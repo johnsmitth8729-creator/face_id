@@ -25,6 +25,10 @@ def _get_report_title(report_type: str) -> str:
         'daily_activity': _('Daily Verification Activity Report'),
         'supervisor_activity': _('Supervisor Activity Logs Report'),
         'security_incidents': _('Security Incident Reports'),
+        'attendance': _('Examination Attendance Report'),
+        'pre_registered': _('Allowed Candidates Report'),
+        'audit_logs': _('System Audit Logs Report'),
+        'daily_stats': _('Daily Verification Stats Report'),
     }
     return titles.get(report_type, _('Report'))
 
@@ -320,5 +324,97 @@ def get_supervisor_activity_data() -> tuple:
             'Score': f'{log.score:.1f}%' if log.score else '-',
             'Date/Time': _format_date(log.verified_at),
             'IP': log.ip_address or '-',
+        })
+    return headers, data
+
+
+def get_attendance_report_data() -> tuple:
+    """Return (headers, data) for exam attendance report."""
+    from apps.admin_panel.views import _attendance_rows
+    rows = _attendance_rows()
+    
+    headers = ['#', 'Applicant ID', 'Full Name', 'Passport', 'Program', 'Region', 'Status', 'Registered At', 'Verification Date', 'Attendance Time', 'Supervisor']
+    data = []
+    for i, r in enumerate(rows, 1):
+        data.append({
+            '#': i,
+            'Applicant ID': r['applicant_id'] or '-',
+            'Full Name': r['full_name'] or '-',
+            'Passport': r['passport_number'] or '-',
+            'Program': r['program'] or '-',
+            'Region': r['region'] or '-',
+            'Status': r['status'].upper() if r['status'] else '-',
+            'Registered At': _format_date(r['registered_at']),
+            'Verification Date': _format_date(r['verification_date']),
+            'Attendance Time': _format_date(r['attendance_at']),
+            'Supervisor': r['supervisor'] or '-',
+        })
+    return headers, data
+
+
+def get_pre_registered_data() -> tuple:
+    """Return (headers, data) for allowed candidates list."""
+    from apps.accounts.models import PreRegisteredApplicant
+    candidates = PreRegisteredApplicant.objects.all().order_by('-created_at')
+    
+    headers = ['#', 'Applicant ID', 'Passport Number', 'Full Name', 'Program', 'Region', 'Uploaded At']
+    data = []
+    for i, c in enumerate(candidates, 1):
+        data.append({
+            '#': i,
+            'Applicant ID': c.applicant_id or '-',
+            'Passport Number': c.passport_number or '-',
+            'Full Name': f'{c.surname} {c.given_name} {c.middle_name}'.strip(),
+            'Program': c.program or '-',
+            'Region': c.region or '-',
+            'Uploaded At': _format_date(c.created_at),
+        })
+    return headers, data
+
+
+def get_audit_logs_data() -> tuple:
+    """Return (headers, data) for system audit logs."""
+    from apps.audit.models import AuditLog
+    logs = AuditLog.objects.all().order_by('-timestamp')
+    
+    headers = ['#', 'Timestamp', 'User', 'Role', 'Category', 'Action', 'Status', 'IP Address']
+    data = []
+    for i, log in enumerate(logs, 1):
+        data.append({
+            '#': i,
+            'Timestamp': _format_date(log.timestamp),
+            'User': log.username_snapshot or 'System',
+            'Role': log.user_role_snapshot or '-',
+            'Category': log.category or '-',
+            'Action': log.action or '-',
+            'Status': 'Success' if log.success else 'Failed',
+            'IP Address': log.ip_address or '-',
+        })
+    return headers, data
+
+
+def get_daily_stats_data() -> tuple:
+    """Return (headers, data) for daily verification stats report."""
+    from apps.verification.models import VerificationLog
+    from django.db.models import Count, Q
+    from django.db.models.functions import TruncDate
+    
+    stats = VerificationLog.objects.annotate(date=TruncDate('verified_at')).values('date').annotate(
+        total=Count('id'),
+        verified=Count('id', filter=Q(result='verified')),
+        review=Count('id', filter=Q(result='review_required')),
+        rejected=Count('id', filter=Q(result='rejected'))
+    ).order_by('-date')
+    
+    headers = ['#', 'Date', 'Total Attempts', 'Verified', 'Review Required', 'Rejected']
+    data = []
+    for i, s in enumerate(stats, 1):
+        data.append({
+            '#': i,
+            'Date': str(s['date']) if s['date'] else '-',
+            'Total Attempts': s['total'],
+            'Verified': s['verified'],
+            'Review Required': s['review'],
+            'Rejected': s['rejected'],
         })
     return headers, data

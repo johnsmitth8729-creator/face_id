@@ -50,9 +50,6 @@
 
   <div class="sidebar-section">
     <div class="sidebar-section-title">{% trans "Configuration" %}</div>
-    <a href="{% url 'admin_panel:ai-config' %}" class="sidebar-link {% if active == 'ai' %}active{% endif %}">
-      <i class="bi bi-cpu-fill"></i>{% trans "AI Configuration" %}
-    </a>
     <a href="{% url 'admin_panel:settings' %}" class="sidebar-link {% if active == 'settings' %}active{% endif %}">
       <i class="bi bi-gear-fill"></i>{% trans "System Settings" %}
     </a>

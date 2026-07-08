@@ -142,12 +142,19 @@ class SupervisorExamVerifyAPI(View):
                 ip_address=request.META.get('REMOTE_ADDR'),
             )
 
+            already_verified = VerificationLog.objects.filter(
+                applicant_profile=profile,
+                verification_type='exam_day',
+                result='verified'
+            ).exists()
+
             return JsonResponse({
                 'success': True,
                 'match_percentage': round(match_pct, 1),
                 'status': status,
                 'indicator': indicator,
                 'message': message,
+                'already_verified': already_verified,
                 'applicant': {
                     'full_name': profile.full_name,
                     'admission_id': profile.admission_id,
@@ -389,12 +396,19 @@ class SupervisorExamIdentifyAPI(View):
                 ip_address=request.META.get('REMOTE_ADDR'),
             )
 
+            already_verified = VerificationLog.objects.filter(
+                applicant_profile=profile,
+                verification_type='exam_day',
+                result='verified'
+            ).exists()
+
             return JsonResponse({
                 'success': True,
                 'match_percentage': round(match_pct, 1),
                 'status': status,
                 'indicator': indicator,
                 'message': message,
+                'already_verified': already_verified,
                 'applicant': {
                     'id': str(profile.id),
                     'full_name': profile.full_name,
@@ -518,6 +532,7 @@ class SupervisorQRLookupAPI(View):
             profile_id_str = applicant_info.get('id')
             has_face_template = False
 
+            already_verified = False
             if profile_id_str:
                 try:
                     from apps.verification.models import FaceProfile
@@ -529,11 +544,21 @@ class SupervisorQRLookupAPI(View):
                 except Exception:
                     pass
 
+                try:
+                    already_verified = VerificationLog.objects.filter(
+                        applicant_profile_id=profile_id_str,
+                        verification_type='exam_day',
+                        result='verified'
+                    ).exists()
+                except Exception:
+                    pass
+
             return JsonResponse({
                 'valid': True,
                 'token': token,
                 'profile_id': profile_id_str,
                 'has_face_template': has_face_template,
+                'already_verified': already_verified,
                 'applicant': applicant_info,
                 'qr_status': result.get('qr_status'),
                 'scan_count': result.get('scan_count'),

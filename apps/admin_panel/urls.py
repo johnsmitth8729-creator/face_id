@@ -17,9 +17,10 @@ urlpatterns = [
     path('attendance/', views.AttendanceManagementView.as_view(), name='attendance'),
     path('attendance/export-excel/', views.AttendanceExportExcelView.as_view(), name='attendance-export-excel'),
     path('supervisors/', views.SupervisorManagementView.as_view(), name='supervisors'),
+    path('supervisors/export-excel/', views.SupervisorLogsExportExcelView.as_view(), name='supervisors-export-excel'),
     path('qr/', views.QRManagementView.as_view(), name='qr-management'),
     path('audit/', views.AuditLogView.as_view(), name='audit-logs'),
-    path('ai-config/', views.AIConfigView.as_view(), name='ai-config'),
+    path('audit/export-excel/', views.AuditLogsExportExcelView.as_view(), name='audit-logs-export-excel'),
     path('settings/', views.SystemSettingsView.as_view(), name='settings'),
     path('reports/', views.ReportsView.as_view(), name='reports'),
 ]

@@ -9,9 +9,14 @@
         <h2 class="page-title">{% trans "Supervisor Management" %}</h2>
         <p class="page-sub">{% trans "Create and manage supervisor accounts" %}</p>
       </div>
-      <button class="btn-akhu-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-        <i class="bi bi-person-plus-fill me-2"></i>{% trans "Add Supervisor" %}
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn-akhu-outline" data-bs-toggle="modal" data-bs-target="#importSupervisorsModal">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>{% trans "Import Supervisors" %}
+        </button>
+        <button class="btn-akhu-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+          <i class="bi bi-person-plus-fill me-2"></i>{% trans "Add Supervisor" %}
+        </button>
+      </div>
     </div>
 
     <!-- Supervisors Table & Stats -->
@@ -76,10 +81,41 @@
 
     <!-- Supervisor Activity Logs -->
     <div class="akhu-card mt-4">
-      <h5 class="mb-3"><i class="bi bi-journal-text me-2 text-gold"></i>{% trans "Supervisor Activity Logs (Exam Day)" %}</h5>
-      <div class="table-responsive">
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-journal-text me-2 text-gold"></i>{% trans "Supervisor Activity Logs (Exam Day)" %}</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'admin_panel:supervisors-export-excel' %}" class="btn btn-sm btn-akhu-outline text-success d-inline-flex align-items-center gap-1">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i> {% trans "Export Logs (Excel)" %}
+          </a>
+          <form method="post" class="d-inline" onsubmit="return confirm('{% trans "Clear all supervisor activity logs? This cannot be undone." %}')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear_logs">
+            <button type="submit" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" style="background-color:#dc3545; border-color:#dc3545;">
+              <i class="bi bi-trash3-fill"></i> {% trans "Clear Logs" %}
+            </button>
+          </form>
+        </div>
+      </div>
+      <!-- Logs Search -->
+      <div class="mb-3 p-2 bg-dark bg-opacity-10 rounded border border-secondary border-opacity-10">
+        <form method="get" class="row g-2 align-items-center">
+          <div class="col-md-9 col-sm-8">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-transparent border-secondary text-secondary"><i class="bi bi-search"></i></span>
+              <input type="text" name="log_q" value="{{ log_q|default:'' }}" class="form-control border-secondary text-light" placeholder="{% trans 'Search logs by supervisor, candidate name, passport, or ID...' %}">
+            </div>
+          </div>
+          <div class="col-md-3 col-sm-4 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-akhu-primary w-100 justify-content-center">{% trans "Search" %}</button>
+            {% if log_q %}
+              <a href="{% url 'admin_panel:supervisors' %}" class="btn btn-sm btn-akhu-outline w-100 justify-content-center text-center">{% trans "Reset" %}</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+      <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
         <table class="akhu-table">
-          <thead>
+          <thead style="position: sticky; top: 0; z-index: 10; background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
             <tr>
               <th>{% trans "Time" %}</th>
               <th>{% trans "Supervisor" %}</th>
@@ -157,6 +193,34 @@
           </div>
           <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
             <i class="bi bi-person-check-fill me-2"></i>{% trans "Create Supervisor" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Supervisors Modal -->
+<div class="modal fade" id="importSupervisorsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="bi bi-file-earmark-excel me-2 text-success"></i>{% trans "Import Supervisors List" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-3">
+          {% trans "Select an Excel file (.xlsx or .xls) to upload supervisor accounts. Columns must match or contain: 'Full Name', 'Username', 'Password'." %}
+        </p>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="import_supervisors">
+          <div class="mb-4">
+            <label class="form-label">{% trans "Choose Excel File" %}</label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
+          </div>
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-cloud-arrow-up-fill me-2"></i>{% trans "Upload and Parse" %}
           </button>
         </form>
       </div>

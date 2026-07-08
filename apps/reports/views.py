@@ -8,7 +8,8 @@ from django.conf import settings
 from apps.reports.exporters import (
     export_csv, export_excel, export_pdf,
     get_verified_applicants_data, get_failed_verifications_data,
-    get_supervisor_activity_data
+    get_supervisor_activity_data, get_attendance_report_data,
+    get_pre_registered_data, get_audit_logs_data, get_daily_stats_data
 )
 from apps.admin_panel.views import ADMIN_SESSION_KEY
 
@@ -17,6 +18,10 @@ REPORT_BUILDERS = {
     'verified': get_verified_applicants_data,
     'failed': get_failed_verifications_data,
     'supervisor_activity': get_supervisor_activity_data,
+    'attendance': get_attendance_report_data,
+    'pre_registered': get_pre_registered_data,
+    'audit_logs': get_audit_logs_data,
+    'daily_stats': get_daily_stats_data,
 }
 
 

@@ -21,6 +21,26 @@
       </div>
     </div>
 
+    <!-- Search -->
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>{% trans "Search QR Codes" %}</h5>
+      <form method="get" class="row g-3">
+        <div class="col-md-8">
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" value="{{ query|default:'' }}" class="form-control border-secondary text-light"
+              placeholder="{% trans 'Search by Token, Candidate Name, Passport, or Admission ID...' %}" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-akhu-primary w-100">{% trans "Filter" %}</button>
+        </div>
+        <div class="col-md-2">
+          <a href="{% url 'admin_panel:qr-management' %}" class="btn btn-akhu-outline w-100 justify-content-center text-center">{% trans "Reset" %}</a>
+        </div>
+      </form>
+    </div>
+
     <!-- QR Codes List -->
     <div class="akhu-card">
       {% if qr_codes %}
@@ -102,13 +122,13 @@
           <nav>
             <ul class="pagination pagination-sm mb-0">
               {% if qr_codes.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ qr_codes.previous_page_number }}">{% trans "Prev" %}</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ qr_codes.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Prev" %}</a></li>
               {% endif %}
               {% for p in qr_codes.paginator.page_range %}
-                <li class="page-item {% if qr_codes.number == p %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+                <li class="page-item {% if qr_codes.number == p %}active{% endif %}"><a class="page-link" href="?page={{ p }}{% if query %}&q={{ query }}{% endif %}">{{ p }}</a></li>
               {% endfor %}
               {% if qr_codes.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ qr_codes.next_page_number }}">{% trans "Next" %}</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ qr_codes.next_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Next" %}</a></li>
               {% endif %}
             </ul>
           </nav>

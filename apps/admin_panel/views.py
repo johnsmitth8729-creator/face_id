@@ -248,7 +248,6 @@ class ApplicantListView(View):
 
     def get(self, request):
         query = request.GET.get('q', '').strip()
-        status_filter = request.GET.get('status', '')
 
         # 1. Standard/Verified applicants
         applicants = ApplicantProfile.objects.select_related('user').prefetch_related(
@@ -256,32 +255,32 @@ class ApplicantListView(View):
             'qr_code',
         ).order_by('-created_at')
 
+        # 2. Pre-registered/Allowed candidates list
+        pre_registered = PreRegisteredApplicant.objects.all().order_by('-created_at')
+
         if query:
             applicants = applicants.filter(
                 Q(admission_id__icontains=query) |
+                Q(applicant_id__icontains=query) |
                 Q(passport_number__icontains=query) |
                 Q(first_name__icontains=query) |
                 Q(last_name__icontains=query) |
-                Q(email__icontains=query)
+                Q(middle_name__icontains=query) |
+                Q(program__icontains=query) |
+                Q(selected_region__icontains=query)
             )
-
-        if status_filter:
-            applicants = applicants.filter(
-                user__verification_sessions__face_profile__status=status_filter
-            ).distinct()
+            pre_registered = pre_registered.filter(
+                Q(passport_number__icontains=query) |
+                Q(applicant_id__icontains=query) |
+                Q(given_name__icontains=query) |
+                Q(surname__icontains=query) |
+                Q(middle_name__icontains=query) |
+                Q(program__icontains=query) |
+                Q(region__icontains=query)
+            )
 
         paginator = Paginator(applicants, 25)
         page = paginator.get_page(request.GET.get('page'))
-
-        # 2. Pre-registered/Allowed candidates list
-        pre_registered = PreRegisteredApplicant.objects.all().order_by('-created_at')
-        if query:
-            pre_registered = pre_registered.filter(
-                Q(passport_number__icontains=query) |
-                Q(given_name__icontains=query) |
-                Q(surname__icontains=query) |
-                Q(applicant_id__icontains=query)
-            )
 
         pre_paginator = Paginator(pre_registered, 25)
         pre_page = pre_paginator.get_page(request.GET.get('pre_page'))
@@ -291,13 +290,6 @@ class ApplicantListView(View):
             'applicants': page,
             'pre_registered': pre_page,
             'query': query,
-            'status_filter': status_filter,
-            'status_choices': [
-                ('verified', _('Verified')),
-                ('review_required', _('Review Required')),
-                ('rejected', _('Rejected')),
-                ('pending', _('Pending')),
-            ],
         })
 
     def post(self, request):
@@ -371,8 +363,6 @@ class ApplicantListView(View):
                     profile = ApplicantProfile.objects.get(id=profile_id)
                     name = profile.full_name
                     # Remove biometric media files before CASCADE-deleting the user.
-                    # CASCADE removes DB rows but files on disk remain unless
-                    # explicitly deleted here.
                     try:
                         from apps.verification.cleanup import cleanup_all_incomplete_for_user
                         _admin_username = request.session.get('admin_username', 'admin')
@@ -398,6 +388,44 @@ class ApplicantListView(View):
                 except ApplicantProfile.DoesNotExist:
                     messages.error(request, _('Applicant not found'))
 
+        elif action == 'bulk_delete':
+            selected_ids = request.POST.getlist('selected_ids')
+            if selected_ids:
+                deleted_count = 0
+                names = []
+                for p_id in selected_ids:
+                    try:
+                        profile = ApplicantProfile.objects.get(id=p_id)
+                        name = profile.full_name
+                        names.append(name)
+                        try:
+                            from apps.verification.cleanup import cleanup_all_incomplete_for_user
+                            _admin_username = request.session.get('admin_username', 'admin')
+                            cleanup_all_incomplete_for_user(
+                                profile.user,
+                                reason='admin_reset',
+                                performed_by=f'admin:{_admin_username}',
+                            )
+                        except Exception as _ce:
+                            logger.warning("Biometric cleanup before admin delete failed for %s: %s", name, _ce)
+                        profile.user.delete()
+                        deleted_count += 1
+                    except ApplicantProfile.DoesNotExist:
+                        pass
+                if deleted_count > 0:
+                    AuditLog.objects.create(
+                        username_snapshot=request.session.get('admin_username', 'admin'),
+                        user_role_snapshot='admin',
+                        category='data',
+                        action=f'Bulk deleted {deleted_count} applicants: {", ".join(names[:10])}',
+                        ip_address=request.META.get('REMOTE_ADDR'),
+                    )
+                    messages.success(request, _(f'Successfully deleted {deleted_count} applicants.'))
+                else:
+                    messages.warning(request, _('No applicants were deleted.'))
+            else:
+                messages.error(request, _('No applicants selected for deletion.'))
+
         elif action == 'delete_pre':
             pre_id = request.POST.get('pre_id')
             if pre_id:
@@ -416,6 +444,27 @@ class ApplicantListView(View):
                     messages.success(request, _(f'Pre-registered candidate {name} deleted'))
                 except PreRegisteredApplicant.DoesNotExist:
                     messages.error(request, _('Pre-registered candidate not found'))
+
+        elif action == 'bulk_delete_pre':
+            selected_ids = request.POST.getlist('selected_ids')
+            if selected_ids:
+                deleted_qs = PreRegisteredApplicant.objects.filter(id__in=selected_ids)
+                deleted_count = deleted_qs.count()
+                passports = list(deleted_qs.values_list('passport_number', flat=True))
+                deleted_qs.delete()
+                if deleted_count > 0:
+                    AuditLog.objects.create(
+                        username_snapshot=request.session.get('admin_username', 'admin'),
+                        user_role_snapshot='admin',
+                        category='data',
+                        action=f'Bulk deleted {deleted_count} pre-registered candidates: {", ".join(passports[:10])}',
+                        ip_address=request.META.get('REMOTE_ADDR'),
+                    )
+                    messages.success(request, _(f'Successfully deleted {deleted_count} pre-registered candidates.'))
+                else:
+                    messages.warning(request, _('No candidates were deleted.'))
+            else:
+                messages.error(request, _('No candidates selected for deletion.'))
 
         elif action == 'create_candidate':
             applicant_id = request.POST.get('applicant_id', '').strip()
@@ -901,15 +950,31 @@ class SupervisorManagementView(View):
             failed_scans=Count('user__supervised_verifications', filter=Q(user__supervised_verifications__verification_type='exam_day', user__supervised_verifications__result='rejected')),
         ).order_by('-created_at')
 
+        log_q = request.GET.get('log_q', '').strip()
         activity_logs = VerificationLog.objects.filter(
             verification_type='exam_day',
             supervisor__isnull=False
-        ).select_related('applicant_profile', 'supervisor').order_by('-verified_at')[:50]
+        ).select_related('applicant_profile', 'supervisor').order_by('-verified_at')
+
+        if log_q:
+            activity_logs = activity_logs.filter(
+                Q(supervisor__username__icontains=log_q) |
+                Q(supervisor__supervisor_account__full_name__icontains=log_q) |
+                Q(applicant_profile__first_name__icontains=log_q) |
+                Q(applicant_profile__last_name__icontains=log_q) |
+                Q(applicant_profile__passport_number__icontains=log_q) |
+                Q(applicant_profile__admission_id__icontains=log_q) |
+                Q(applicant_profile__applicant_id__icontains=log_q) |
+                Q(notes__icontains=log_q)
+            )
+        else:
+            activity_logs = activity_logs[:50]
 
         return render(request, self.template_name, {
             'page_title': _('Supervisor Management'),
             'supervisors': supervisors,
             'activity_logs': activity_logs,
+            'log_q': log_q,
         })
 
     def post(self, request):
@@ -967,7 +1032,138 @@ class SupervisorManagementView(View):
             except SupervisorAccount.DoesNotExist:
                 messages.error(request, _('Supervisor not found'))
 
+        elif action == 'clear_logs':
+            deleted_count, _deleted_dict = VerificationLog.objects.filter(verification_type='exam_day').delete()
+            AuditLog.objects.create(
+                username_snapshot=request.session.get('admin_username', 'admin'),
+                user_role_snapshot='admin',
+                category='data',
+                action=f'Cleared supervisor activity logs: {deleted_count} deleted',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+            messages.success(request, _(f'Cleared {deleted_count} exam day activity logs.'))
+
+        elif action == 'import_supervisors':
+            excel_file = request.FILES.get('excel_file')
+            if not excel_file:
+                messages.error(request, _('Please upload an Excel file'))
+                return redirect('admin_panel:supervisors')
+            try:
+                import openpyxl
+                wb = openpyxl.load_workbook(excel_file, data_only=True)
+                sheet = wb.active
+                
+                headers = [str(sheet.cell(1, c).value).strip().lower() if sheet.cell(1, c).value else '' for c in range(1, sheet.max_column + 1)]
+                
+                def find_col(names):
+                    for idx, h in enumerate(headers):
+                        if any(n in h for n in names):
+                            return idx + 1
+                    return None
+
+                col_name = find_col(['full name', 'fullname', 'name', 'ism', 'familya', 'to\'liq ism'])
+                col_user = find_col(['username', 'login', 'user', 'foydalanuvchi'])
+                col_pass = find_col(['password', 'parol', 'pass'])
+
+                if not col_name: col_name = 1
+                if not col_user: col_user = 2
+                if not col_pass: col_pass = 3
+
+                imported_count = 0
+                errors = []
+                for r in range(2, sheet.max_row + 1):
+                    name_val = str(sheet.cell(r, col_name).value or '').strip()
+                    user_val = str(sheet.cell(r, col_user).value or '').strip().lower()
+                    pass_val = str(sheet.cell(r, col_pass).value or '').strip()
+
+                    if not name_val and not user_val:
+                        continue
+                    if not user_val or not pass_val or not name_val:
+                        errors.append(f"Row {r}: Username, password and full name are required")
+                        continue
+
+                    if CustomUser.objects.filter(username=user_val).exists():
+                        errors.append(f"Row {r}: Username '{user_val}' already exists")
+                        continue
+
+                    user = CustomUser.objects.create_supervisor(username=user_val, password=pass_val)
+                    SupervisorAccount.objects.create(user=user, full_name=name_val)
+                    imported_count += 1
+
+                AuditLog.objects.create(
+                    username_snapshot=request.session.get('admin_username', 'admin'),
+                    user_role_snapshot='admin',
+                    category='data',
+                    action=f'Imported {imported_count} supervisors via Excel',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                )
+                if imported_count > 0:
+                    messages.success(request, _(f'Successfully imported {imported_count} supervisors!'))
+                if errors:
+                    messages.warning(request, _(f'Warnings: {", ".join(errors[:5])}'))
+            except Exception as e:
+                messages.error(request, _(f'Failed to parse Excel: {str(e)}'))
+
         return redirect('admin_panel:supervisors')
+
+
+@admin_required_class
+class SupervisorLogsExportExcelView(View):
+    def get(self, request):
+        import io
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+
+        logs = VerificationLog.objects.filter(
+            verification_type='exam_day',
+            supervisor__isnull=False
+        ).select_related('applicant_profile', 'supervisor').order_by('-verified_at')
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Supervisor Activity'
+        
+        headers = ['Timestamp', 'Supervisor', 'Candidate Full Name', 'Admission ID', 'Passport Number', 'Result', 'Score', 'Details']
+        ws.append(headers)
+        
+        for cell in ws[1]:
+            cell.font = Font(bold=True, color='FFFFFF')
+            cell.fill = PatternFill('solid', fgColor='1F4E78')
+            cell.alignment = Alignment(horizontal='center')
+
+        for log in logs:
+            sup_name = ""
+            if log.supervisor:
+                if hasattr(log.supervisor, 'supervisor_account') and log.supervisor.supervisor_account:
+                    sup_name = log.supervisor.supervisor_account.full_name
+                else:
+                    sup_name = log.supervisor.username
+            
+            ws.append([
+                log.verified_at.strftime('%Y-%m-%d %H:%M:%S') if log.verified_at else '',
+                sup_name,
+                log.applicant_profile.full_name if log.applicant_profile else '',
+                log.applicant_profile.admission_id if log.applicant_profile else '',
+                log.applicant_profile.passport_number if log.applicant_profile else '',
+                log.get_result_display() or '',
+                f'{log.score:.1f}%' if log.score else '',
+                log.notes or 'Face match verified',
+            ])
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or '')) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = min(max(max_length + 2, 12), 40)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="supervisor_activity_logs.xlsx"'
+        return response
 
 
 # ─── QR MANAGEMENT ───────────────────────────────────────────────────────────
@@ -977,12 +1173,22 @@ class QRManagementView(View):
     template_name = 'admin_panel/qr_management.html'
 
     def get(self, request):
+        query = request.GET.get('q', '').strip()
         qr_codes = QRCode.objects.select_related('applicant_profile').order_by('-generated_at')
+        if query:
+            qr_codes = qr_codes.filter(
+                Q(token__icontains=query) |
+                Q(applicant_profile__first_name__icontains=query) |
+                Q(applicant_profile__last_name__icontains=query) |
+                Q(applicant_profile__passport_number__icontains=query) |
+                Q(applicant_profile__admission_id__icontains=query)
+            )
         paginator = Paginator(qr_codes, 25)
         page = paginator.get_page(request.GET.get('page'))
         return render(request, self.template_name, {
             'page_title': _('QR Management'),
             'qr_codes': page,
+            'query': query,
         })
 
     def post(self, request):
@@ -1047,27 +1253,166 @@ class AuditLogView(View):
             'date_to': date_to,
         })
 
+    def post(self, request):
+        action = request.POST.get('action')
+        
+        if action == 'clear_logs':
+            deleted_count, _deleted_dict = AuditLog.objects.all().delete()
+            AuditLog.objects.create(
+                username_snapshot=request.session.get('admin_username', 'admin'),
+                user_role_snapshot='admin',
+                category='security',
+                action='Cleared system audit logs',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+            messages.success(request, _(f'Cleared {deleted_count} system audit logs.'))
+            
+        elif action == 'import_logs':
+            excel_file = request.FILES.get('excel_file')
+            if not excel_file:
+                messages.error(request, _('Please upload an Excel file'))
+                return redirect('admin_panel:audit-logs')
+            try:
+                import openpyxl
+                from django.utils.dateparse import parse_datetime
+                wb = openpyxl.load_workbook(excel_file, data_only=True)
+                sheet = wb.active
+                
+                headers = [str(sheet.cell(1, c).value).strip().lower() if sheet.cell(1, c).value else '' for c in range(1, sheet.max_column + 1)]
+                
+                def find_col(names):
+                    for idx, h in enumerate(headers):
+                        if any(n in h for n in names):
+                            return idx + 1
+                    return None
 
-# ─── AI CONFIGURATION ────────────────────────────────────────────────────────
+                col_time = find_col(['timestamp', 'time', 'date'])
+                col_user = find_col(['user', 'username', 'operator'])
+                col_role = find_col(['role', 'level'])
+                col_cat = find_col(['category', 'type'])
+                col_act = find_col(['action', 'details', 'operation'])
+                col_ip = find_col(['ip address', 'ip_address', 'ip'])
+                col_success = find_col(['status', 'success'])
+
+                if not col_time: col_time = 1
+                if not col_user: col_user = 2
+                if not col_act: col_act = 3
+
+                imported_count = 0
+                for r in range(2, sheet.max_row + 1):
+                    time_str = str(sheet.cell(r, col_time).value or '').strip()
+                    user_val = str(sheet.cell(r, col_user).value or '').strip()
+                    act_val = str(sheet.cell(r, col_act).value or '').strip()
+                    role_val = str(sheet.cell(r, col_role).value or '').strip() if col_role else 'admin'
+                    cat_val = str(sheet.cell(r, col_cat).value or '').strip() if col_cat else 'system'
+                    ip_val = str(sheet.cell(r, col_ip).value or '').strip() if col_ip else '127.0.0.1'
+                    status_val = str(sheet.cell(r, col_success).value or '').strip().lower() if col_success else 'success'
+
+                    if not act_val:
+                        continue
+
+                    timestamp = None
+                    if time_str:
+                        try:
+                            timestamp = parse_datetime(time_str)
+                        except Exception:
+                            pass
+                    if not timestamp:
+                        timestamp = timezone.now()
+
+                    success_flag = status_val in ('success', 'true', '1', 'yes')
+
+                    AuditLog.objects.create(
+                        timestamp=timestamp,
+                        username_snapshot=user_val,
+                        user_role_snapshot=role_val,
+                        category=cat_val,
+                        action=act_val,
+                        ip_address=ip_val,
+                        success=success_flag,
+                    )
+                    imported_count += 1
+
+                AuditLog.objects.create(
+                    username_snapshot=request.session.get('admin_username', 'admin'),
+                    user_role_snapshot='admin',
+                    category='data',
+                    action=f'Imported {imported_count} audit logs via Excel',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                )
+                messages.success(request, _(f'Successfully imported {imported_count} audit logs!'))
+            except Exception as e:
+                messages.error(request, _(f'Failed to parse Excel: {str(e)}'))
+
+        return redirect('admin_panel:audit-logs')
+
 
 @admin_required_class
-class AIConfigView(View):
-    template_name = 'admin_panel/ai_config.html'
-
+class AuditLogsExportExcelView(View):
     def get(self, request):
-        current = {
-            'threshold_verified': settings.AI_ENGINE.get('THRESHOLD_VERIFIED', 0.90) * 100,
-            'threshold_review': settings.AI_ENGINE.get('THRESHOLD_REVIEW', 0.80) * 100,
-            'mode': settings.AI_ENGINE.get('MODE', 'mock'),
-            'model_pack': settings.AI_ENGINE.get('MODEL_PACK', 'buffalo_l'),
-            'liveness_blink': settings.LIVENESS.get('BLINK_THRESHOLD', 0.25),
-            'liveness_timeout': settings.LIVENESS.get('CHALLENGE_TIMEOUT', 30),
-            'liveness_retries': settings.LIVENESS.get('MAX_RETRIES', 3),
-        }
-        return render(request, self.template_name, {
-            'page_title': _('AI Configuration'),
-            'current': current,
-        })
+        import io
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+
+        logs = AuditLog.objects.order_by('-timestamp')
+        category = request.GET.get('category', '')
+        query = request.GET.get('q', '')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+
+        if category:
+            logs = logs.filter(category=category)
+        if query:
+            logs = logs.filter(
+                Q(action__icontains=query) |
+                Q(username_snapshot__icontains=query) |
+                Q(ip_address__icontains=query)
+            )
+        if date_from:
+            logs = logs.filter(timestamp__date__gte=date_from)
+        if date_to:
+            logs = logs.filter(timestamp__date__lte=date_to)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Audit Logs'
+        
+        headers = ['Timestamp', 'Username', 'Role', 'Category', 'Action', 'Status', 'IP Address']
+        ws.append(headers)
+        
+        for cell in ws[1]:
+            cell.font = Font(bold=True, color='FFFFFF')
+            cell.fill = PatternFill('solid', fgColor='1F4E78')
+            cell.alignment = Alignment(horizontal='center')
+
+        for log in logs:
+            ws.append([
+                log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '',
+                log.username_snapshot or 'System',
+                log.user_role_snapshot or '',
+                log.category or '',
+                log.action or '',
+                'Success' if log.success else 'Failed',
+                log.ip_address or '',
+            ])
+
+        for column_cells in ws.columns:
+            max_length = max(len(str(cell.value or '')) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = min(max(max_length + 2, 12), 40)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="system_audit_logs.xlsx"'
+        return response
+
+
+
 
 
 # ─── SYSTEM SETTINGS ─────────────────────────────────────────────────────────

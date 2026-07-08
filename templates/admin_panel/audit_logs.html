@@ -16,8 +16,20 @@
         <h2 class="page-title">{% trans "System Audit Logs" %}</h2>
         <p class="page-sub">{% trans "Security monitoring and system activity tracking logs" %}</p>
       </div>
-      <div class="header-meta">
-        <span class="badge-date"><i class="bi bi-shield-check me-2"></i>{% trans "Compliance Log" %}</span>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <button class="btn btn-sm btn-akhu-outline text-success" data-bs-toggle="modal" data-bs-target="#importAuditModal">
+          <i class="bi bi-file-earmark-excel-fill me-1"></i>{% trans "Import Backup" %}
+        </button>
+        <a href="{% url 'admin_panel:audit-logs-export-excel' %}?q={{ query }}&category={{ selected_category }}&date_from={{ date_from }}&date_to={{ date_to }}" class="btn btn-sm btn-akhu-outline text-info d-inline-flex align-items-center gap-1">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i> {% trans "Export Excel" %}
+        </a>
+        <form method="post" class="d-inline" onsubmit="return confirm('{% trans "Clear all system audit logs? This cannot be undone." %}')">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="clear_logs">
+          <button type="submit" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" style="background-color: #dc3545; border-color: #dc3545;">
+            <i class="bi bi-trash3-fill"></i> {% trans "Clear Logs" %}
+          </button>
+        </form>
       </div>
     </div>
 
@@ -187,4 +199,32 @@
 .badge-date { background:var(--bg-glass);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:6px 14px;font-size:0.82rem;color:var(--text-secondary); }
 .status-badge { display:inline-block;padding:4px 8px;font-size:0.75rem;font-weight:600;border-radius:var(--radius-sm);text-transform:uppercase; }
 </style>
+
+<!-- Import Audit Logs Modal -->
+<div class="modal fade" id="importAuditModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="bi bi-file-earmark-excel me-2 text-success"></i>{% trans "Import Audit Logs Backup" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-3">
+          {% trans "Select an Excel file (.xlsx or .xls) to restore system audit logs. Columns must match or contain: 'Timestamp', 'Username', 'Action'." %}
+        </p>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="import_logs">
+          <div class="mb-4">
+            <label class="form-label">{% trans "Choose Excel File" %}</label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
+          </div>
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-cloud-arrow-up-fill me-2"></i>{% trans "Upload and Restore" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

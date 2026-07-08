@@ -76,80 +76,86 @@
     {% if liveness_data %}
       {% for item in liveness_data %}
       {% with p=item.profile fp=item.face_profile %}
-      <div class="biometric-card mb-4">
-        <!-- Candidate Header -->
-        <div class="biometric-card-header">
-          <div class="candidate-info">
-            <div class="candidate-id">{{ p.applicant_id|default:"-" }}</div>
-            <div class="candidate-name">{{ p.full_name }}</div>
-            <div class="candidate-meta">
-              <span><i class="bi bi-passport me-1"></i>{{ p.passport_number }}</span>
-              <span class="mx-2">/</span>
-              <span><i class="bi bi-geo-alt me-1"></i>{{ p.selected_region|default:"-" }}</span>
+      <div class="biometric-card mb-3 p-3">
+        <div class="d-flex flex-md-row flex-column justify-content-between align-items-md-center align-items-start gap-3">
+          
+          <!-- Candidate Info (Left Side) -->
+          <div class="candidate-info-box">
+            <span class="candidate-id mb-1">{{ p.applicant_id|default:"-" }}</span>
+            <h5 class="candidate-name mb-1">{{ p.full_name }}</h5>
+            <div class="candidate-meta small text-secondary">
+              <span class="me-2"><i class="bi bi-passport me-1 text-gold"></i><strong>{{ p.passport_number }}</strong></span>
+              <span class="me-2">|</span>
+              <span class="me-2"><i class="bi bi-geo-alt me-1"></i>{{ p.selected_region|default:"-" }}</span>
               {% if p.program %}
-              <span class="mx-2">/</span>
-              <span><i class="bi bi-mortarboard me-1"></i>{{ p.program }}</span>
+                <span class="me-2">|</span>
+                <span><i class="bi bi-mortarboard me-1"></i>{{ p.program }}</span>
+              {% endif %}
+            </div>
+            
+            <div class="mt-2 d-flex align-items-center gap-2">
+              {% if fp %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2 py-1" style="font-size: 0.75rem;">
+                  <i class="bi bi-check-circle-fill me-1"></i>{% trans "Verified" %} {% if fp.match_percentage %}({{ fp.match_percentage|floatformat:1 }}%){% endif %}
+                </span>
+              {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-2 py-1" style="font-size: 0.75rem;">
+                  <i class="bi bi-camera-video-off me-1"></i>{% trans "No capture" %}
+                </span>
               {% endif %}
             </div>
           </div>
-          <div class="candidate-actions">
+          
+          <!-- Liveness Thumbnails & Actions (Right Side) -->
+          <div class="d-flex align-items-center gap-3 flex-wrap">
             {% if fp %}
-            <span class="status-badge verified me-3">
-              <i class="bi bi-check-circle-fill me-1"></i>{% trans "Verified" %}
-              {% if fp.match_percentage %} / {{ fp.match_percentage|floatformat:1 }}%{% endif %}
-            </span>
+              <div class="biometric-images-container d-flex gap-2">
+                <!-- Frontal -->
+                <div class="biometric-photo-thumbnail" onclick="openLightbox('{{ p.id }}_frontal')" title="{% trans 'Frontal View' %}">
+                  {% if fp.selfie_image %}
+                    <img src="{{ fp.selfie_image.url }}" alt="Frontal" id="{{ p.id }}_frontal" loading="lazy">
+                  {% else %}
+                    <div class="photo-missing-thumb"><i class="bi bi-person-x"></i></div>
+                  {% endif %}
+                  <div class="label-overlay">{% trans "Front" %}</div>
+                </div>
+                <!-- Left -->
+                <div class="biometric-photo-thumbnail" onclick="openLightbox('{{ p.id }}_left')" title="{% trans 'Left View' %}">
+                  {% if fp.selfie_left %}
+                    <img src="{{ fp.selfie_left.url }}" alt="Left" id="{{ p.id }}_left" loading="lazy">
+                  {% else %}
+                    <div class="photo-missing-thumb"><i class="bi bi-arrow-left"></i></div>
+                  {% endif %}
+                  <div class="label-overlay">{% trans "Left" %}</div>
+                </div>
+                <!-- Right -->
+                <div class="biometric-photo-thumbnail" onclick="openLightbox('{{ p.id }}_right')" title="{% trans 'Right View' %}">
+                  {% if fp.selfie_right %}
+                    <img src="{{ fp.selfie_right.url }}" alt="Right" id="{{ p.id }}_right" loading="lazy">
+                  {% else %}
+                    <div class="photo-missing-thumb"><i class="bi bi-arrow-right"></i></div>
+                  {% endif %}
+                  <div class="label-overlay">{% trans "Right" %}</div>
+                </div>
+                <!-- Up -->
+                <div class="biometric-photo-thumbnail" onclick="openLightbox('{{ p.id }}_up')" title="{% trans 'Up View' %}">
+                  {% if fp.selfie_up %}
+                    <img src="{{ fp.selfie_up.url }}" alt="Up" id="{{ p.id }}_up" loading="lazy">
+                  {% else %}
+                    <div class="photo-missing-thumb"><i class="bi bi-arrow-up"></i></div>
+                  {% endif %}
+                  <div class="label-overlay">{% trans "Up" %}</div>
+                </div>
+              </div>
             {% endif %}
-            <a href="{% url 'admin_panel:liveness-download-zip' p.id %}" class="btn btn-sm btn-gold">
-              <i class="bi bi-file-zip me-1"></i>{% trans "Download ZIP" %}
-            </a>
+            
+            <div class="d-flex flex-column gap-2 justify-content-center">
+              <a href="{% url 'admin_panel:liveness-download-zip' p.id %}" class="btn btn-sm btn-akhu-outline d-flex align-items-center gap-1 py-2 px-3">
+                <i class="bi bi-file-zip"></i> {% trans "ZIP" %}
+              </a>
+            </div>
           </div>
-        </div>
-
-        <!-- Photo Grid -->
-        <div class="photo-grid">
-          {% if fp %}
-            <!-- Frontal -->
-            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_frontal')">
-              {% if fp.selfie_image %}
-                <img src="{{ fp.selfie_image.url }}" alt="Frontal" id="{{ p.id }}_frontal" loading="lazy">
-              {% else %}
-                <div class="photo-missing"><i class="bi bi-person-x"></i></div>
-              {% endif %}
-              <div class="photo-label"><i class="bi bi-person-square me-1"></i>{% trans "Frontal" %}</div>
-            </div>
-            <!-- Left -->
-            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_left')">
-              {% if fp.selfie_left %}
-                <img src="{{ fp.selfie_left.url }}" alt="Left" id="{{ p.id }}_left" loading="lazy">
-              {% else %}
-                <div class="photo-missing"><i class="bi bi-arrow-left-circle"></i></div>
-              {% endif %}
-              <div class="photo-label"><i class="bi bi-arrow-left me-1"></i>{% trans "Left" %}</div>
-            </div>
-            <!-- Right -->
-            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_right')">
-              {% if fp.selfie_right %}
-                <img src="{{ fp.selfie_right.url }}" alt="Right" id="{{ p.id }}_right" loading="lazy">
-              {% else %}
-                <div class="photo-missing"><i class="bi bi-arrow-right-circle"></i></div>
-              {% endif %}
-              <div class="photo-label"><i class="bi bi-arrow-right me-1"></i>{% trans "Right" %}</div>
-            </div>
-            <!-- Up -->
-            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_up')">
-              {% if fp.selfie_up %}
-                <img src="{{ fp.selfie_up.url }}" alt="Up" id="{{ p.id }}_up" loading="lazy">
-              {% else %}
-                <div class="photo-missing"><i class="bi bi-arrow-up-circle"></i></div>
-              {% endif %}
-              <div class="photo-label"><i class="bi bi-arrow-up me-1"></i>{% trans "Up" %}</div>
-            </div>
-          {% else %}
-            <div class="col-span-4 text-center py-4 text-secondary">
-              <i class="bi bi-camera-video-off" style="font-size:2rem;"></i>
-              <p class="mt-2 mb-0 small">{% trans "No liveness images found." %}</p>
-            </div>
-          {% endif %}
+          
         </div>
       </div>
       {% endwith %}
@@ -225,25 +231,17 @@
 .summary-label { color:var(--text-secondary);font-size:0.8rem;margin-top:4px; }
 .summary-note { display:flex;align-items:center;color:var(--text-secondary);font-size:0.88rem; }
 
-/* Biometric Card */
+/* Redesigned compact biometric-card styles */
 .biometric-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: border-color 0.2s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.25s ease;
 }
 .biometric-card:hover {
-  border-color: rgba(245,158,11,0.3);
-}
-.biometric-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
-  gap: 12px;
-  flex-wrap: wrap;
+  border-color: rgba(245,158,11,0.4);
+  box-shadow: 0 4px 20px rgba(245,158,11,0.05);
 }
 .candidate-id {
   font-family: var(--font-mono);
@@ -255,78 +253,62 @@
   padding: 2px 8px;
   border-radius: 4px;
   display: inline-block;
-  margin-bottom: 4px;
 }
 .candidate-name {
+  font-size: 1.1rem;
   font-weight: 700;
-  font-size: 1rem;
   color: var(--text-primary);
 }
 .candidate-meta {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  margin-top: 2px;
 }
-.candidate-actions {
+.biometric-images-container {
   display: flex;
-  align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
-
-/* Photo Grid */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
-.photo-cell {
+.biometric-photo-thumbnail {
   position: relative;
-  cursor: pointer;
+  width: 70px;
+  height: 90px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
   overflow: hidden;
-  aspect-ratio: 3/4;
+  cursor: pointer;
   background: var(--dark-surface);
-  border-right: 1px solid var(--border-color);
+  transition: all 0.2s ease;
 }
-.photo-cell:last-child {
-  border-right: none;
+.biometric-photo-thumbnail:hover {
+  transform: translateY(-2px);
+  border-color: var(--akhu-gold);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-.photo-cell img {
+.biometric-photo-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  display: block;
 }
-.photo-cell:hover img {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-.photo-missing {
+.photo-missing-thumb {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
+  font-size: 1.4rem;
   color: var(--text-muted);
 }
-.photo-label {
+.biometric-photo-thumbnail .label-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 8px 10px;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
-  font-size: 0.75rem;
+  background: rgba(10, 22, 40, 0.85);
+  color: var(--text-primary);
+  font-size: 0.62rem;
   font-weight: 600;
-  color: #fff;
-  letter-spacing: 0.3px;
-}
-.photo-cell:hover .photo-label {
-  color: var(--akhu-gold);
+  text-align: center;
+  padding: 2px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 /* Lightbox */

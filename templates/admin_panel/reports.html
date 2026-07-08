@@ -50,6 +50,63 @@
           </div>
         </div>
       </div>
+
+      <!-- Exam Attendance Report -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon blue"><i class="bi bi-clipboard-check-fill"></i></div>
+          <h5 class="report-title">{% trans "Exam Attendance" %}</h5>
+          <p class="report-desc">{% trans "Full attendance records and verification status on exam day" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'attendance' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'attendance' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'attendance' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pre-Registered Candidates Report -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon success"><i class="bi bi-person-lines-fill"></i></div>
+          <h5 class="report-title">{% trans "Pre-Registered Candidates" %}</h5>
+          <p class="report-desc">{% trans "All candidates allowed to complete Face ID verification" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'pre_registered' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'pre_registered' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'pre_registered' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Log History -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon danger"><i class="bi bi-shield-lock-fill"></i></div>
+          <h5 class="report-title">{% trans "System Audit History" %}</h5>
+          <p class="report-desc">{% trans "Activity trail of administrator actions and system operations" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'audit_logs' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'audit_logs' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'audit_logs' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Stats Summary -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon gold"><i class="bi bi-bar-chart-line-fill"></i></div>
+          <h5 class="report-title">{% trans "Daily Verification Stats" %}</h5>
+          <p class="report-desc">{% trans "Summary of verification attempts and outcomes by date" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'daily_stats' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'daily_stats' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'daily_stats' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

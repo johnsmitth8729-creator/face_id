@@ -27,23 +27,15 @@
     <!-- Search & Filter Controls -->
     <div class="akhu-card mb-4 py-3">
       <form method="get" class="row g-2 align-items-center">
-        <div class="col-md-5">
+        <div class="col-md-8">
           <div class="search-input-wrapper">
             <i class="bi bi-search search-icon"></i>
-            <input type="text" name="q" value="{{ query }}" class="form-control ps-5" placeholder="{% trans 'Search by passport, name, email...' %}">
+            <input type="text" name="q" value="{{ query }}" class="form-control ps-5" placeholder="{% trans 'Search by passport, name, applicant ID, program, region...' %}">
           </div>
-        </div>
-        <div class="col-md-3">
-          <select name="status" class="form-control">
-            <option value="">-- {% trans "Filter Verification Status" %} --</option>
-            {% for code, label in status_choices %}
-              <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
         </div>
         <div class="col-md-2">
           <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
-            <i class="bi bi-funnel-fill me-1"></i>{% trans "Filter" %}
+            <i class="bi bi-search me-1"></i>{% trans "Search" %}
           </button>
         </div>
         <div class="col-md-2">
@@ -74,10 +66,20 @@
       <!-- Tab 1: Completed / Verified Applicants -->
       <div class="tab-pane fade show active" id="completed-content" role="tabpanel">
         <div class="akhu-card">
+          <!-- Bulk Action Bar -->
+          <div class="d-flex align-items-center justify-content-between mb-3 bg-dark bg-opacity-25 p-2 rounded border border-secondary border-opacity-25">
+            <div>
+              <span class="text-secondary small"><span id="selectedCompletedCount" class="fw-bold text-gold">0</span> {% trans "items selected" %}</span>
+            </div>
+            <button type="button" id="bulkDeleteCompletedBtn" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" disabled style="background-color: #dc3545; border-color: #dc3545;">
+              <i class="bi bi-trash3-fill"></i> {% trans "Delete Selected" %}
+            </button>
+          </div>
           <div class="table-responsive">
             <table class="akhu-table">
               <thead>
                 <tr>
+                  <th class="text-center" style="width: 40px;"><input type="checkbox" id="selectAllCompleted" class="form-check-input"></th>
                   <th>{% trans "Applicant ID" %}</th>
                   <th>{% trans "Passport" %}</th>
                   <th>{% trans "Full Name" %}</th>
@@ -92,6 +94,9 @@
                   {% with session=applicant.user.verification_sessions.first %}
                   {% with fp=session.face_profile %}
                   <tr>
+                    <td class="text-center">
+                      <input type="checkbox" name="selected_completed" value="{{ applicant.id }}" data-name="{{ applicant.full_name }}" class="form-check-input completed-checkbox">
+                    </td>
                     <td>
                       <span class="badge-admission-id">{{ applicant.applicant_id|default:"—" }}</span>
                     </td>
@@ -177,7 +182,7 @@
                   {% endwith %}
                 {% empty %}
                   <tr>
-                    <td colspan="7" class="text-center py-5 text-secondary">
+                    <td colspan="8" class="text-center py-5 text-secondary">
                       <i class="bi bi-people mb-2" style="font-size: 2rem;"></i>
                       <p class="mb-0">{% trans "No completed verifications found." %}</p>
                     </td>
@@ -212,10 +217,20 @@
       <!-- Tab 2: Allowed Candidates (Pre-Registered) -->
       <div class="tab-pane fade" id="allowed-content" role="tabpanel">
         <div class="akhu-card">
+          <!-- Bulk Action Bar -->
+          <div class="d-flex align-items-center justify-content-between mb-3 bg-dark bg-opacity-25 p-2 rounded border border-secondary border-opacity-25">
+            <div>
+              <span class="text-secondary small"><span id="selectedAllowedCount" class="fw-bold text-gold">0</span> {% trans "items selected" %}</span>
+            </div>
+            <button type="button" id="bulkDeleteAllowedBtn" class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1" disabled style="background-color: #dc3545; border-color: #dc3545;">
+              <i class="bi bi-trash3-fill"></i> {% trans "Delete Selected" %}
+            </button>
+          </div>
           <div class="table-responsive">
             <table class="akhu-table">
               <thead>
                 <tr>
+                  <th class="text-center" style="width: 40px;"><input type="checkbox" id="selectAllAllowed" class="form-check-input"></th>
                   <th>{% trans "Applicant ID" %}</th>
                   <th>{% trans "Passport" %}</th>
                   <th>{% trans "Full Name" %}</th>
@@ -228,6 +243,9 @@
               <tbody>
                 {% for pre in pre_registered %}
                   <tr>
+                    <td class="text-center">
+                      <input type="checkbox" name="selected_allowed" value="{{ pre.id }}" data-name="{{ pre.surname }} {{ pre.given_name }}" class="form-check-input allowed-checkbox">
+                    </td>
                     <td><span class="badge-admission-id">{{ pre.applicant_id|default:"—" }}</span></td>
                     <td><strong>{{ pre.passport_number }}</strong></td>
                     <td>{{ pre.surname }} {{ pre.given_name }} {% if pre.middle_name %}{{ pre.middle_name }}{% endif %}</td>
@@ -248,7 +266,7 @@
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="7" class="text-center py-5 text-secondary">
+                    <td colspan="8" class="text-center py-5 text-secondary">
                       <i class="bi bi-cloud-upload mb-2" style="font-size: 2rem;"></i>
                       <p class="mb-0">{% trans "No allowed candidates list uploaded yet." %}</p>
                     </td>
@@ -288,6 +306,7 @@
 .page-title { font-size:1.6rem; font-weight:800; margin-bottom:4px; }
 .page-sub { color:var(--text-secondary); font-size:0.9rem; margin:0; }
 .search-input-wrapper { position:relative; }
+.search-input-wrapper input { padding-left: 42px !important; }
 .search-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
 .badge-admission-id { background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:var(--akhu-gold); border-radius:var(--radius-sm); padding:4px 8px; font-size:0.8rem; font-family:monospace; }
 .tab-btn { background:transparent !important; border:none !important; color:var(--text-secondary) !important; padding:10px 20px !important; font-weight:600; border-radius:var(--radius-md) !important; margin-right:8px; font-size:0.9rem; }
@@ -324,6 +343,95 @@ document.addEventListener('DOMContentLoaded', function () {
       window.location.hash = e.target.getAttribute('data-bs-target');
     });
   });
+
+  // Reusable bulk checkbox logic function
+  function setupBulkActions(selectAllId, checkboxClass, countId, btnId, actionName) {
+    const selectAllCheckbox = document.getElementById(selectAllId);
+    if (!selectAllCheckbox) return;
+
+    function getCheckboxes() {
+      return document.querySelectorAll('.' + checkboxClass);
+    }
+
+    function updateState() {
+      const checkboxes = getCheckboxes();
+      const checked = Array.from(checkboxes).filter(cb => cb.checked);
+      
+      const countEl = document.getElementById(countId);
+      if (countEl) countEl.textContent = checked.length;
+      
+      const btnEl = document.getElementById(btnId);
+      if (btnEl) {
+        btnEl.disabled = checked.length === 0;
+      }
+      
+      selectAllCheckbox.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+      selectAllCheckbox.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+
+    selectAllCheckbox.addEventListener('change', function () {
+      getCheckboxes().forEach(cb => {
+        cb.checked = selectAllCheckbox.checked;
+      });
+      updateState();
+    });
+
+    document.addEventListener('change', function (e) {
+      if (e.target.classList.contains(checkboxClass)) {
+        updateState();
+      }
+    });
+
+    const actionBtn = document.getElementById(btnId);
+    if (actionBtn) {
+      actionBtn.addEventListener('click', function () {
+        const checkboxes = getCheckboxes();
+        const checked = Array.from(checkboxes).filter(cb => cb.checked);
+        if (checked.length === 0) return;
+
+        const selectedItems = checked.map(cb => ({
+          id: cb.value,
+          name: cb.getAttribute('data-name')
+        }));
+
+        // Display JSON text message before deletion as requested
+        const payload = {
+          action: actionName,
+          total_selected: selectedItems.length,
+          timestamp: new Date().toISOString(),
+          target_items: selectedItems
+        };
+
+        const jsonPre = document.getElementById('bulkDeleteJsonContent');
+        if (jsonPre) {
+          jsonPre.textContent = JSON.stringify(payload, null, 2);
+        }
+
+        const actionInput = document.getElementById('bulkDeleteActionInput');
+        if (actionInput) {
+          actionInput.value = actionName;
+        }
+
+        const container = document.getElementById('bulkDeleteIdsContainer');
+        if (container) {
+          container.innerHTML = '';
+          selectedItems.forEach(item => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_ids';
+            input.value = item.id;
+            container.appendChild(input);
+          });
+        }
+
+        const confirmModal = new bootstrap.Modal(document.getElementById('bulkDeleteConfirmModal'));
+        confirmModal.show();
+      });
+    }
+  }
+
+  setupBulkActions('selectAllCompleted', 'completed-checkbox', 'selectedCompletedCount', 'bulkDeleteCompletedBtn', 'bulk_delete');
+  setupBulkActions('selectAllAllowed', 'allowed-checkbox', 'selectedAllowedCount', 'bulkDeleteAllowedBtn', 'bulk_delete_pre');
 });
 </script>
 {% endblock %}
@@ -662,6 +770,34 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>{% trans "Confirm Bulk Deletion" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-3">
+          {% trans "You are about to delete multiple records. Please review the JSON summary of target items below before confirming this action:" %}
+        </p>
+        <div class="bg-black p-3 rounded mb-3 border border-secondary" style="max-height: 200px; overflow-y: auto;">
+          <pre id="bulkDeleteJsonContent" class="text-info m-0" style="font-family: monospace; font-size: 0.82rem; white-space: pre-wrap; word-wrap: break-word;"></pre>
+        </div>
+        <form method="post" id="bulkDeleteForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" id="bulkDeleteActionInput" value="">
+          <div id="bulkDeleteIdsContainer"></div>
+          <button type="submit" class="btn btn-danger w-100 justify-content-center" style="background-color: #dc3545; border-color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="bi bi-trash3-fill"></i>{% trans "Confirm & Delete Permanent" %}
+          </button>
+        </form>
       </div>
     </div>
   </div>
