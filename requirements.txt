@@ -1,12 +1,12 @@
 # ============================================================
 # AKHU Face Identity Verification System (AFIVS)
-# Python 3.14 Compatible Requirements
+# Production Requirements (Ubuntu 22.04 / Python 3.10)
 # ============================================================
 
 # ---------------- Core Django ----------------
 Django>=5.2,<5.3
-djangorestframework>=3.16.0
-django-cors-headers>=4.7.0
+djangorestframework>=3.17.1
+django-cors-headers>=4.9.0
 django-environ>=0.12.0
 django-extensions>=4.1
 django-crispy-forms>=2.4
@@ -17,28 +17,26 @@ psycopg2-binary>=2.9.10
 dj-database-url>=3.0.1
 
 # ---------------- Authentication ----------------
-django-allauth>=65.11.2
+django-allauth>=65.18.0
 PyJWT>=2.10.1
 cryptography>=45.0.7
 argon2-cffi>=25.1.0
 
-# ---------------- Cache ----------------
+# ---------------- Cache / Background ----------------
 redis>=6.4.0
 django-redis>=6.0.0
 celery>=5.5.3
 
-# ---------------- AI ----------------
-numpy>=2.3.0
+# ---------------- AI / Face Recognition ----------------
+numpy>=2.2.6,<2.3
 opencv-python>=4.12.0.88
 Pillow>=11.3.0
 onnxruntime>=1.22.1
 scikit-learn>=1.7.1
 scipy>=1.16.1
-
-# Optional
 insightface>=0.7.3
 
-# ---------------- QR ----------------
+# ---------------- QR Code ----------------
 qrcode[pil]>=8.2
 
 # ---------------- Reports ----------------
@@ -59,9 +57,11 @@ boto3>=1.40.0
 gunicorn>=23.0.0
 whitenoise>=6.11.0
 
-# ---------------- Utilities ----------------
+# ---------------- Environment ----------------
 python-decouple>=3.8
 python-dotenv>=1.1.1
+
+# ---------------- Utilities ----------------
 Faker>=37.6.0
 shortuuid>=1.0.13
 
