@@ -9,6 +9,10 @@ import os
 DEBUG = False
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=["https://id.akhu.uz"]
+)
 
 # PostgreSQL
 DATABASES = {
@@ -37,6 +41,7 @@ SECURE_HSTS_SECONDS = 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Sentry
 SENTRY_DSN = env('SENTRY_DSN', default='')
