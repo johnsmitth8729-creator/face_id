@@ -1,13 +1,14 @@
 """
 AKHU AFIVS — Production Settings
-PostgreSQL, Redis, HTTPS, Gunicorn
+PostgreSQL, Local Cache, Logging, HTTPS
 """
 from .base import *
 import dj_database_url
+import os
 
 DEBUG = False
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['faceid.akhu.uz', 'verification.akhu.uz'])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 # PostgreSQL
 DATABASES = {
@@ -18,26 +19,21 @@ DATABASES = {
     )
 }
 
-# Redis Cache
+# Local Cache (Redis disabled temporarily)
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://redis:6379/0'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
-# Sessions in Redis
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Sessions in Database
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-# Security
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
+# Security (Temporary disabled HTTPS flags until SSL works)
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -54,31 +50,34 @@ if SENTRY_DSN:
         send_default_pii=False,
     )
 
-# Logging
+# Logging Setup
+LOG_DIR = "/var/log/akhu"
+os.makedirs(LOG_DIR, exist_ok=True)
+
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/akhu/django.log',
-            'maxBytes': 1024 * 1024 * 50,  # 50 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOG_DIR, "django.log"),
+            "maxBytes": 50 * 1024 * 1024,
+            "backupCount": 5,
+            "formatter": "verbose",
         },
     },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
     },
 }
