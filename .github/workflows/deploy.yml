@@ -1,0 +1,39 @@
+name: AKHU FaceID Auto Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Ubuntu Server
+        run: |
+          cd /home/boss/face_id
+
+          echo "Pull latest source..."
+          git fetch origin
+          git reset --hard origin/main
+
+          echo "Activate virtual environment..."
+          source venv/bin/activate
+
+          echo "Install dependencies..."
+          pip install -r requirements.txt
+
+          echo "Run migrations..."
+          python manage.py migrate --noinput
+
+          echo "Collect static..."
+          python manage.py collectstatic --noinput
+
+          echo "Restart Gunicorn..."
+          sudo systemctl restart faceid
+
+          echo "Deployment completed successfully!"
