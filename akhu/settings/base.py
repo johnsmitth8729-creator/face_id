@@ -150,18 +150,30 @@ LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
-# STATIC FILES
-STATIC_URL = '/static/'
-STATIC_ROOT = Path(
-    env('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles'))
-)
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# ============================================================
+# Static & Media
+# ============================================================
 
-# MEDIA FILES
-MEDIA_URL = '/media/'
+STATIC_URL = "/static/"
+STATIC_ROOT = Path(
+    env(
+        "STATIC_ROOT",
+        default="/var/www/faceid/static"
+    )
+)
+
+STATICFILES_DIRS = [
+    BASE_DIR / "static"
+]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(
-    env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
+    env(
+        "MEDIA_ROOT",
+        default="/var/www/faceid/media"
+    )
 )
 
 # DEFAULT AUTO FIELD
