@@ -1,0 +1,43 @@
+{% load i18n %}
+<!-- Step Progress Bar -->
+<div class="step-progress-wrapper mb-5">
+  <div class="step-progress">
+    <!-- Step 1: Info -->
+    <div class="step-item {% if current_step == 1 %}active{% elif current_step > 1 %}completed{% endif %}">
+      <div class="step-circle">
+        {% if current_step > 1 %}<i class="bi bi-check-lg"></i>{% else %}1{% endif %}
+      </div>
+      <span class="step-label">{% trans "Info" %}</span>
+    </div>
+
+    <div class="step-connector {% if current_step >= 2 %}completed{% endif %}"></div>
+
+    <!-- Step 2: Face Capture -->
+    <div class="step-item {% if current_step == 2 %}active{% elif current_step > 2 %}completed{% endif %}">
+      <div class="step-circle">
+        {% if current_step > 2 %}<i class="bi bi-check-lg"></i>{% else %}2{% endif %}
+      </div>
+      <span class="step-label">{% trans "Face" %}</span>
+    </div>
+
+    <div class="step-connector {% if current_step >= 3 %}completed{% endif %}"></div>
+
+    <!-- Step 3: Liveness -->
+    <div class="step-item {% if current_step == 3 %}active{% elif current_step > 3 %}completed{% endif %}">
+      <div class="step-circle">
+        {% if current_step > 3 %}<i class="bi bi-check-lg"></i>{% else %}3{% endif %}
+      </div>
+      <span class="step-label">{% trans "Liveness" %}</span>
+    </div>
+
+    <div class="step-connector {% if current_step >= 4 %}completed{% endif %}"></div>
+
+    <!-- Step 4: Result -->
+    <div class="step-item {% if current_step == 4 %}active{% elif current_step > 4 %}completed{% endif %}">
+      <div class="step-circle">
+        {% if current_step > 4 %}<i class="bi bi-check-lg"></i>{% else %}4{% endif %}
+      </div>
+      <span class="step-label">{% trans "Result" %}</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,193 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  {% include "admin_panel/includes/sidebar.html" with active="attendance" %}
+
+  <div class="admin-content">
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Exam Attendance" %}</h2>
+        <p class="page-sub">{% trans "Track allowed candidates, completed profiles, verification status, and exam-day attendance in one place." %}</p>
+      </div>
+      <div class="header-meta d-flex gap-2">
+        <a href="{% url 'admin_panel:attendance-export-excel' %}?q={{ query }}&status={{ status_filter }}&source={{ source_filter }}" class="btn btn-gold px-4 fw-bold">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>{% trans "Export Excel" %}
+        </a>
+      </div>
+    </div>
+
+    <div class="attendance-stats mb-4">
+      <div class="stat-tile">
+        <span class="stat-icon total"><i class="bi bi-people-fill"></i></span>
+        <div><strong>{{ stats.total }}</strong><span>{% trans "Total" %}</span></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon attended"><i class="bi bi-check2-circle"></i></span>
+        <div><strong>{{ stats.attended }}</strong><span>{% trans "Attended" %}</span></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon absent"><i class="bi bi-person-dash"></i></span>
+        <div><strong>{{ stats.verified_absent }}</strong><span>{% trans "Verified, Not Attended" %}</span></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon pending"><i class="bi bi-hourglass-split"></i></span>
+        <div><strong>{{ stats.registered }}</strong><span>{% trans "Registered, Not Verified" %}</span></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon allowed"><i class="bi bi-card-list"></i></span>
+        <div><strong>{{ stats.not_started }}</strong><span>{% trans "Allowed, Not Started" %}</span></div>
+      </div>
+    </div>
+
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>{% trans "Smart Search & Filters" %}</h5>
+      <form method="get" class="row g-3">
+        <div class="col-lg-6">
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" value="{{ query }}" class="form-control border-secondary"
+              placeholder="{% trans 'Search by Applicant ID, passport, name, program, or region...' %}" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-lg-2">
+          <select name="status" class="form-control border-secondary">
+            <option value="">{% trans "All statuses" %}</option>
+            {% for code, label in status_choices %}
+              <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-2">
+          <select name="source" class="form-control border-secondary">
+            <option value="">{% trans "All sources" %}</option>
+            {% for code, label in source_choices %}
+              <option value="{{ code }}" {% if source_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-2 d-grid">
+          <button type="submit" class="btn btn-akhu-primary">{% trans "Filter" %}</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="akhu-card">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h5 class="card-title-custom mb-0"><i class="bi bi-clipboard-check-fill me-2 text-gold"></i>{% trans "Attendance Overview" %}</h5>
+        <span class="text-secondary small">{% trans "Showing page" %} {{ attendance_rows.number }} {% trans "of" %} {{ attendance_rows.paginator.num_pages }}</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="akhu-table align-middle attendance-table">
+          <thead>
+            <tr>
+              <th>{% trans "Applicant ID" %}</th>
+              <th>{% trans "Full Name" %}</th>
+              <th>{% trans "Passport" %}</th>
+              <th>{% trans "Program / Region" %}</th>
+              <th>{% trans "Source" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Verification Date" %}</th>
+              <th>{% trans "Attendance Time" %}</th>
+              <th>{% trans "Supervisor" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in attendance_rows %}
+              <tr>
+                <td><span class="badge-id">{{ row.applicant_id|default:"—" }}</span></td>
+                <td><strong>{{ row.full_name|default:"—" }}</strong></td>
+                <td>{{ row.passport_number|default:"—" }}</td>
+                <td>
+                  <div>{{ row.program|default:"—" }}</div>
+                  <small class="text-secondary">{{ row.region|default:"—" }}</small>
+                </td>
+                <td>
+                  {% if row.source == 'allowed' %}
+                    <span class="source-badge allowed">{% trans "Allowed Candidate" %}</span>
+                  {% else %}
+                    <span class="source-badge profile">{% trans "Submitted Profile" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.status == 'attended' %}
+                    <span class="attendance-badge attended">{% trans "Attended" %}</span>
+                  {% elif row.status == 'verified_absent' %}
+                    <span class="attendance-badge absent">{% trans "Verified, Not Attended" %}</span>
+                  {% elif row.status == 'registered' %}
+                    <span class="attendance-badge pending">{% trans "Registered, Not Verified" %}</span>
+                  {% else %}
+                    <span class="attendance-badge allowed">{% trans "Allowed, Not Started" %}</span>
+                  {% endif %}
+                </td>
+                <td><span class="text-secondary small">{{ row.verification_date|date:"Y-m-d H:i"|default:"—" }}</span></td>
+                <td><span class="text-secondary small">{{ row.attendance_at|date:"Y-m-d H:i"|default:"—" }}</span></td>
+                <td>{{ row.supervisor|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-5 text-secondary">
+                  <i class="bi bi-search" style="font-size:2rem;"></i>
+                  <p class="mb-0 mt-2">{% trans "No attendance records matched your filters." %}</p>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if attendance_rows.has_other_pages %}
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <span class="text-secondary small">{% trans "Showing page" %} {{ attendance_rows.number }} {% trans "of" %} {{ attendance_rows.paginator.num_pages }}</span>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            {% if attendance_rows.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page={{ attendance_rows.previous_page_number }}&q={{ query }}&status={{ status_filter }}&source={{ source_filter }}">{% trans "Prev" %}</a></li>
+            {% endif %}
+            {% for num in attendance_rows.paginator.page_range %}
+              <li class="page-item {% if attendance_rows.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}&q={{ query }}&status={{ status_filter }}&source={{ source_filter }}">{{ num }}</a></li>
+            {% endfor %}
+            {% if attendance_rows.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ attendance_rows.next_page_number }}&q={{ query }}&status={{ status_filter }}&source={{ source_filter }}">{% trans "Next" %}</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.attendance-stats { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px; }
+.stat-tile { background:var(--card-bg);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;gap:12px; }
+.stat-tile strong { display:block;font-size:1.35rem;line-height:1;font-weight:900; }
+.stat-tile span:not(.stat-icon) { color:var(--text-secondary);font-size:0.78rem; }
+.stat-icon { width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem; }
+.stat-icon.total { background:rgba(59,130,246,0.12);color:#60A5FA; }
+.stat-icon.attended { background:rgba(16,185,129,0.12);color:var(--akhu-success); }
+.stat-icon.absent { background:rgba(245,158,11,0.12);color:var(--akhu-gold); }
+.stat-icon.pending { background:rgba(99,102,241,0.12);color:#818CF8; }
+.stat-icon.allowed { background:rgba(148,163,184,0.12);color:#CBD5E1; }
+.badge-id { font-family:var(--font-mono);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:var(--akhu-gold);padding:4px 8px;border-radius:var(--radius-sm);font-size:0.8rem; }
+.attendance-badge,.source-badge { display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:0.74rem;font-weight:800;white-space:nowrap; }
+.attendance-badge.attended { background:rgba(16,185,129,0.12);color:var(--akhu-success); }
+.attendance-badge.absent { background:rgba(245,158,11,0.12);color:var(--akhu-gold); }
+.attendance-badge.pending { background:rgba(99,102,241,0.12);color:#A5B4FC; }
+.attendance-badge.allowed,.source-badge.allowed { background:rgba(148,163,184,0.12);color:#CBD5E1; }
+.source-badge.profile { background:rgba(59,130,246,0.12);color:#93C5FD; }
+.btn-gold { background-color:var(--gold-primary);border-color:var(--gold-primary);color:var(--dark-bg);font-weight:700; }
+.btn-gold:hover { background-color:var(--gold-hover);border-color:var(--gold-hover);color:var(--dark-bg); }
+.pagination .page-link { background:var(--bg-secondary);border-color:var(--border-color);color:var(--text-secondary); }
+.pagination .page-item.active .page-link { background:var(--akhu-blue-light);border-color:var(--akhu-blue-light);color:#fff; }
+@media (max-width: 1200px) { .attendance-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width: 640px) { .admin-page-header { flex-direction:column;gap:12px; } .attendance-stats { grid-template-columns:1fr; } .header-meta,.header-meta .btn { width:100%; } }
+</style>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}supervisor-portal{% endblock %}
+
+{% block content %}
+<div class="login-layout">
+  <div class="login-container">
+    <!-- Logo -->
+    <div class="login-brand">
+      <div class="brand-icon large">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+      <h1 class="login-title">{% trans "Supervisor Portal" %}</h1>
+      <p class="login-subtitle">{{ SITE_NAME }}</p>
+      <div class="access-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {% trans "Restricted Access — Authorized Personnel Only" %}
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-card">
+      <form method="post" id="supervisorLoginForm">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label">{% trans "Username" %}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-person-fill"></i>
+            <input type="text" name="username" class="form-control" id="usernameInput"
+              placeholder="{% trans 'Enter your username' %}" required autocomplete="username">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">{% trans "Password" %}</label>
+          <div class="input-with-icon">
+            <i class="bi bi-lock-fill"></i>
+            <input type="password" name="password" class="form-control" id="passwordInput"
+              placeholder="{% trans 'Enter your password' %}" required autocomplete="current-password">
+            <button type="button" class="toggle-password" onclick="togglePassword('passwordInput', this)">
+              <i class="bi bi-eye-slash"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-akhu-primary w-100 justify-content-center" id="loginBtn">
+          <i class="bi bi-box-arrow-in-right me-2"></i>
+          {% trans "Sign In" %}
+        </button>
+      </form>
+
+      <!-- Info -->
+      <div class="login-info mt-4">
+        <i class="bi bi-info-circle me-2"></i>
+        {% trans "Contact administrator if you don't have an account." %}
+      </div>
+    </div>
+
+    <div class="login-back-link">
+      <a href="{% url 'verification:home' %}">
+        <i class="bi bi-arrow-left me-1"></i>{% trans "Return to Main Page" %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+.login-layout {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.login-container { width: 100%; max-width: 440px; }
+.login-brand { text-align: center; margin-bottom: 32px; }
+.brand-icon.large { width:70px;height:70px;font-size:1.8rem;margin:0 auto 16px;background:var(--gradient-blue);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:white;box-shadow:var(--shadow-glow-blue); }
+.login-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.login-subtitle { color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px; }
+.access-warning { display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:var(--akhu-gold);padding:6px 14px;border-radius:var(--radius-full);font-size:0.78rem;font-weight:600; }
+.login-card { background:var(--gradient-card);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:32px; }
+.input-with-icon { position:relative; }
+.input-with-icon > i:first-child { position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.95rem;pointer-events:none;z-index:2; }
+.input-with-icon .form-control { padding-left:44px !important; }
+.toggle-password { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:0.95rem;z-index:2; }
+.toggle-password:hover { color:var(--text-primary); }
+.login-info { text-align:center;font-size:0.82rem;color:var(--text-muted); }
+.login-back-link { text-align:center;margin-top:20px; }
+.login-back-link a { color:var(--text-secondary);text-decoration:none;font-size:0.88rem; }
+.login-back-link a:hover { color:var(--text-primary); }
+</style>
+
+<script>
+function togglePassword(id, btn) {
+  const input = document.getElementById(id);
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye-slash';
+  }
+}
+</script>
+{% endblock %}

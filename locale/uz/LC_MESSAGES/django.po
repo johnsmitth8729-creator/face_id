@@ -1,0 +1,1674 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: AKHU AFIVS 1.0\n"
+"Language: uz\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "-- Select Exam Region --"
+msgstr "-- Imtihon hududini tanlang --"
+
+msgid "AES-256 Encryption"
+msgstr "AES-256 shifrlash"
+
+msgid "AI Configuration"
+msgstr "AI konfiguratsiyasi"
+
+msgid "AI Engine"
+msgstr "AI mexanizmi"
+
+msgid "AI Engine Configuration"
+msgstr "AI mexanizmi konfiguratsiyasi"
+
+msgid "AI Verification"
+msgstr "AI tekshiruvi"
+
+msgid "AI-Powered Biometric Security"
+msgstr "AI asosidagi biometrik xavfsizlik"
+
+msgid "AKHU Face Identity Verification System"
+msgstr "AKHU Yuz Identifikatsiya Tizimi"
+
+msgid ""
+"AKHU Face Identity Verification System — Secure biometric identity "
+"verification for admission applicants"
+msgstr ""
+"AKHU Yuz Identifikatsiya Tizimi — Qabul abituriyentlari uchun xavfsiz "
+"biometrik tekshiruv"
+
+msgid "AKHU Face Verification System"
+msgstr "AKHU Yuz Tekshiruv Tizimi"
+
+msgid "Access Tokens"
+msgstr "Kirish tokenlari"
+
+msgid "Accuracy"
+msgstr "Aniqlik"
+
+msgid "Action"
+msgstr "Harakat"
+
+msgid "Action Details"
+msgstr "Harakat tafsilotlari"
+
+msgid "Actions"
+msgstr "Harakatlar"
+
+msgid "Active"
+msgstr "Faol"
+
+msgid "Active QR Codes"
+msgstr "Faol QR kodlar"
+
+msgid "Active Supervisors"
+msgstr "Faol nazoratchilar"
+
+msgid "Add Allowed Candidate"
+msgstr "Ruxsat etilgan abituriyent qoʻshish"
+
+msgid "Add Candidate"
+msgstr "Abituriyent qoʻshish"
+
+msgid "Add Supervisor"
+msgstr "Nazoratchi qoʻshish"
+
+msgid "Admin Dashboard"
+msgstr "Admin boshqaruv paneli"
+
+msgid "Admin Login"
+msgstr "Admin kirishi"
+
+msgid "Admin Panel"
+msgstr "Admin paneli"
+
+msgid "Admin password"
+msgstr "Admin paroli"
+
+msgid "Admin username"
+msgstr "Admin foydalanuvchi nomi"
+
+msgid "Administration"
+msgstr "Markaziy boshqaruv"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+msgid "Administrator Access Only"
+msgstr "Faqat administrator uchun"
+
+msgid "Admission ID"
+msgstr "Qabul ID raqami"
+
+msgid "Admission ID, Passport Number, or Name..."
+msgstr "Qabul ID, pasport raqami yoki ism..."
+
+msgid "All Categories"
+msgstr "Barcha kategoriyalar"
+
+msgid "All applicants with successful verification"
+msgstr "Muvaffaqiyatli tekshiruvdan oʻtgan barcha abituriyentlar"
+
+msgid "All challenges passed. Proceeding to face matching..."
+msgstr ""
+"Barcha topshiriqlar bajarildi. Yuz solishtirish bosqichiga oʻtilmoqda..."
+
+msgid "All edges of the document must be visible"
+msgstr "Hujjatning barcha chetlari ko`rinishi kerak"
+
+msgid "All exam-day verification logs by supervisor"
+msgstr "Nazoratchi tomonidan imtihon kuni barcha tekshiruv jurnallari"
+
+msgid "All fields are required"
+msgstr "Barcha maydonlar toʻldirish shart"
+
+msgid "All rejected verification attempts"
+msgstr "Barcha rad etilgan tekshiruv urinishlari"
+
+msgid "All rights reserved."
+msgstr "Barcha huquqlar himoyalangan."
+
+msgid ""
+"Allow camera access and take a live selfie — ensure your face is well lit "
+"and centered"
+msgstr ""
+"Kamera ruxsatini bering va jonli selfi oling — yuzingiz yaxshi yoritilgan va"
+" markazda bo`lsin"
+
+msgid "Allowed Candidates (Pending)"
+msgstr "Ruxsat etilgan abituriyentlar (kutilmoqda)"
+
+msgid "Analyzing face..."
+msgstr "Yuz tahlil qilinmoqda..."
+
+msgid "Anti-Spoofing Detection"
+msgstr "Soxtalikni aniqlash"
+
+msgid "Applicant"
+msgstr "Abituriyent"
+
+msgid "Applicant ID"
+msgstr "Abituriyent ID"
+
+msgid "Applicant ID (Optional)"
+msgstr "Abituriyent ID (ixtiyoriy)"
+
+msgid "Applicant Management"
+msgstr "Abituriyentlarni boshqarish"
+
+msgid "Applicant Profile"
+msgstr "Abituriyent profili"
+
+msgid "Applicant Profiles"
+msgstr "Abituriyent profillari"
+
+msgid "Applicant not found"
+msgstr "Abituriyent topilmadi"
+
+msgid "Applicants"
+msgstr "Abituriyentlar"
+
+msgid "Approve & Generate ID"
+msgstr "Tasdiqlash va ID yaratish"
+
+msgid "Ask the candidate to face the camera directly."
+msgstr "Abituriyentdan toʻgʻri kameraga qarashni soʻring."
+
+msgid "Audit Log"
+msgstr "Audit jurnali"
+
+msgid "Audit Logs"
+msgstr "Audit jurnallari"
+
+msgid "Authentication"
+msgstr "Autentifikatsiya"
+
+msgid "Back"
+msgstr "Orqaga"
+
+msgid "Begin Verification"
+msgstr "Tekshiruvni boshlash"
+
+msgid "Biometrics"
+msgstr "Biometrika"
+
+msgid "Blink"
+msgstr "Koʻz qisish"
+
+msgid "Browse File"
+msgstr "Faylni koʻrib chiqish"
+
+msgid "Camera Starting..."
+msgstr "Kamera ishga tushirilmoqda..."
+
+msgid "Candidate"
+msgstr "Abituriyent"
+
+msgid "Candidate Found"
+msgstr "Abituriyent topildi"
+
+msgid "Candidate with this passport number is already registered"
+msgstr "Bu pasport raqamiga ega abituriyent allaqachon roʻyxatdan oʻtgan"
+
+msgid "Capture & Verify"
+msgstr "Suratga olish va tekshirish"
+
+msgid "Capture & Verify Face"
+msgstr "Yuzni suratga olish va tekshirish"
+
+msgid "Capture Photo"
+msgstr "Suratga olish"
+
+msgid "Card / Passport Number"
+msgstr "Karta / Pasport raqami"
+
+msgid "Category"
+msgstr "Kategoriya"
+
+msgid "Challenge Failed"
+msgstr "Topshiriq bajarilmadi"
+
+msgid "Challenge Timeout"
+msgstr "Topshiriq muddati tugadi"
+
+msgid "Choose Excel File"
+msgstr "Excel faylini tanlang"
+
+msgid "Clear Filters"
+msgstr "Filtrlarni tozalash"
+
+msgid "Comparing with registered template..."
+msgstr "Roʻyxatdagi shablon bilan solishtirilmoqda..."
+
+msgid "Complete in just 5 simple steps"
+msgstr "Bor-yo`g`qi 5 oddiy qadamda to`lang"
+
+msgid ""
+"Complete your identity verification using our advanced AI facial recognition"
+" system. Your biometric data is encrypted and securely stored."
+msgstr ""
+"Ilgʻor AI yuz tanish tizimimiz yordamida shaxsingizni tasdiqlashni "
+"yakunlang. Biometrik maʻlumotlaringiz shifrlangan va xavfsiz saqlanadi."
+
+msgid "Completed"
+msgstr "Yakunlandi"
+
+msgid "Completed Verifications"
+msgstr "Yakunlangan tekshiruvlar"
+
+msgid "Compliance Log"
+msgstr "Muvofiqlik jurnali"
+
+msgid "Concurrent Users"
+msgstr "Bir vaqtdagi foydalanuvchilar"
+
+msgid "Configuration"
+msgstr "Konfiguratsiya"
+
+msgid ""
+"Configure QR domains, release permits, and manage regional exam locations "
+"and schedules."
+msgstr ""
+"QR domenlarini sozlang, ruxsatnomalarni chiqaring va mintaqaviy imtihon "
+"joylari va jadvallarini boshqaring."
+
+msgid ""
+"Configure the specific exam center (venue) and the exam date/time for each "
+"of the 14 regions of Uzbekistan."
+msgstr ""
+"O`zbekistonning 14 mintaqasining har biri uchun maxsus imtihon markazi va "
+"imtihon sanasi/vaqtini sozlang."
+
+msgid ""
+"Congratulations! Your face has been successfully matched with your identity "
+"document."
+msgstr ""
+"Tabriklaymiz! Yuzingiz shaxsingizni tasdiqlovchi hujjat bilan muvaffaqiyatli"
+" moslab ko`rildi."
+
+msgid "Continue"
+msgstr "Davom etish"
+
+msgid "Continue to Liveness"
+msgstr "Tiriklik tekshiruviga davom etish"
+
+msgid "Create Supervisor"
+msgstr "Nazoratchi yaratish"
+
+msgid "Create and manage supervisor accounts"
+msgstr "Nazoratchi hisoblarini yaratish va boshqarish"
+
+msgid "Created"
+msgstr "Yaratilgan"
+
+msgid "DOB"
+msgstr "Tugʻilgan sana"
+
+msgid "Daily Verification Activity Report"
+msgstr "Kunlik tekshiruv faoliyati hisoboti"
+
+msgid "Dashboard"
+msgstr "Boshqaruv paneli"
+
+msgid "Data Management"
+msgstr "Maʻlumotlarni boshqarish"
+
+msgid "Date & Time"
+msgstr "Sana va vaqt"
+
+msgid "Date From"
+msgstr "Dan sana"
+
+msgid "Date To"
+msgstr "Gacha sana"
+
+msgid "Date of Birth"
+msgstr "Tugʻilgan sana"
+
+msgid "Describe logic for override decision..."
+msgstr "Qaror mantiqini tasvirlab bering..."
+
+msgid "Description"
+msgstr "Tavsif"
+
+msgid "Details"
+msgstr "Tafsilotlar"
+
+msgid "Document"
+msgstr "Hujjat"
+
+msgid "Document Upload"
+msgstr "Hujjat yuklash"
+
+msgid "Document must be clearly readable"
+msgstr "Hujjat aniq o`qilishi kerak"
+
+msgid "Download"
+msgstr "Yuklab olish"
+
+msgid "Download Confirmation"
+msgstr "Tasdiqlashni yuklab olish"
+
+msgid "Drag & Drop or Click to Upload"
+msgstr "Sudrab olib keling yoki yuklash uchun bosing"
+
+msgid "Email"
+msgstr "Elektron pochta"
+
+msgid "Email Address"
+msgstr "Elektron pochta manzili"
+
+msgid "Embedding Dimensions"
+msgstr "Embedding oʻlchamlari"
+
+msgid "Encrypted"
+msgstr "Shifrlangan"
+
+msgid "Encryption"
+msgstr "Shifrlash"
+
+msgid "Engine Mode"
+msgstr "Mexanizm rejimi"
+
+msgid "English"
+msgstr "Inglizcha"
+
+msgid "Ensure good, even lighting on your face"
+msgstr "Yuzingizga yaxshi, bir xil yorug`lik tushishiga ishonch hosil qiling"
+
+msgid "Enter Token Manually"
+msgstr "Tokenni qoʻlda kiriting"
+
+msgid "Enter given name"
+msgstr "Ismni kiriting"
+
+msgid "Enter specific exam venue address"
+msgstr "Maxsus imtihon joyi manzilini kiriting"
+
+msgid "Enter surname"
+msgstr "Familiyani kiriting"
+
+msgid "Enter your name, date of birth, passport number, and Admission ID"
+msgstr "Ism, tug`ilgan sana, pasport raqami va qabul ID raqamingizni kiriting"
+
+msgid "Enter your password"
+msgstr "Parolingizni kiriting"
+
+msgid "Enter your username"
+msgstr "Foydalanuvchi nomingizni kiriting"
+
+msgid "Enterprise-Grade Security"
+msgstr "Korporativ darajadagi xavfsizlik"
+
+msgid "Error Details"
+msgstr "Xato tafsilotlari"
+
+msgid "Exam Date & Time"
+msgstr "Imtihon sanasi va vaqti"
+
+msgid "Exam Day Verification"
+msgstr "Imtihon kuni tekshiruvi"
+
+msgid "Exam Region"
+msgstr "Imtihon hududi"
+
+msgid "Exam Venue"
+msgstr "Imtihon joyi"
+
+msgid "Exam Venue / Address"
+msgstr "Imtihon joyi / Manzil"
+
+msgid "Exam Venue Config"
+msgstr "Imtihon joyi konfiguratsiyasi"
+
+msgid "Exam Venue Configs"
+msgstr "Imtihon joylari konfiguratsiyalari"
+
+msgid "Examination Attendance Report"
+msgstr "Imtihon davomat hisoboti"
+
+msgid "Examination Day"
+msgstr "Imtihon kuni"
+
+msgid "Excel Format"
+msgstr "Excel formati"
+
+msgid "Excel Format Specification"
+msgstr "Excel format spetsifikatsiyasi"
+
+msgid "Expired"
+msgstr "Muddati tugagan"
+
+msgid "Export system data as PDF, Excel, or CSV"
+msgstr "Tizim ma`lumotlarini PDF, Excel yoki CSV formatida eksport qilish"
+
+msgid "Extra Metadata JSON"
+msgstr "Qo`shimcha metadata JSON"
+
+msgid "Eye Blink Threshold"
+msgstr "Ko`z qisish chegarasi"
+
+msgid "Face"
+msgstr "Yuz"
+
+msgid "Face Capture"
+msgstr "Yuzni suratga olish"
+
+msgid "Face Identity"
+msgstr "Yuz identifikatsiyasi"
+
+msgid "Face Matching"
+msgstr "Yuzlarni solishtirish"
+
+msgid "Face Profile"
+msgstr "Yuz profili"
+
+msgid "Face Profiles"
+msgstr "Yuz profillari"
+
+msgid "Face Recognition Model"
+msgstr "Yuz tanish modeli"
+
+msgid "Face Verification"
+msgstr "Yuz tekshiruvi"
+
+msgid "Face photo must be visible"
+msgstr "Yuz surati ko`rinib turishi kerak"
+
+msgid "Face verification ensures the QR holder is the real candidate."
+msgstr "Yuz tekshiruvi QR ega haqiqiy abituriyent ekanligini taʻminlaydi."
+
+msgid "Failed"
+msgstr "Muvaffaqiyatsiz"
+
+msgid "Failed Verifications"
+msgstr "Muvaffaqiyatsiz tekshiruvlar"
+
+msgid "Failed Verifications Report"
+msgstr "Muvaffaqiyatsiz tekshiruvlar hisoboti"
+
+msgid "Female"
+msgstr "Ayol"
+
+msgid "Field"
+msgstr "Maydon"
+
+msgid "File size exceeds 10 MB limit"
+msgstr "Fayl hajmi 10 MB chegarasidan oshib ketdi"
+
+msgid "Filter"
+msgstr "Filtrlash"
+
+msgid "Filter Verification Status"
+msgstr "Tekshiruv holatini filtrlash"
+
+msgid "First Name"
+msgstr "Ism"
+
+msgid "Full Audit Trail"
+msgstr "To`liq audit izi"
+
+msgid "Full Name"
+msgstr "Toʻliq ism"
+
+msgid "Gender"
+msgstr "Jins"
+
+msgid "Generated"
+msgstr "Yaratilgan"
+
+msgid "Get ready..."
+msgstr "Tayyor boʻling..."
+
+msgid "Given Name"
+msgstr "Ismi"
+
+msgid "Given name, surname, and card/passport number are required"
+msgstr "Ism, familiya va karta/pasport raqami talab qilinadi"
+
+msgid "Home"
+msgstr "Bosh sahifa"
+
+msgid "How It Works"
+msgstr "Qanday ishlaydi"
+
+msgid "How Verification Works"
+msgstr "Tekshiruv qanday ishlaydi"
+
+msgid "IP Address"
+msgstr "IP manzil"
+
+msgid "Identity Confirmed"
+msgstr "Shaxs tasdiqlandi"
+
+msgid "Identity Mismatch"
+msgstr "Shaxs mos kelmadi"
+
+msgid "Identity Verification Review"
+msgstr "Shaxsni tekshiruv ko`rib chiqish"
+
+msgid "Identity Verified!"
+msgstr "Shaxs tasdiqlandi!"
+
+msgid "Import Candidate List"
+msgstr "Abituriyentlar ro`yxatini import qilish"
+
+msgid "Import Candidates"
+msgstr "Abituriyentlarni import qilish"
+
+msgid "In Progress"
+msgstr "Jarayonda"
+
+msgid "Inactive"
+msgstr "Faol emas"
+
+msgid "Info"
+msgstr "Maʻlumot"
+
+msgid "Initial Verification"
+msgstr "Dastlabki tekshiruv"
+
+msgid "Initializing camera..."
+msgstr "Kamera ishga tushirilmoqda..."
+
+msgid "Invalid administrator credentials"
+msgstr "Notoʻgʻri administrator maʻlumotlari"
+
+msgid "Invalid credentials or insufficient permissions"
+msgstr "Notoʻgʻri maʻlumotlar yoki yetarli ruxsat yoʻq"
+
+msgid "Invalid file type. Allowed: JPG, JPEG, PNG, PDF"
+msgstr "Invalid file type. Allowed: JPG, JPEG, PNG, PDF"
+
+msgid "Keep your face centered in the oval"
+msgstr "Yuzingizni oval ichida markazda ushlab turing"
+
+msgid "Keywords"
+msgstr "Kalit soʻzlar"
+
+msgid "Last Activity"
+msgstr "Oxirgi faoliyat"
+
+msgid "Last Name"
+msgstr "Familiya"
+
+msgid "Live"
+msgstr "Jonli"
+
+msgid "Live Camera"
+msgstr "Jonli kamera"
+
+msgid "Live Verify"
+msgstr "Jonli tekshiruv"
+
+msgid "Liveness"
+msgstr "Tiriklik"
+
+msgid "Liveness Challenge"
+msgstr "Tiriklik topshirig`i"
+
+msgid "Liveness Challenges"
+msgstr "Tiriklik topshiriqlari"
+
+msgid "Liveness Check"
+msgstr "Tiriklik tekshiruvi"
+
+msgid "Liveness Confirmed!"
+msgstr "Tiriklik tasdiqlandi!"
+
+msgid "Liveness Detection"
+msgstr "Tiriklikni aniqlash"
+
+msgid "Liveness Detection Parameters"
+msgstr "Tiriklikni aniqlash parametrlari"
+
+msgid "Liveness Passed"
+msgstr "Tiriklik tekshiruvi oʻtildi"
+
+msgid "Liveness Verification Selfies (4 Directions)"
+msgstr "Tiriklik tekshiruvi selfilari (4 yo`nalish)"
+
+msgid ""
+"Liveness utilizes real-time head turns (yaw/pitch tracking) and blink aspect"
+" ratios using MediaPipe Face Mesh algorithms."
+msgstr ""
+"Tiriklik aniqlash MediaPipe Face Mesh algoritmlari yordamida real vaqtda "
+"bosh burilishlarini va ko`z qisish nisbatlarini qo`llanadi."
+
+msgid "Locked"
+msgstr "Qulflangan"
+
+msgid "Login username"
+msgstr "Kirish foydalanuvchi nomi"
+
+msgid "Logout"
+msgstr "Chiqish"
+
+msgid "Look Left"
+msgstr "Chapga qarang"
+
+msgid "Look Right"
+msgstr "Oʻngga qarang"
+
+msgid "Look Up"
+msgstr "Yuqoriga qarang"
+
+msgid "Maintain a neutral expression"
+msgstr "Neytral ifodani saqlang"
+
+msgid "Male"
+msgstr "Erkak"
+
+msgid ""
+"Manage allowed candidate registration lists and track verification outcomes."
+msgstr ""
+"Ruxsat etilgan abituriyentlar ro`yxatlarini boshqaring va tekshiruv "
+"natijalarini kuzating."
+
+msgid "Manual Review Required"
+msgstr "Qoʻlda koʻrib chiqish talab qilinadi"
+
+msgid "Manual Verification Review"
+msgstr "Qoʻlda tekshiruv koʻrib chiqish"
+
+msgid "Manual verification queue is empty. All candidate matches are clean."
+msgstr ""
+"Qo`lda tekshiruv navbati bo`sh. Barcha abituriyent moslashuvi tozadir."
+
+msgid "Match"
+msgstr "Moslik"
+
+msgid "Match Score"
+msgstr "Moslik bali"
+
+msgid ""
+"Matches below the review threshold are rejected. Scores in between trigger "
+"manual verification queue entry."
+msgstr ""
+"Ko`rib chiqish chegarasidan pastdagi mosliklar rad etiladi. Oralig`dagi "
+"ballar qo`lda tekshiruv navbatiga kiritiladi."
+
+msgid "Maximum Retries"
+msgstr "Maksimal urinishlar soni"
+
+msgid "Maximum file size: 10 MB"
+msgstr "Maksimal fayl hajmi: 10 MB"
+
+msgid "Metadata"
+msgstr "Metadata"
+
+msgid "Middle Name"
+msgstr "Otasining ismi"
+
+msgid "Middle Name (Optional)"
+msgstr "Otasining ismi (ixtiyoriy)"
+
+msgid "Model Pack"
+msgstr "Model toʻplami"
+
+msgid "Muvaffaqiyatli tasdiqlandi!"
+msgstr "Muvaffaqiyatli tasdiqlandi!"
+
+msgid "New QR Scan"
+msgstr "Yangi QR skanerlash"
+
+msgid "Next"
+msgstr "Keyingisi"
+
+msgid "No Passport Image Uploaded"
+msgstr "Pasport surati yuklanmagan"
+
+msgid "No QR codes generated yet."
+msgstr "Hali QR kodlar yaratilmagan."
+
+msgid "No Record"
+msgstr "Yozuv yoʻq"
+
+msgid "No allowed candidates list uploaded yet."
+msgstr "Hali ruxsat etilgan abituriyentlar ro`yxati yuklanmagan."
+
+msgid "No applicants found for"
+msgstr "Quyidagi uchun abituriyentlar topilmadi"
+
+msgid "No audit logs found matching current filters."
+msgstr "Joriy filtrlarga mos audit jurnallari topilmadi."
+
+msgid "No blurry or dark images"
+msgstr "Xira yoki qorong`i rasmlar bo`lmasin"
+
+msgid "No completed verifications found."
+msgstr "Yakunlangan tekshiruvlar topilmadi."
+
+msgid "No exam day activity logged yet"
+msgstr "Hali imtihon kuni faoliyati qayd etilmagan"
+
+msgid ""
+"No face template found for this candidate. They may not have completed face "
+"registration."
+msgstr ""
+"Bu abituriyent uchun yuz shabloni topilmadi. Yuz ro`yxatini "
+"to`liqlashtirmagan bo`lishi mumkin."
+
+msgid "No image"
+msgstr "Rasm yo`q"
+
+msgid "No masks or face coverings"
+msgstr "Niqob yoki yuz qoplamasi bo`lmasin"
+
+msgid "No supervisors yet"
+msgstr "Hali nazoratchilar yoʻq"
+
+msgid "No verification logs found for this applicant."
+msgstr "Bu abituriyent uchun tekshiruv jurnallari topilmadi."
+
+msgid "No verifications yet"
+msgstr "Hali tekshiruvlar yo`q"
+
+msgid "Not Started"
+msgstr "Boshlanmagan"
+
+msgid "Notes"
+msgstr "Izohlar"
+
+msgid "Or scan a QR code:"
+msgstr "Yoki QR kodni skaner qiling:"
+
+msgid ""
+"Our AI compares your live face with your passport photo in under 2 seconds"
+msgstr ""
+"Bizning AI yuzingizni pasport suratingiz bilan 2 soniyadan kamroq vaqtda "
+"solishtiradi"
+
+msgid ""
+"Override release date and release permits to all verified candidates "
+"immediately."
+msgstr ""
+"Chiqarish sanasini bekor qiling va barcha tasdiqlangan abituriyentlarga "
+"darhol ruxsatnomalar chiqaring."
+
+msgid "Overview"
+msgstr "Umumiy koʻrinish"
+
+msgid ""
+"Overview of face recognition thresholds, models, and liveness parameters"
+msgstr ""
+"Yuz tanish chegaralari, modellar va tiriklik parametrlariga umumiy ko`rinish"
+
+msgid "Passed"
+msgstr "Oʻtildi"
+
+msgid "Passport"
+msgstr "Pasport"
+
+msgid ""
+"Passport / Card Number not found in the allowed applicant list. Please "
+"contact administrator."
+msgstr ""
+"Pasport / karta raqami ruxsat etilgan abituriyentlar ro`yxatida topilmadi. "
+"Administrator bilan bog`laning."
+
+msgid "Passport / Document Image"
+msgstr "Pasport / Hujjat surati"
+
+msgid "Passport Number"
+msgstr "Pasport raqami"
+
+msgid "Passport or ID Card"
+msgstr "Pasport yoki shaxsiy guvohnoma"
+
+msgid "Passport or ID Card — JPG, JPEG, PNG, PDF"
+msgstr "Pasport yoki shaxsiy guvohnoma — JPG, JPEG, PNG, PDF"
+
+msgid "Password"
+msgstr "Parol"
+
+msgid "Pending"
+msgstr "Kutilmoqda"
+
+msgid "Pending Action"
+msgstr "Kutilayotgan harakat"
+
+msgid "Pending Review"
+msgstr "Koʻrib chiqish kutilmoqda"
+
+msgid "Pending Verification Requests"
+msgstr "Kutilayotgan tekshiruv soʻrovlari"
+
+msgid "Permit & Domain Configurations"
+msgstr "Ruxsatnoma va domen konfiguratsiyalari"
+
+msgid "Permit Release Date"
+msgstr "Ruxsatnomani chiqarish sanasi"
+
+msgid "Permits Released"
+msgstr "Ruxsatnomalar chiqarilgan"
+
+msgid "Personal Information"
+msgstr "Shaxsiy maʻlumotlar"
+
+msgid "Phone Number"
+msgstr "Telefon raqami"
+
+msgid "Photo captured!"
+msgstr "Surat olindi!"
+
+msgid "Please enter username and password"
+msgstr "Iltimos, foydalanuvchi nomi va parolni kiriting"
+
+msgid ""
+"Please provide your personal details exactly as they appear on your official"
+" documents."
+msgstr ""
+"Iltimos, shaxsiy ma`lumotlaringizni rasmiy hujjatlaringizdagi kabi "
+"kiritiniz."
+
+msgid "Please upload an Excel file"
+msgstr "Iltimos, Excel faylini yuklang"
+
+msgid "Position your face in the oval and take a selfie."
+msgstr "Yuzingizni ovalga joylang va selfi oling."
+
+msgid "Pre-Registered Applicant"
+msgstr "Oldindan roʻyxatdan oʻtgan abituriyent"
+
+msgid "Pre-Registered Applicants"
+msgstr "Oldindan roʻyxatdan oʻtgan abituriyentlar"
+
+msgid "Pre-registered candidate not found"
+msgstr "Oldindan roʻyxatdan oʻtgan abituriyent topilmadi"
+
+msgid ""
+"Present this QR code on examination day for quick identity verification."
+msgstr "Tezkor shaxs tekshiruvi uchun imtihon kuni ushbu QR kodni koʻrsating."
+
+msgid "Prev"
+msgstr "Oldingi"
+
+msgid "Proceed to Face Verification"
+msgstr "Yuz tekshiruviga oʻtish"
+
+msgid "Process"
+msgstr "Jarayon"
+
+msgid "Processing..."
+msgstr "Ishlanmoqda..."
+
+msgid "Profile is locked after verification approval"
+msgstr "Profil tekshiruv tasdiqlangandan so`ng qulflangan"
+
+msgid "Profile not found"
+msgstr "Profil topilmadi"
+
+msgid "Program"
+msgstr "Dastur"
+
+msgid "QR Code"
+msgstr "QR kod"
+
+msgid "QR Code / Permit Domain"
+msgstr "QR kod / Ruxsatnoma domeni"
+
+msgid "QR Code Domain"
+msgstr "QR kod domeni"
+
+msgid "QR Code Error"
+msgstr "QR kod xatosi"
+
+msgid "QR Code Issued"
+msgstr "QR kod berilgan"
+
+msgid "QR Code Management"
+msgstr "QR kodlarni boshqarish"
+
+msgid "QR Code Scanner"
+msgstr "QR kod skaneri"
+
+msgid "QR Codes"
+msgstr "QR kodlar"
+
+msgid "QR Image"
+msgstr "QR rasm"
+
+msgid "QR Management"
+msgstr "QR boshqarish"
+
+msgid "QR Status"
+msgstr "QR holati"
+
+msgid "QR Token"
+msgstr "QR token"
+
+msgid "QR Verification"
+msgstr "QR tekshiruvi"
+
+msgid "QR code not found"
+msgstr "QR kod topilmadi"
+
+msgid "QR code regenerated"
+msgstr "QR kod qayta yaratildi"
+
+msgid "QR code revoked"
+msgstr "QR kod bekor qilindi"
+
+msgid "Re-Verification"
+msgstr "Qayta tekshiruv"
+
+msgid "Ready to Verify"
+msgstr "Tekshirishga tayyor"
+
+msgid "Recent Verifications"
+msgstr "Soʻnggi tekshiruvlar"
+
+msgid "Regenerate QR Code"
+msgstr "QR kodni qayta yaratish"
+
+msgid "Region"
+msgstr "Hudud"
+
+msgid "Regional Exam Locations & Dates"
+msgstr "Mintaqaviy imtihon joylari va sanalari"
+
+msgid "Reject and Lock"
+msgstr "Rad etish va qulflash"
+
+msgid "Rejected"
+msgstr "Rad etilgan"
+
+msgid "Rejected Threshold"
+msgstr "Rad etish chegarasi"
+
+msgid "Release Permits Instantly"
+msgstr "Ruxsatnomalarni darhol chiqarish"
+
+msgid "Remove glasses if possible"
+msgstr "Iloji bo`lsa ko`zoynak olib qo`yilsin"
+
+msgid "Report"
+msgstr "Hisobot"
+
+msgid "Reports"
+msgstr "Hisobotlar"
+
+msgid "Requested Date"
+msgstr "So`raladigan sana"
+
+msgid "Required"
+msgstr "Talab qilinadi"
+
+msgid "Requirements"
+msgstr "Talablar"
+
+msgid "Reset"
+msgstr "Qayta oʻrnatish"
+
+msgid "Restricted Access — Authorized Personnel Only"
+msgstr "Cheklangan kirish — Faqat vakolatli xodimlar"
+
+msgid "Result"
+msgstr "Natija"
+
+msgid "Retake Photo"
+msgstr "Suratni qayta olish"
+
+msgid "Retry Capture"
+msgstr "Qayta suratga olish"
+
+msgid "Return to Main Page"
+msgstr "Asosiy sahifaga qaytish"
+
+msgid "Review"
+msgstr "Koʻrib chiqish"
+
+msgid "Review Notes / Comments"
+msgstr "Ko`rib chiqish izohlari / Fikrlar"
+
+msgid "Review Queue"
+msgstr "Koʻrib chiqish navbati"
+
+msgid "Review Required"
+msgstr "Koʻrib chiqish talab qilinadi"
+
+msgid "Review Threshold"
+msgstr "Koʻrib chiqish chegarasi"
+
+msgid "Review flagged candidates and confirm identities manually"
+msgstr ""
+"Belgilangan abituriyentlarni ko`rib chiqing va shaxslarni qo`lda tasdiqlang"
+
+msgid "Revoke QR Code"
+msgstr "QR kodni bekor qilish"
+
+msgid "Revoke, regenerate, and manage applicant access QR codes"
+msgstr ""
+"Abituriyent kirish QR kodlarini bekor qilish, qayta yaratish va boshqarish"
+
+msgid "Revoked"
+msgstr "Bekor qilingan"
+
+msgid "Save All Settings"
+msgstr "Barcha sozlamalarni saqlash"
+
+msgid "Save Candidate"
+msgstr "Abituriyentni saqlash"
+
+msgid "Scan Candidate QR Code"
+msgstr "Abituriyent QR kodini skanerlash"
+
+msgid "Scan QR"
+msgstr "QR skanerlash"
+
+msgid "Scan QR code to identify candidate, then verify their face."
+msgstr ""
+"Abituriyentni aniqlash uchun QR kodni skanerlang, soʻngra yuzini tekshiring."
+
+msgid "Scans"
+msgstr "Skanerlar"
+
+msgid "Score"
+msgstr "Ball"
+
+msgid "Search"
+msgstr "Qidirish"
+
+msgid "Search & Filter"
+msgstr "Qidirish va filtrlash"
+
+msgid "Search Applicant"
+msgstr "Abituriyentni qidirish"
+
+msgid "Search Results"
+msgstr "Qidirish natijalari"
+
+msgid "Search action, user, IP..."
+msgstr "Harakat, foydalanuvchi, IP qidiring..."
+
+msgid "Search by passport, name, email..."
+msgstr "Pasport, ism, email bo`ylab qidiring..."
+
+msgid ""
+"Search for an applicant by Admission ID, Passport Number, or Name to begin "
+"verification."
+msgstr ""
+"Tekshiruvni boshlash uchun Qabul ID, Pasport raqami yoki Ism bo`ylab "
+"abituriyentni qidiring."
+
+msgid "Secured with AES-256 encryption and TLS 1.3"
+msgstr "AES-256 shifrlash va TLS 1.3 bilan himoyalangan"
+
+msgid "Security"
+msgstr "Xavfsizlik"
+
+msgid "Security Incident Reports"
+msgstr "Xavfsizlik hodisalari hisobotlari"
+
+msgid "Security monitoring and system activity tracking logs"
+msgstr "Xavfsizlik monitoringi va tizim faoliyatini kuzatish jurnallari"
+
+msgid ""
+"Select an Excel file (.xlsx or .xls) to upload. Validated candidates will be"
+" allowed to complete the Face ID verification wizard."
+msgstr ""
+"Yuklash uchun Excel faylini (.xlsx yoki .xls) tanlang. Tasdiqlangan "
+"abituriyentlarga Face ID tekshiruv ustasini to`liqlashtirish imkoniyati "
+"beriladi."
+
+msgid "Selected Region"
+msgstr "Tanlangan hudud"
+
+msgid "Selfie Ready"
+msgstr "Selfi tayyor"
+
+msgid "Showing page"
+msgstr "Sahifa ko`rsatilmoqda"
+
+msgid "Sign In"
+msgstr "Kirish"
+
+msgid "Sign In as Administrator"
+msgstr "Administrator sifatida kirish"
+
+msgid "Signed JWT Token"
+msgstr "Imzolangan JWT token"
+
+msgid "Start Face Verification"
+msgstr "Yuz tekshiruvini boshlash"
+
+msgid "Starting liveness detection..."
+msgstr "Tiriklikni aniqlash boshlanmoqda..."
+
+msgid "Status"
+msgstr "Holat"
+
+msgid "Straight / Closed Eyes"
+msgstr "To`g`ri / Yopiq ko`zlar"
+
+msgid "Success"
+msgstr "Muvaffaqiyat"
+
+msgid "Supervisor"
+msgstr "Nazoratchi"
+
+msgid "Supervisor Account"
+msgstr "Nazoratchi hisobi"
+
+msgid "Supervisor Accounts"
+msgstr "Nazoratchi hisoblar"
+
+msgid "Supervisor Accounts & Statistics"
+msgstr "Nazoratchi hisoblar va statistika"
+
+msgid "Supervisor Activity"
+msgstr "Nazoratchi faoliyati"
+
+msgid "Supervisor Activity Logs (Exam Day)"
+msgstr "Nazoratchi faoliyati jurnallari (Imtihon kuni)"
+
+msgid "Supervisor Activity Logs Report"
+msgstr "Nazoratchi faoliyati jurnallari hisoboti"
+
+msgid "Supervisor Dashboard"
+msgstr "Nazoratchi boshqaruv paneli"
+
+msgid "Supervisor Login"
+msgstr "Nazoratchi kirishi"
+
+msgid "Supervisor Management"
+msgstr "Nazoratchilarni boshqarish"
+
+msgid "Supervisor Portal"
+msgstr "Nazoratchi portali"
+
+msgid "Supervisor deactivated"
+msgstr "Nazoratchi faolsizlantirildi"
+
+msgid "Supervisor not found"
+msgstr "Nazoratchi topilmadi"
+
+msgid "Supervisors"
+msgstr "Nazoratchilar"
+
+msgid "Supported Header Names"
+msgstr "Qo`llab-quvvatlanadigan sarlavha nomlari"
+
+msgid "Surname"
+msgstr "Familiya"
+
+msgid "System"
+msgstr "Tizim"
+
+msgid "System Audit Logs"
+msgstr "Tizim audit jurnallari"
+
+msgid "System Parameters"
+msgstr "Tizim parametrlari"
+
+msgid "System Setting"
+msgstr "Tizim sozlamasi"
+
+msgid "System Settings"
+msgstr "Tizim sozlamalari"
+
+msgid "System Settings & Exam Venues"
+msgstr "Tizim sozlamalari va imtihon joylari"
+
+msgid "System Uptime"
+msgstr "Tizim ishlash vaqti"
+
+msgid "System settings and exam venues updated successfully."
+msgstr "Tizim sozlamalari va exam joylari muvaffaqiyatli yangilandi."
+
+msgid "TLS 1.3 Transport Security"
+msgstr "TLS 1.3 transport xavfsizligi"
+
+msgid "Tasdiqlash — Imtihonga Kirdi"
+msgstr "Tasdiqlash — Imtihonga Kirdi"
+
+msgid ""
+"The base domain used when generating QR codes on candidate permits (e.g. "
+"id.akhu.uz)."
+msgstr ""
+"Abituriyent ruxsatnomalarida QR kodlar yaratishda ishlatiladigan asosiy "
+"domen (masalan, id.akhu.uz)."
+
+msgid "The date on which permits become downloadable for candidate sessions."
+msgstr ""
+"Ruxsatnomalar abituriyentlar uchun yuklab olishga tayyor bo`ladigan sana."
+
+msgid ""
+"The entered Surname or Given Name does not match our pre-registered records "
+"for this Passport / Card Number."
+msgstr ""
+"Kiritilgan Familiya yoki Ism ushbu Pasport / Karta raqami uchun bizning "
+"oldindan ro`yxatdan o`tkazilgan yozuvlarimizga mos kelmaydi."
+
+msgid ""
+"The entered Surname or Given Name does not match our records for this "
+"Passport / Card Number."
+msgstr ""
+"Kiritilgan Familiya yoki Ism ushbu Pasport / Karta raqami uchun bizning "
+"yozuvlarimizga mos kelmaydi."
+
+msgid ""
+"The parser dynamically maps headers, supporting English and Uzbek names."
+msgstr ""
+"Tahlilchi sarlavhalarni dinamik ravishda xaritalaydi, ingliz va o`zbek "
+"nomlarini qo`llab-quvvatlaydi."
+
+msgid ""
+"The system extracts facial features using ArcFace to verify candidate "
+"identity during liveness check and exam registration."
+msgstr ""
+"Tizim ArcFace yordamida yuz xususiyatlarini chiqarib oladi va tiriklik "
+"tekshiruvi hamda imtihon ro`yxatida abituriyent shaxsini tasdiqlaydi."
+
+msgid ""
+"This step verifies that you are a real person. Follow the on-screen "
+"instructions carefully."
+msgstr ""
+"Bu qadam siz haqiqiy odam ekanligingizni tekshiradi. Ekrandagi "
+"ko`rsatmalarga diqqat bilan rioya qiling."
+
+msgid "Time"
+msgstr "Vaqt"
+
+msgid "Timestamp"
+msgstr "Vaqt belgisi"
+
+msgid "Tips for a Good Photo"
+msgstr "Yaxshi surat uchun maslahatlar"
+
+msgid "Today Total"
+msgstr "Bugungi jami"
+
+msgid "Total Applicants"
+msgstr "Jami abituriyentlar"
+
+msgid "Total Scans"
+msgstr "Jami skanerlar"
+
+msgid "Try Again"
+msgstr "Qayta urinib koʻring"
+
+msgid "Type"
+msgstr "Tur"
+
+msgid "Under Review"
+msgstr "Koʻrib chiqilmoqda"
+
+msgid "Upload Date"
+msgstr "Yuklash sanasi"
+
+msgid "Upload Identity Document"
+msgstr "Shaxsni tasdiqlovchi hujjatni yuklash"
+
+msgid "Upload a clear photo or scan of your passport or national ID card."
+msgstr ""
+"Pasportingiz yoki milliy shaxsiy guvohnomangizning aniq surati yoki skanini "
+"yuklang."
+
+msgid "Upload a photo of your passport or national ID card (JPG, PNG, or PDF)"
+msgstr ""
+"Pasportingiz yoki milliy shaxsiy guvohnomangiz suratini yuklang (JPG, PNG "
+"yoki PDF)"
+
+msgid "Upload and Parse"
+msgstr "Yuklash va tahlil qilish"
+
+msgid ""
+"Upon successful verification, receive your unique QR code for examination "
+"day"
+msgstr ""
+"Muvaffaqiyatli tekshiruvdan so`ng, imtihon kuni uchun noyob QR kodingizni "
+"oling"
+
+msgid "Used"
+msgstr "Ishlatilgan"
+
+msgid "User"
+msgstr "Foydalanuvchi"
+
+msgid "Username"
+msgstr "Foydalanuvchi nomi"
+
+msgid "Username already exists"
+msgstr "Foydalanuvchi nomi allaqachon mavjud"
+
+msgid "Username is required"
+msgstr "Foydalanuvchi nomi talab qilinadi"
+
+msgid "Uzbek"
+msgstr "Oʻzbekcha"
+
+msgid "Venue Name"
+msgstr "Joy nomi"
+
+msgid "Verification"
+msgstr "Tekshiruv"
+
+msgid "Verification Failed"
+msgstr "Tekshiruv muvaffaqiyatsiz"
+
+msgid "Verification History"
+msgstr "Tekshiruv tarixi"
+
+msgid "Verification Log"
+msgstr "Tekshiruv jurnali"
+
+msgid "Verification Logs"
+msgstr "Tekshiruv jurnallari"
+
+msgid "Verification Match Percentage"
+msgstr "Tekshiruv moslik foizi"
+
+msgid "Verification Result"
+msgstr "Tekshiruv natijasi"
+
+msgid "Verification Review"
+msgstr "Tekshiruvni koʻrib chiqish"
+
+msgid "Verification Session"
+msgstr "Tekshiruv sessiyasi"
+
+msgid "Verification Sessions"
+msgstr "Tekshiruv sessiyalari"
+
+msgid "Verification Speed"
+msgstr "Tekshiruv tezligi"
+
+msgid "Verification Status"
+msgstr "Tekshiruv holati"
+
+msgid "Verification Thresholds"
+msgstr "Tekshiruv chegaralari"
+
+msgid "Verification not complete"
+msgstr "Tekshiruv tugallanmagan"
+
+msgid "Verified"
+msgstr "Tasdiqlangan"
+
+msgid "Verified / Failed"
+msgstr "Tasdiqlangan / Muvaffaqiyatsiz"
+
+msgid "Verified Applicants"
+msgstr "Tasdiqlangan abituriyentlar"
+
+msgid "Verified Applicants Report"
+msgstr "Tasdiqlangan abituriyentlar hisoboti"
+
+msgid "Verified By"
+msgstr "Kim tomonidan tasdiqlangan"
+
+msgid "Verified Threshold"
+msgstr "Tasdiqlash chegarasi"
+
+msgid "Verify"
+msgstr "Tasdiqlash"
+
+msgid "Verify Now"
+msgstr "Hozir tasdiqlash"
+
+msgid "View All"
+msgstr "Hammasini koʻring"
+
+msgid "Waiting for QR Code"
+msgstr "QR kod kutilmoqda"
+
+msgid "Yes"
+msgstr "Ha"
+
+msgid ""
+"Your Excel file must contain columns with headers equivalent to the "
+"following:"
+msgstr ""
+"Excel faylingiz quyidagilarga teng sarlavhalar bilan ustunlarni o`z ichiga "
+"olishi kerak:"
+
+msgid "Your Verification QR Code"
+msgstr "Sizning tekshiruv QR kodingiz"
+
+msgid ""
+"Your biometric data is protected with industry-leading encryption and stored"
+" on secure servers."
+msgstr ""
+"Biometrik ma`lumotlaringiz sanoatda yetakchi shifrlash bilan himoyalangan va"
+" xavfsiz serverlarda saqlanadi."
+
+msgid "Your entire face must be visible"
+msgstr "Butun yuzingiz ko`rinib turishi kerak"
+
+msgid ""
+"Your face could not be matched with the uploaded document. Please try again."
+msgstr ""
+"Yuzingiz yuklangan hujjat bilan mos kelmadi. Iltimos, qayta urinib ko`ring."
+
+msgid ""
+"Your selfie looks good. Click Continue to proceed to liveness detection."
+msgstr ""
+"Selfiingiz yaxshi ko`rinadi. Tiriklikni aniqlashga o`tish uchun Davom etish "
+"tugmasini bosing."
+
+msgid ""
+"Your verification is pending manual review by an administrator. You will be "
+"notified of the result."
+msgstr ""
+"Tekshiruvingiz administrator tomonidan qo`lda ko`rib chiqishni kutmoqda. "
+"Natija haqida xabardor qilinasiz."
+
+msgid "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+msgstr "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+
+msgid "active"
+msgstr "faol"
+
+msgid "ago"
+msgstr "oldin"
+
+msgid "date joined"
+msgstr "qoʻshilgan sana"
+
+msgid "datetime"
+msgstr "sana va vaqt"
+
+msgid "e.g. AKHU2026-000001"
+msgstr "masalan, AKHU2026-000001"
+
+msgid "e.g. John Smith"
+msgstr "masalan, Alisher Umarov"
+
+msgid "email address"
+msgstr "elektron pochta manzili"
+
+msgid "of"
+msgstr "dan"
+
+msgid "role"
+msgstr "rol"
+
+msgid "staff status"
+msgstr "xodim holati"
+
+msgid "user"
+msgstr "foydalanuvchi"
+
+msgid "username"
+msgstr "foydalanuvchi nomi"
+
+msgid "users"
+msgstr "foydalanuvchilar"
+
+msgid "Hold the candidate permit's QR code in front of the camera to verify."
+msgstr ""
+"Tekshirish uchun abituriyentning ruxsatnomasi QR kodini kameraga tutib "
+"turing."
+
+msgid "Multi-Angle Face Capture"
+msgstr "Yuz shaklini turli burchaklardan tasvirga olish"
+
+msgid "Please turn your face in the direction indicated by the instructions and click capture."
+msgstr "Iltimos, yuzingizni ko'rsatilgan yo'nalishga burib, rasmga olish tugmasini bosing."
+
+msgid "Capture Completed!"
+msgstr "Rasmlar yuklandi!"
+
+msgid "All angles saved successfully. Proceeding to verification result..."
+msgstr "Barcha burchakli rasmlar muvaffaqiyatli saqlandi. Natijani tekshirish bosqichiga o'tilmoqda..."
+
+msgid "Capture Failed"
+msgstr "Rasmga olish xatosi"
+
+msgid "Starting face capture..."
+msgstr "Yuz rasmlarini olish boshlanmoqda..."
+
+msgid "QR Code Confirmed"
+msgstr "QR kod tasdiqlangan"
+
+msgid "This QR code has been verified by the university platform."
+msgstr "Ushbu QR kod universitet platformasi tomonidan tasdiqlangan."
+
+msgid "QR Code Not Found"
+msgstr "QR kod topilmadi"
+
+msgid "This QR code was not found in the platform database."
+msgstr "Ushbu QR kod platforma bazasidan topilmadi."
+
+msgid "This QR code is not valid or is no longer active."
+msgstr "Ushbu QR kod yaroqsiz yoki endi faol emas."
+
+msgid "QR ID"
+msgstr "QR ID"
+
+msgid "Confirmed"
+msgstr "Tasdiqlangan"
+
+msgid "No personal applicant information is shown on this public QR verification page."
+msgstr "Ushbu ommaviy QR tekshiruv sahifasida abituriyentning shaxsiy ma'lumotlari ko'rsatilmaydi."
+
+msgid "Attendance"
+msgstr "Davomat"
+
+msgid "Exam Attendance"
+msgstr "Imtihon davomati"
+
+msgid "Track allowed candidates, completed profiles, verification status, and exam-day attendance in one place."
+msgstr "Ruxsat etilgan abituriyentlar, to'ldirilgan profillar, verifikatsiya holati va imtihon kuni davomatini bir joyda kuzating."
+
+msgid "Export Excel"
+msgstr "Excelga eksport qilish"
+
+msgid "Attended"
+msgstr "Keldi"
+
+msgid "Verified, Not Attended"
+msgstr "Verifikatsiyadan o'tgan, kelmagan"
+
+msgid "Registered, Not Verified"
+msgstr "Ma'lumot kiritgan, verifikatsiyadan o'tmagan"
+
+msgid "Allowed, Not Started"
+msgstr "Ruxsat berilgan, hali boshlamagan"
+
+msgid "Smart Search & Filters"
+msgstr "Aqlli qidiruv va filterlar"
+
+msgid "Search by Applicant ID, passport, name, program, or region..."
+msgstr "Applicant ID, passport, ism, yo'nalish yoki hudud bo'yicha qidiring..."
+
+msgid "All statuses"
+msgstr "Barcha holatlar"
+
+msgid "All sources"
+msgstr "Barcha manbalar"
+
+msgid "Submitted Profiles"
+msgstr "Yuborilgan profillar"
+
+msgid "Submitted Profile"
+msgstr "Yuborilgan profil"
+
+msgid "Allowed Candidate"
+msgstr "Ruxsat etilgan abituriyent"
+
+msgid "Attendance Overview"
+msgstr "Davomat umumiy ko'rinishi"
+
+msgid "Program / Region"
+msgstr "Yo'nalish / Hudud"
+
+msgid "Source"
+msgstr "Manba"
+
+msgid "Registered At"
+msgstr "Ro'yxatdan o'tgan vaqt"
+
+msgid "Attendance Time"
+msgstr "Kelgan vaqti"
+
+msgid "No attendance records matched your filters."
+msgstr "Filterlarga mos davomat yozuvlari topilmadi."
+
+# Recent UI and QR verification additions
+msgid "QR Code Active"
+msgstr "QR kod faol"
+
+msgid "This QR code is valid and ready for examination-day verification."
+msgstr "Ushbu QR kod yaroqli va imtihon kuni tekshiruv uchun tayyor."
+
+msgid "Personal applicant details are hidden on this public page. Supervisors can view details only after login."
+msgstr "Abituriyentning shaxsiy ma'lumotlari ushbu ommaviy sahifada yashirilgan. Ma'lumotlarni faqat tizimga kirgan nazoratchilar ko'ra oladi."
+
+msgid "QR scanner could not be loaded"
+msgstr "QR skaner yuklanmadi"
+
+msgid "Scanning"
+msgstr "Skanerlanmoqda"
+
+msgid "Camera permission denied"
+msgstr "Kameradan foydalanishga ruxsat berilmadi"
+
+msgid "Checking..."
+msgstr "Tekshirilmoqda..."
+
+msgid "Invalid QR code"
+msgstr "QR kod yaroqsiz"
+
+msgid "Network error"
+msgstr "Tarmoq xatosi"
+
+msgid "Error"
+msgstr "Xato"
+
+msgid "Found"
+msgstr "Topildi"
+
+msgid "Identity Verified"
+msgstr "Shaxs tasdiqlandi"
+
+msgid "Your identity has been successfully verified. Your admission permit will be released on <strong>%(release_date)s</strong>. You can download your permit starting from that date."
+msgstr "Shaxsingiz muvaffaqiyatli tasdiqlandi. Kirish ruxsatnomasi <strong>%(release_date)s</strong> sanasida e'lon qilinadi va uni shu sanadan boshlab yuklab olishingiz mumkin."
+
+msgid "Your identity has been successfully verified. Your admission permit will become available shortly."
+msgstr "Shaxsingiz muvaffaqiyatli tasdiqlandi. Kirish ruxsatnomasi tez orada yuklab olish uchun tayyor bo'ladi."
+
+msgid "Edit Applicant Information"
+msgstr "Abituriyent ma'lumotlarini tahrirlash"
+
+msgid "Update completed verification profile data without deleting biometric history."
+msgstr "Biometrik tarixni o'chirmasdan yakunlangan verifikatsiya profil ma'lumotlarini yangilang."
+
+msgid "Profile locked"
+msgstr "Profil qulflangan"
+
+msgid "User active"
+msgstr "Foydalanuvchi faol"
+
+msgid "Verified records"
+msgstr "Tasdiqlangan yozuvlar"
+
+msgid "Bulk ZIP exports every verified user into a separate folder named by Applicant ID."
+msgstr "Umumiy ZIP har bir tasdiqlangan foydalanuvchini Applicant ID nomli alohida papkaga joylaydi."
+
+msgid "No"
+msgstr "Yo'q"

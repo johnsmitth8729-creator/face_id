@@ -1,0 +1,1077 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Exam Day Verification" %} — {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="supervisor-layout">
+  <nav class="supervisor-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar"><i class="bi bi-person-badge-fill"></i></div>
+      <div>
+        <div class="sidebar-username">{{ request.session.supervisor_username }}</div>
+        <div class="sidebar-role">{% trans "Supervisor" %}</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <a href="{% url 'supervisor:dashboard' %}" class="sidebar-link">
+        <i class="bi bi-grid-1x2-fill"></i>{% trans "Dashboard" %}
+      </a>
+      <a href="{% url 'supervisor:exam-verify-auto' %}" class="sidebar-link active">
+        <i class="bi bi-camera-video-fill"></i>{% trans "Live Verify" %}
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <a href="{% url 'supervisor:logout' %}" class="sidebar-link text-danger">
+        <i class="bi bi-box-arrow-left"></i>{% trans "Logout" %}
+      </a>
+    </div>
+  </nav>
+
+  <div class="supervisor-main">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h4 class="mb-1 fw-bold"><i class="bi bi-shield-check me-2 text-gold"></i>{% trans "Exam Day Verification" %}</h4>
+        <p class="text-muted small mb-0">{% trans "Scan QR code or use face identification to verify candidate." %}</p>
+      </div>
+      <div class="d-flex gap-2">
+        <span class="badge bg-primary px-3 py-2" id="modeLabel"><i class="bi bi-qr-code-scan me-1"></i> QR Mode</span>
+      </div>
+    </div>
+
+    <!-- Tab Switcher (shown only if no preloaded applicant) -->
+    {% if not applicant %}
+    <div class="akhu-card mb-4 p-2 d-flex justify-content-center gap-2" style="max-width: 400px; margin: 0 auto 20px;">
+      <button class="btn btn-akhu-outline flex-1 py-2 fw-bold active" id="btnQRMode" onclick="switchVerifyMode('qr')">
+        <i class="bi bi-qr-code-scan me-2"></i>{% trans "QR Code Skaner" %}
+      </button>
+      <button class="btn btn-akhu-outline flex-1 py-2 fw-bold" id="btnFaceMode" onclick="switchVerifyMode('face')">
+        <i class="bi bi-camera-fill me-2"></i>{% trans "Face ID (Yuz)" %}
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- ═══ PHASE 1: QR SCANNING (shown by default unless profile preloaded) ═══ -->
+    <div id="phase1QR" {% if applicant %}style="display:none"{% endif %}>
+      <div class="row g-4">
+        <!-- QR Camera -->
+        <div class="col-lg-7">
+          <div class="akhu-card text-center">
+            <h5 class="mb-1 text-gold"><i class="bi bi-qr-code-scan me-2"></i>{% trans "QR Code Scanner" %}</h5>
+            <p class="text-muted small mb-3">{% trans "Point the camera at the candidate's QR code on their permit." %}</p>
+            <div class="camera-container mb-3 position-relative" style="max-height:340px;overflow:hidden;">
+              <div id="qrReader" style="width:100%;"></div>
+              <div class="scan-status-overlay" id="qrStatusOverlay">
+                <span class="badge bg-primary px-3 py-2"><i class="bi bi-camera me-1"></i> {% trans "Camera Starting..." %}</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn-akhu-outline flex-1" id="manualTokenBtn" onclick="showManualEntry()">
+                <i class="bi bi-keyboard me-1"></i>{% trans "Enter Token Manually" %}
+              </button>
+            </div>
+            <!-- Manual token entry (hidden by default) -->
+            <div id="manualEntryBox" class="mt-3 d-none">
+              <div class="input-group">
+                <input type="text" id="manualTokenInput" class="form-control"
+                  placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
+                <button class="btn-akhu-gold px-3" onclick="submitManualToken()">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+              <p class="text-muted small mt-1">{% trans "Enter the token printed on the candidate's QR permit." %}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Result / Waiting -->
+        <div class="col-lg-5">
+          <!-- Waiting -->
+          <div class="result-waiting" id="qrWaiting">
+            <div class="waiting-icon text-primary"><i class="bi bi-qr-code"></i></div>
+            <h5>{% trans "Waiting for QR Code" %}</h5>
+            <p class="text-secondary small">{% trans "Hold the candidate's permit QR code in front of the camera to begin." %}</p>
+          </div>
+          <!-- QR Error -->
+          <div class="akhu-card d-none" id="qrErrorCard" style="border:1px solid var(--akhu-danger);">
+            <div class="text-center py-3">
+              <i class="bi bi-x-circle-fill" style="font-size:2.5rem;color:var(--akhu-danger)"></i>
+              <h5 class="mt-3 text-danger">{% trans "QR Code Error" %}</h5>
+              <p class="text-secondary" id="qrErrorMsg">—</p>
+              <button class="btn-akhu-outline mt-2" onclick="resetQRPhase()">
+                <i class="bi bi-arrow-repeat me-1"></i>{% trans "Try Again" %}
+              </button>
+            </div>
+          </div>
+          <!-- QR Success — Candidate Info -->
+          <div class="akhu-card d-none" id="qrSuccessCard" style="border:1px solid var(--akhu-success);">
+            <h5 class="mb-3 text-success"><i class="bi bi-person-check-fill me-2"></i>{% trans "Candidate Found" %}</h5>
+            <div class="d-flex flex-column flex-sm-row gap-3 align-items-center align-items-sm-start mb-3">
+              <div class="border border-secondary rounded overflow-hidden bg-dark d-flex align-items-center justify-content-center" style="width: 100px; height: 120px; flex-shrink: 0;">
+                <img id="qr_photo" src="" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+              </div>
+              <div class="info-grid flex-1 w-100">
+                <div class="info-item">
+                  <span class="info-label">{% trans "Full Name" %}</span>
+                  <span class="info-value fw-bold" id="qr_fullName">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">{% trans "Admission ID" %}</span>
+                  <span class="info-value text-gold fw-bold" id="qr_admissionId">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">{% trans "Passport" %}</span>
+                  <span class="info-value" id="qr_passport">—</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">{% trans "QR Status" %}</span>
+                  <span class="info-value" id="qr_status">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4" id="proceedFaceBox">
+              <button class="btn-akhu-gold w-100 fw-bold" onclick="proceedToFaceVerify()">
+                <i class="bi bi-camera-fill me-2"></i>{% trans "Proceed to Face Verification" %}
+              </button>
+              <p class="text-muted small mt-2 mb-0 text-center">
+                <i class="bi bi-shield-lock me-1"></i>{% trans "Face verification ensures the QR holder is the real candidate." %}
+              </p>
+            </div>
+            <div class="mt-3 d-none text-warning" id="noTemplateWarning">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              {% trans "No face template found for this candidate. They may not have completed face registration." %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PHASE 2: FACE VERIFICATION (shown after QR success or profile preloaded) ═══ -->
+    <div id="phase2Face" style="display:none">
+      <div class="row g-4">
+        <!-- Left: Candidate Info + Camera -->
+        <div class="col-lg-6">
+          <!-- Candidate Summary Card -->
+          <div class="akhu-card mb-3" id="candidateSummaryCard">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="candidate-avatar border border-secondary rounded overflow-hidden" style="width: 48px; height: 48px; flex-shrink: 0; background: #000;">
+                <img id="fv_photo" src="" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold" id="fv_fullName">{% if applicant %}{{ applicant.full_name }}{% else %}—{% endif %}</h5>
+                <span class="text-gold small fw-bold" id="fv_admissionId">{% if applicant %}{{ applicant.admission_id }}{% endif %}</span>
+              </div>
+              <button class="btn-akhu-outline btn-sm ms-auto" onclick="backToQR()" id="backToQRBtn">
+                <i class="bi bi-arrow-left me-1"></i>{% trans "Back" %}
+              </button>
+            </div>
+            <div class="info-grid small">
+              <div class="info-item">
+                <span class="info-label">{% trans "Passport" %}</span>
+                <span class="info-value" id="fv_passport">{% if applicant %}{{ applicant.passport_number }}{% endif %}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">{% trans "Date of Birth" %}</span>
+                <span class="info-value" id="fv_dob">{% if applicant %}{{ applicant.date_of_birth }}{% endif %}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Camera -->
+          <div class="akhu-card text-center">
+            <h5 class="mb-2"><i class="bi bi-camera-video-fill me-2"></i>{% trans "Live Camera" %}</h5>
+            <div class="camera-container mb-3 position-relative">
+              <video id="examVideo" class="camera-video" autoplay muted playsinline></video>
+              <div class="camera-overlay">
+                <div class="face-guide-oval" id="faceGuide"></div>
+              </div>
+            </div>
+            <button class="btn-akhu-gold w-100 fw-bold" id="captureBtn" onclick="captureAndVerify()">
+              <i class="bi bi-camera-fill me-2"></i>{% trans "Capture & Verify Face" %}
+            </button>
+            <p class="text-muted small mt-2 mb-0">{% trans "Ask the candidate to face the camera directly." %}</p>
+          </div>
+        </div>
+
+        <!-- Right: Verification Result -->
+        <div class="col-lg-6">
+          <!-- Waiting for capture -->
+          <div class="result-waiting" id="faceWaiting">
+            <div class="waiting-icon"><i class="bi bi-person-bounding-box"></i></div>
+            <h5>{% trans "Ready to Verify" %}</h5>
+            <p class="text-secondary small">{% trans "Click 'Capture & Verify Face' when the candidate is positioned in front of the camera." %}</p>
+          </div>
+
+          <!-- Loading -->
+          <div class="d-none text-center py-5" id="faceLoading">
+            <div class="loading-spinner mx-auto mb-3"></div>
+            <p class="text-secondary">{% trans "Analyzing face..." %}</p>
+            <p class="text-muted small">{% trans "Comparing with registered template..." %}</p>
+          </div>
+
+          <!-- Result Banner -->
+          <div class="d-none" id="faceResultBanner">
+            <div class="result-banner" id="faceResultInner">
+              <div class="result-banner-icon" id="faceIcon"></div>
+              <div class="result-banner-title" id="faceTitle"></div>
+              <div class="result-banner-sub" id="faceSub"></div>
+              <div class="mt-3">
+                <span class="status-badge fs-6" id="faceScore"></span>
+              </div>
+            </div>
+
+            <!-- Visual Comparison Card -->
+            <div class="akhu-card mt-3" id="visualComparisonCard">
+              <h6 class="mb-3 text-gold fw-bold text-center"><i class="bi bi-images me-2"></i>{% trans "Visual Comparison" %}</h6>
+              <div class="d-flex justify-content-center align-items-center gap-4">
+                <div class="text-center">
+                  <div class="small text-secondary mb-1">{% trans "Registered Template" %}</div>
+                  <div class="border border-secondary rounded overflow-hidden" style="width: 120px; height: 150px; background: #000;">
+                    <img id="comp_registered" src="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+                  </div>
+                </div>
+                <div class="text-secondary" style="font-size: 1.5rem;"><i class="bi bi-arrow-left-right"></i></div>
+                <div class="text-center">
+                  <div class="small text-secondary mb-1">{% trans "Live Capture" %}</div>
+                  <div class="border border-secondary rounded overflow-hidden" style="width: 120px; height: 150px; background: #000;">
+                    <img id="comp_live" src="" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attendance Confirm (shown only on success) -->
+            <div class="akhu-card mt-3 d-none" id="attendanceBox" style="border:1px solid var(--akhu-success);background:rgba(16,185,129,0.05);">
+              <p class="text-secondary small mb-2">{% trans "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?" %}</p>
+              <button class="btn btn-success w-100 fw-bold" id="confirmBtn" onclick="confirmAttendance()">
+                <i class="bi bi-shield-check me-2"></i>{% trans "Tasdiqlash — Imtihonga Kirdi" %}
+              </button>
+              <div class="text-success small mt-2 d-none fw-bold" id="confirmSuccess">
+                <i class="bi bi-check-circle-fill me-1"></i>{% trans "Muvaffaqiyatli tasdiqlandi!" %}
+              </div>
+            </div>
+
+            <!-- Retry -->
+            <div class="akhu-card mt-3">
+              <div class="d-flex gap-2">
+                <button class="btn-akhu-outline flex-1" onclick="resetFacePhase()">
+                  <i class="bi bi-arrow-repeat me-1"></i>{% trans "Retry Capture" %}
+                </button>
+                <button class="btn-akhu-outline flex-1" onclick="backToQR()">
+                  <i class="bi bi-qr-code me-1"></i>{% trans "New QR Scan" %}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PHASE 3: FACE IDENTIFICATION (Face ID Mode) ═══ -->
+    <div id="phase3FaceID" style="display:none">
+      <div class="row g-4">
+        <!-- Left: Live Camera feed -->
+        <div class="col-lg-6">
+          <div class="akhu-card text-center">
+            <h5 class="mb-2"><i class="bi bi-camera-video-fill me-2"></i>{% trans "Face ID Live Scanner" %}</h5>
+            <p class="text-muted small mb-3">{% trans "Point the camera at the candidate's face to identify them." %}</p>
+            <div class="camera-container mb-3 position-relative" style="max-height:340px;overflow:hidden;">
+              <video id="faceIdVideo" class="camera-video" autoplay muted playsinline style="width: 100%; border-radius: var(--radius-lg);"></video>
+              <div class="scan-status-overlay" id="faceIdScanStatus">
+                <span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> {% trans "QIDIRILMOQDA..." %}</span>
+              </div>
+            </div>
+            <p class="text-muted small mt-2 mb-0">{% trans "Verification runs automatically when a face is detected." %}</p>
+          </div>
+        </div>
+        
+        <!-- Right: Identified Candidate details -->
+        <div class="col-lg-6">
+          <!-- Waiting for candidate -->
+          <div class="result-waiting" id="faceIdWaiting">
+            <div class="waiting-icon"><i class="bi bi-person-bounding-box"></i></div>
+            <h5>{% trans "Kameraga qarang" %}</h5>
+            <p class="text-secondary small">{% trans "Tizim nomzodni avtomatik tarzda aniqlaydi." %}</p>
+          </div>
+          
+          <!-- Identified result card -->
+          <div class="d-none" id="faceIdResultCard">
+            <!-- Result banner -->
+            <div class="result-banner" id="faceIdResultInner">
+              <div class="result-banner-icon" id="faceIdIcon"></div>
+              <div class="result-banner-title" id="faceIdTitle"></div>
+              <div class="result-banner-sub" id="faceIdSub"></div>
+              <div class="mt-3">
+                <span class="status-badge fs-6" id="faceIdScore"></span>
+              </div>
+            </div>
+            
+            <!-- Comparison info card -->
+            <div class="akhu-card mt-3">
+              <h6 class="mb-3 text-gold fw-bold"><i class="bi bi-person-badge-fill me-2"></i>{% trans "Candidate Profile" %}</h6>
+              <div class="d-flex flex-column flex-sm-row gap-3 align-items-center align-items-sm-start">
+                <div class="border border-secondary rounded overflow-hidden bg-dark d-flex align-items-center justify-content-center" style="width: 100px; height: 120px; flex-shrink: 0;">
+                  <img id="faceId_photo" src="" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+                </div>
+                <div class="info-grid flex-1 w-100">
+                  <div class="info-item">
+                    <span class="info-label">{% trans "Full Name" %}</span>
+                    <span class="info-value fw-bold" id="faceId_fullName">—</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">{% trans "Admission ID" %}</span>
+                    <span class="info-value text-gold fw-bold" id="faceId_admissionId">—</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">{% trans "Passport" %}</span>
+                    <span class="info-value" id="faceId_passport">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Attendance confirm box -->
+            <div class="akhu-card mt-3" id="faceIdAttendanceBox" style="border:1px solid var(--akhu-success);background:rgba(16,185,129,0.05);">
+              <p class="text-secondary small mb-2">{% trans "Nomzod aniqlandi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?" %}</p>
+              <button class="btn btn-success w-100 fw-bold" id="faceIdConfirmBtn" onclick="confirmFaceIdAttendance()">
+                <i class="bi bi-shield-check me-2"></i>{% trans "Tasdiqlash — Imtihonga Kirdi" %}
+              </button>
+              <div class="text-success small mt-2 d-none fw-bold" id="faceIdConfirmSuccess">
+                <i class="bi bi-check-circle-fill me-1"></i>{% trans "Muvaffaqiyatli tasdiqlandi!" %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /supervisor-main -->
+</div><!-- /supervisor-layout -->
+
+<!-- Scripts -->
+<script>
+  // ── Constants from Django ──
+  const AUTO_SCAN_MODE = {% if applicant %}false{% else %}true{% endif %};
+  const PRELOADED_PROFILE_ID = "{{ applicant.id|default:'' }}";
+  const CSRF_TOKEN = "{{ csrf_token }}";
+
+  const API_QR_LOOKUP  = "{% url 'supervisor:api-qr-lookup' %}";
+  const API_EXAM_VERIFY = "{% url 'supervisor:api-exam-verify' %}";
+  const API_CONFIRM    = "{% url 'supervisor:api-confirm-attendance' %}";
+  const I18N = {
+    qrScannerNotLoaded: "{% trans 'QR scanner could not be loaded' %}",
+    scanning: "{% trans 'Scanning' %}",
+    cameraPermissionDenied: "{% trans 'Camera permission denied' %}",
+    checking: "{% trans 'Checking...' %}",
+    invalidQr: "{% trans 'Invalid QR code' %}",
+    networkError: "{% trans 'Network error' %}",
+    error: "{% trans 'Error' %}",
+    found: "{% trans 'Found' %}",
+  };
+  {% if applicant %}
+  const PRELOADED_APPLICANT = {
+    id: "{{ applicant.id }}",
+    full_name: "{{ applicant.full_name|escapejs }}",
+    admission_id: "{{ applicant.admission_id|escapejs }}",
+    passport_number: "{{ applicant.passport_number|escapejs }}",
+    date_of_birth: "{{ applicant.date_of_birth }}",
+    selfie_url: "{{ selfie_url }}",
+  };
+  {% else %}
+  const PRELOADED_APPLICANT = null;
+  {% endif %}
+
+  // ── State ──
+  let currentProfileId = PRELOADED_PROFILE_ID || null;
+  let cameraStream = null;
+  let html5QrCode = null;
+  let lastScannedSelfieUrl = '';
+
+  // ═══ PHASE 1 — QR SCANNING ═══
+
+  function initQRScanner() {
+    if (typeof Html5Qrcode === 'undefined') {
+      document.getElementById('qrStatusOverlay').innerHTML =
+        `<span class="badge bg-danger px-3 py-2"><i class="bi bi-exclamation-triangle me-1"></i> ${I18N.qrScannerNotLoaded}</span>`;
+      return;
+    }
+    html5QrCode = new Html5Qrcode("qrReader");
+    const config = { fps: 10, qrbox: { width: 240, height: 240 }, aspectRatio: 1.0 };
+    html5QrCode.start({ facingMode: "environment" }, config, onQRSuccess, onQRError)
+      .then(() => {
+        document.getElementById('qrStatusOverlay').innerHTML =
+          `<span class="badge bg-success px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
+      })
+      .catch(err => {
+        // Fallback to user camera (laptop webcam)
+        html5QrCode.start({ facingMode: "user" }, config, onQRSuccess, onQRError)
+          .then(() => {
+            document.getElementById('qrStatusOverlay').innerHTML =
+              `<span class="badge bg-success px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
+          })
+          .catch(err2 => {
+            document.getElementById('qrStatusOverlay').innerHTML =
+              `<span class="badge bg-warning px-3 py-2">${I18N.cameraPermissionDenied}</span>`;
+          });
+      });
+  }
+
+  function stopQRScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      html5QrCode.stop().catch(() => {});
+    }
+  }
+
+  let qrProcessing = false;
+  async function onQRSuccess(decodedText) {
+    if (qrProcessing) return;
+    qrProcessing = true;
+    stopQRScanner();
+    document.getElementById('qrStatusOverlay').innerHTML =
+      `<span class="badge bg-info px-3 py-2"><i class="bi bi-hourglass me-1"></i> ${I18N.checking}</span>`;
+    await lookupQR(decodedText);
+  }
+
+  function onQRError(err) {
+    // Silently ignore frame errors — scanner keeps trying
+  }
+
+  async function lookupQR(rawText) {
+    try {
+      const resp = await fetch(API_QR_LOOKUP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ qr_text: rawText }),
+      });
+      const data = await resp.json();
+
+      document.getElementById('qrWaiting').classList.add('d-none');
+
+      if (!data.valid) {
+        showQRError(data.error || I18N.invalidQr);
+        qrProcessing = false;
+        return;
+      }
+
+      showQRSuccess(data);
+    } catch (err) {
+      showQRError(`${I18N.networkError}: ${err.message}`);
+      qrProcessing = false;
+    }
+  }
+
+  function showQRError(msg) {
+    document.getElementById('qrSuccessCard').classList.add('d-none');
+    document.getElementById('qrErrorCard').classList.remove('d-none');
+    document.getElementById('qrErrorMsg').textContent = msg;
+    document.getElementById('qrStatusOverlay').innerHTML =
+      `<span class="badge bg-danger px-3 py-2"><i class="bi bi-x-circle me-1"></i> ${I18N.error}</span>`;
+  }
+
+  function showQRSuccess(data) {
+    const ap = data.applicant || {};
+    document.getElementById('qr_fullName').textContent = ap.full_name || '—';
+    document.getElementById('qr_admissionId').textContent = ap.admission_id || '—';
+    document.getElementById('qr_passport').textContent = ap.passport_number || '—';
+
+    lastScannedSelfieUrl = ap.selfie_url || '';
+    if (ap.selfie_url) {
+      document.getElementById('qr_photo').src = ap.selfie_url;
+    } else {
+      document.getElementById('qr_photo').src = '/static/images/avatar.png';
+    }
+
+    const statusBadges = { active: 'text-success', used: 'text-warning', expired: 'text-danger', revoked: 'text-danger' };
+    const qrStatusEl = document.getElementById('qr_status');
+    qrStatusEl.textContent = data.qr_status || 'active';
+    qrStatusEl.className = 'info-value fw-bold ' + (statusBadges[data.qr_status] || '');
+
+    currentProfileId = data.profile_id;
+
+    const noTpl = document.getElementById('noTemplateWarning');
+    const proceedBox = document.getElementById('proceedFaceBox');
+    if (!data.has_face_template) {
+      noTpl.classList.remove('d-none');
+      proceedBox.classList.add('d-none');
+    } else {
+      noTpl.classList.add('d-none');
+      proceedBox.classList.remove('d-none');
+    }
+
+    document.getElementById('qrErrorCard').classList.add('d-none');
+    document.getElementById('qrSuccessCard').classList.remove('d-none');
+    document.getElementById('qrStatusOverlay').innerHTML =
+      `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check me-1"></i> ${I18N.found}</span>`;
+
+    // Fill face phase info
+    fillFacePhaseInfo(ap, data.profile_id);
+  }
+
+  function fillFacePhaseInfo(ap, profileId) {
+    document.getElementById('fv_fullName').textContent = ap.full_name || '—';
+    document.getElementById('fv_admissionId').textContent = ap.admission_id || '—';
+    document.getElementById('fv_passport').textContent = ap.passport_number || '—';
+    document.getElementById('fv_dob').textContent = ap.date_of_birth || '—';
+    
+    lastScannedSelfieUrl = ap.selfie_url || '';
+    if (ap.selfie_url) {
+      document.getElementById('fv_photo').src = ap.selfie_url;
+    } else {
+      document.getElementById('fv_photo').src = '/static/images/avatar.png';
+    }
+    
+    currentProfileId = profileId;
+  }
+
+  function proceedToFaceVerify() {
+    stopQRScanner();
+    document.getElementById('phase1QR').style.display = 'none';
+    document.getElementById('phase2Face').style.display = '';
+    document.getElementById('backToQRBtn').style.display = '';
+    initFaceCamera();
+  }
+
+  function resetQRPhase() {
+    document.getElementById('qrWaiting').classList.remove('d-none');
+    document.getElementById('qrErrorCard').classList.add('d-none');
+    document.getElementById('qrSuccessCard').classList.add('d-none');
+    qrProcessing = false;
+    initQRScanner();
+  }
+
+  function showManualEntry() {
+    const box = document.getElementById('manualEntryBox');
+    box.classList.toggle('d-none');
+    if (!box.classList.contains('d-none')) {
+      document.getElementById('manualTokenInput').focus();
+    }
+  }
+
+  function submitManualToken() {
+    const val = document.getElementById('manualTokenInput').value.trim();
+    if (!val) return;
+    stopQRScanner();
+    document.getElementById('qrWaiting').classList.add('d-none');
+    lookupQR(val);
+  }
+
+  function backToQR() {
+    stopFaceCamera();
+    document.getElementById('phase2Face').style.display = 'none';
+    document.getElementById('phase1QR').style.display = '';
+    currentProfileId = null;
+    resetQRPhase();
+    resetFacePhase();
+  }
+
+  // ═══ PHASE 2 — FACE VERIFICATION ═══
+
+  async function initFaceCamera() {
+    try {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 } }, audio: false,
+        });
+      } catch (e) {
+        console.warn("Real camera failed, creating mock video stream for testing:", e);
+        cameraStream = createSupervisorMockStream();
+      }
+      document.getElementById('examVideo').srcObject = cameraStream;
+    } catch (err) {
+      alert('Kamera ruxsati yo\'q: ' + err.message);
+    }
+  }
+
+  function createSupervisorMockStream() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 480;
+    const ctx = canvas.getContext('2d');
+    
+    function drawFrame() {
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Grid/Lines
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.2)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < canvas.width; i += 40) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+      }
+      for (let j = 0; j < canvas.height; j += 40) {
+        ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+      }
+      
+      // Draw a face placeholder
+      ctx.fillStyle = '#3b82f6'; // Blue color
+      ctx.beginPath();
+      ctx.arc(320, 240, 100, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Eyes
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(280, 220, 12, 0, Math.PI * 2);
+      ctx.arc(360, 220, 12, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Smile
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(320, 250, 40, 0, Math.PI);
+      ctx.stroke();
+      
+      // Label text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('SUPERVISOR WEBCAM ACTIVE', 320, 390);
+      
+      requestAnimationFrame(drawFrame);
+    }
+    
+    drawFrame();
+    return canvas.captureStream(30);
+  }
+
+  function stopFaceCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+  }
+
+  function captureFrame() {
+    const video = document.getElementById('examVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.9);
+  }
+
+  async function captureAndVerify() {
+    if (!currentProfileId) {
+      alert('Talaba tanlanmagan. Avval QR kod skaner qiling.');
+      return;
+    }
+    const video = document.getElementById('examVideo');
+    if (!cameraStream || !video.readyState) {
+      alert('Kamera tayyor emas. Iltimos kuting.');
+      return;
+    }
+
+    document.getElementById('faceWaiting').classList.add('d-none');
+    document.getElementById('faceResultBanner').classList.add('d-none');
+    document.getElementById('faceLoading').classList.remove('d-none');
+    document.getElementById('captureBtn').disabled = true;
+
+    const frame = captureFrame();
+    document.getElementById('comp_live').src = frame;
+    document.getElementById('comp_registered').src = lastScannedSelfieUrl || '/static/images/avatar.png';
+
+    try {
+      const resp = await fetch(API_EXAM_VERIFY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ profile_id: currentProfileId, frame: frame }),
+      });
+      const result = await resp.json();
+      document.getElementById('faceLoading').classList.add('d-none');
+      showFaceResult(result);
+    } catch (err) {
+      document.getElementById('faceLoading').classList.add('d-none');
+      showFaceResult({ success: false, error: 'Tarmoq xatosi: ' + err.message });
+    } finally {
+      document.getElementById('captureBtn').disabled = false;
+    }
+  }
+
+  function showFaceResult(result) {
+    const inner = document.getElementById('faceResultInner');
+    const iconEl = document.getElementById('faceIcon');
+    const titleEl = document.getElementById('faceTitle');
+    const subEl = document.getElementById('faceSub');
+    const scoreEl = document.getElementById('faceScore');
+    const attBox = document.getElementById('attendanceBox');
+
+    if (!result.success) {
+      inner.className = 'result-banner red';
+      iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-danger)"></i>';
+      titleEl.textContent = result.error || 'Tekshirish xatosi';
+      subEl.textContent = 'Qayta urinib ko\'ring yoki administrator bilan bog\'laning.';
+      scoreEl.textContent = '';
+      attBox.classList.add('d-none');
+    } else {
+      const ind = result.indicator;
+      const score = result.match_percentage;
+
+      if (ind === 'green') {
+        inner.className = 'result-banner green';
+        iconEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:var(--akhu-success)"></i>';
+        titleEl.textContent = 'Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli';
+        subEl.textContent = (result.applicant?.full_name || '') + (result.applicant?.admission_id ? ' — ' + result.applicant.admission_id : '');
+        scoreEl.className = 'status-badge verified fs-6';
+        scoreEl.textContent = score + '% mos';
+        attBox.classList.remove('d-none');
+        document.getElementById('confirmBtn').disabled = false;
+        document.getElementById('confirmSuccess').classList.add('d-none');
+      } else if (ind === 'yellow') {
+        inner.className = 'result-banner yellow';
+        iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-warning)"></i>';
+        titleEl.textContent = 'Qo\'lda tekshirish talab qilinadi';
+        subEl.textContent = 'Yuz mos keldi, lekin qo\'shimcha tekshiruv kerak.';
+        scoreEl.className = 'status-badge review_required fs-6';
+        scoreEl.textContent = score + '% mos';
+        attBox.classList.add('d-none');
+      } else {
+        inner.className = 'result-banner red';
+        iconEl.innerHTML = '<i class="bi bi-x-circle-fill" style="color:var(--akhu-danger)"></i>';
+        titleEl.textContent = 'Yuz mos kelmadi — Rad etildi';
+        subEl.textContent = 'Talabani imtihon komissiyasiga yo\'naltiring.';
+        scoreEl.className = 'status-badge rejected fs-6';
+        scoreEl.textContent = score + '% mos';
+        attBox.classList.add('d-none');
+      }
+    }
+
+    document.getElementById('faceResultBanner').classList.remove('d-none');
+  }
+
+  function resetFacePhase() {
+    document.getElementById('faceWaiting').classList.remove('d-none');
+    document.getElementById('faceResultBanner').classList.add('d-none');
+    document.getElementById('faceLoading').classList.add('d-none');
+    document.getElementById('attendanceBox').classList.add('d-none');
+    document.getElementById('confirmSuccess').classList.add('d-none');
+  }
+
+  async function confirmAttendance() {
+    if (!currentProfileId) return;
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    try {
+      const resp = await fetch(API_CONFIRM, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ profile_id: currentProfileId }),
+      });
+      const res = await resp.json();
+      if (res.success) {
+        document.getElementById('confirmSuccess').classList.remove('d-none');
+        btn.classList.add('d-none');
+      } else {
+        alert(res.error || 'Tasdiqlashda xato');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('Tarmoq xatosi');
+      btn.disabled = false;
+    }
+  }
+
+  // ── Face ID Mode JavaScript ──
+  let activeVerifyMode = 'qr'; // 'qr' or 'face'
+  let faceIdStream = null;
+  let faceIdScanInterval = null;
+  let faceIdScanningInProgress = false;
+  let faceIdLastMatchProfileId = null;
+  let faceIdLastMatchTime = 0;
+  
+  const API_EXAM_IDENTIFY = "/api/supervisor/exam-identify/";
+
+  function switchVerifyMode(mode) {
+    activeVerifyMode = mode;
+    
+    // Reset buttons
+    const btnQR = document.getElementById('btnQRMode');
+    const btnFace = document.getElementById('btnFaceMode');
+    if (btnQR) btnQR.classList.remove('active');
+    if (btnFace) btnFace.classList.remove('active');
+    
+    if (mode === 'qr') {
+      if (btnQR) btnQR.classList.add('active');
+      document.getElementById('modeLabel').innerHTML = '<i class="bi bi-qr-code-scan me-1"></i> QR Mode';
+      
+      // Stop face ID camera & loop
+      stopFaceIdMode();
+      
+      // Show QR Phase
+      document.getElementById('phase1QR').style.display = '';
+      document.getElementById('phase2Face').style.display = 'none';
+      document.getElementById('phase3FaceID').style.display = 'none';
+      
+      initQRScanner();
+    } else {
+      if (btnFace) btnFace.classList.add('active');
+      document.getElementById('modeLabel').innerHTML = '<i class="bi bi-camera-fill me-1"></i> Face ID Mode';
+      
+      // Stop QR scanner & phase 2 camera
+      stopQRScanner();
+      stopFaceCamera();
+      
+      // Show Face ID Phase
+      document.getElementById('phase1QR').style.display = 'none';
+      document.getElementById('phase2Face').style.display = 'none';
+      document.getElementById('phase3FaceID').style.display = '';
+      
+      initFaceIdMode();
+    }
+  }
+
+  async function initFaceIdMode() {
+    clearFaceIdResult();
+    
+    try {
+      try {
+        faceIdStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 } },
+          audio: false,
+        });
+      } catch (e) {
+        console.warn("Real camera failed, creating mock video stream for testing:", e);
+        faceIdStream = createSupervisorMockStream();
+      }
+      document.getElementById('faceIdVideo').srcObject = faceIdStream;
+      startFaceIdScanning();
+    } catch (err) {
+      alert('Kamera ruxsati yo\'q: ' + err.message);
+    }
+  }
+
+  function stopFaceIdMode() {
+    if (faceIdScanInterval) {
+      clearInterval(faceIdScanInterval);
+      faceIdScanInterval = null;
+    }
+    if (faceIdStream) {
+      faceIdStream.getTracks().forEach(t => t.stop());
+      faceIdStream = null;
+    }
+    faceIdScanningInProgress = false;
+    faceIdLastMatchProfileId = null;
+  }
+
+  function startFaceIdScanning() {
+    if (faceIdScanInterval) clearInterval(faceIdScanInterval);
+    
+    faceIdScanInterval = setInterval(async () => {
+      if (faceIdScanningInProgress || !faceIdStream || activeVerifyMode !== 'face') return;
+      
+      // If a candidate is already identified and the 10-second cooldown is not over, do not scan
+      if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime < 10000)) return;
+      
+      const videoEl = document.getElementById('faceIdVideo');
+      if (!videoEl.readyState) return;
+      
+      faceIdScanningInProgress = true;
+      
+      const statusOverlay = document.getElementById('faceIdScanStatus');
+      statusOverlay.innerHTML = `<span class="badge bg-primary px-3 py-2"><i class="bi bi-activity me-1"></i> SKANERLANMOQDA...</span>`;
+      
+      // Capture frame
+      const canvas = document.createElement('canvas');
+      canvas.width = videoEl.videoWidth || 640;
+      canvas.height = videoEl.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoEl, -canvas.width, 0, canvas.width, canvas.height);
+      const frame = canvas.toDataURL('image/jpeg', 0.9);
+      
+      try {
+        const resp = await fetch(API_EXAM_IDENTIFY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+          body: JSON.stringify({ frame: frame }),
+        });
+        const result = await resp.json();
+        
+        if (result.success) {
+          statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ANIQLANDI</span>`;
+          showFaceIdResult(result);
+          
+          faceIdLastMatchProfileId = result.applicant?.id;
+          faceIdLastMatchTime = Date.now();
+        } else {
+          const noFace = result.error && result.error.includes('No face');
+          statusOverlay.innerHTML = noFace
+            ? `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> YUZ KO'RINMADI</span>`
+            : `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-x-fill me-1"></i> QIDIRILMOQDA...</span>`;
+            
+          // If 10-second view is over, clear old result
+          if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime >= 10000)) {
+            clearFaceIdResult();
+            faceIdLastMatchProfileId = null;
+          }
+        }
+      } catch (err) {
+        console.error('Face ID Identify API error:', err);
+      } finally {
+        faceIdScanningInProgress = false;
+      }
+    }, 2000);
+  }
+
+  function showFaceIdResult(result) {
+    const indicator = result.indicator;
+    const score = result.match_percentage;
+    const ap = result.applicant || {};
+    
+    document.getElementById('faceId_fullName').textContent = ap.full_name || '—';
+    document.getElementById('faceId_admissionId').textContent = ap.admission_id || '—';
+    document.getElementById('faceId_passport').textContent = ap.passport_number || '—';
+    
+    if (ap.selfie_url) {
+      document.getElementById('faceId_photo').src = ap.selfie_url;
+    } else {
+      document.getElementById('faceId_photo').src = '/static/images/avatar.png';
+    }
+    
+    const inner = document.getElementById('faceIdResultInner');
+    const iconEl = document.getElementById('faceIdIcon');
+    const titleEl = document.getElementById('faceIdTitle');
+    const subEl = document.getElementById('faceIdSub');
+    const scoreEl = document.getElementById('faceIdScore');
+    const attBox = document.getElementById('faceIdAttendanceBox');
+    const confirmBtn = document.getElementById('faceIdConfirmBtn');
+    const confirmSuccess = document.getElementById('faceIdConfirmSuccess');
+    
+    confirmBtn.disabled = false;
+    confirmBtn.classList.remove('d-none');
+    confirmSuccess.classList.add('d-none');
+
+    if (indicator === 'green') {
+      inner.className = 'result-banner green';
+      iconEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:var(--akhu-success)"></i>';
+      titleEl.textContent = 'Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli';
+      subEl.textContent = ap.full_name;
+      scoreEl.className = 'status-badge verified fs-6';
+      scoreEl.textContent = score + '% mos';
+      attBox.classList.remove('d-none');
+    } else if (indicator === 'yellow') {
+      inner.className = 'result-banner yellow';
+      iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-warning)"></i>';
+      titleEl.textContent = 'Qo\'lda tekshirish talab qilinadi';
+      subEl.textContent = 'Yuz mos keldi, lekin qo\'shimcha tekshiruv kerak.';
+      scoreEl.className = 'status-badge review_required fs-6';
+      scoreEl.textContent = score + '% mos';
+      attBox.classList.add('d-none');
+    } else {
+      inner.className = 'result-banner red';
+      iconEl.innerHTML = '<i class="bi bi-x-circle-fill" style="color:var(--akhu-danger)"></i>';
+      titleEl.textContent = 'Yuz mos kelmadi — Rad etildi';
+      subEl.textContent = 'Talabani imtihon komissiyasiga yo\'naltiring.';
+      scoreEl.className = 'status-badge rejected fs-6';
+      scoreEl.textContent = score + '% mos';
+      attBox.classList.add('d-none');
+    }
+
+    document.getElementById('faceIdWaiting').classList.add('d-none');
+    document.getElementById('faceIdResultCard').classList.remove('d-none');
+  }
+
+  function clearFaceIdResult() {
+    document.getElementById('faceIdWaiting').classList.remove('d-none');
+    document.getElementById('faceIdResultCard').classList.add('d-none');
+    
+    document.getElementById('faceId_fullName').textContent = '—';
+    document.getElementById('faceId_admissionId').textContent = '—';
+    document.getElementById('faceId_passport').textContent = '—';
+    document.getElementById('faceId_photo').src = '/static/images/avatar.png';
+  }
+
+  async function confirmFaceIdAttendance() {
+    if (!faceIdLastMatchProfileId) return;
+    const btn = document.getElementById('faceIdConfirmBtn');
+    btn.disabled = true;
+    try {
+      const resp = await fetch(API_CONFIRM, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ profile_id: faceIdLastMatchProfileId }),
+      });
+      const res = await resp.json();
+      if (res.success) {
+        document.getElementById('faceIdConfirmSuccess').classList.remove('d-none');
+        btn.classList.add('d-none');
+        
+        // After 3 seconds, reset Face ID so scanning can resume for other candidates
+        setTimeout(() => {
+          clearFaceIdResult();
+          faceIdLastMatchProfileId = null;
+        }, 3000);
+      } else {
+        alert(res.error || 'Tasdiqlashda xato');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      alert('Tarmoq xatosi');
+      btn.disabled = false;
+    }
+  }
+
+  // ── Initialization ──
+  document.addEventListener('DOMContentLoaded', () => {
+    if (PRELOADED_APPLICANT) {
+      // Profile passed via URL: go straight to face verify
+      document.getElementById('phase1QR').style.display = 'none';
+      document.getElementById('phase2Face').style.display = '';
+      document.getElementById('modeLabel').innerHTML = '<i class="bi bi-camera-fill me-1"></i> Face Verify';
+      lastScannedSelfieUrl = PRELOADED_APPLICANT.selfie_url || '';
+      fillFacePhaseInfo(PRELOADED_APPLICANT, PRELOADED_PROFILE_ID);
+      initFaceCamera();
+    } else {
+      // QR scan mode
+      initQRScanner();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    stopFaceCamera();
+    stopQRScanner();
+    stopFaceIdMode();
+  });
+</script>
+
+<style>
+.supervisor-layout { display:flex;min-height:calc(100vh - 70px); }
+.supervisor-sidebar { width:240px;background:var(--bg-secondary);border-right:1px solid var(--border-color);display:flex;flex-direction:column;flex-shrink:0; }
+.supervisor-main { flex:1;padding:32px;overflow-y:auto; }
+.sidebar-header { padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px; }
+.sidebar-avatar { width:40px;height:40px;background:var(--gradient-blue);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white; }
+.sidebar-username { font-weight:700;font-size:0.9rem; }
+.sidebar-role { font-size:0.75rem;color:var(--akhu-gold); }
+.sidebar-nav { flex:1;padding:12px 0; }
+.sidebar-footer { padding:12px 0;border-top:1px solid var(--border-color); }
+.sidebar-link { display:flex;align-items:center;gap:12px;padding:11px 20px;color:var(--text-secondary);text-decoration:none;font-size:0.9rem;font-weight:500;transition:all 0.15s; }
+.sidebar-link:hover { background:var(--bg-card-hover);color:var(--text-primary); }
+.sidebar-link.active { background:rgba(37,99,235,0.10);color:var(--akhu-blue-light); }
+
+.info-grid { display:flex;flex-direction:column;gap:10px; }
+.info-item { display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04); }
+.info-label { font-size:0.82rem;color:var(--text-muted); }
+.info-value { font-size:0.9rem;font-weight:500; }
+
+.result-waiting { text-align:center;padding:50px 24px;background:var(--gradient-card);border:1px solid var(--border-color);border-radius:var(--radius-xl); }
+.waiting-icon { font-size:3.5rem;color:var(--text-muted);margin-bottom:16px; }
+.flex-1 { flex:1; }
+.btn-sm { padding:6px 14px !important;font-size:0.82rem !important; }
+
+.candidate-avatar { width:48px;height:48px;background:var(--gradient-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--bg-primary);flex-shrink:0; }
+
+#qrReader { border-radius: var(--radius-lg);overflow:hidden; }
+#qrReader video { width:100% !important; border-radius: var(--radius-lg); }
+#qrReader img { display:none; }
+.scan-status-overlay { position:absolute;top:12px;left:12px;z-index:10; }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}

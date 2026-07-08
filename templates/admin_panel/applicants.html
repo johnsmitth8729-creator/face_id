@@ -1,0 +1,740 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+{% block content %}
+<div class="admin-layout">
+  {% include "admin_panel/includes/sidebar.html" with active="applicants" %}
+  <div class="admin-content">
+    
+    <!-- Page Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Applicant Management" %}</h2>
+        <p class="page-sub">{% trans "Manage allowed candidate registration lists and track verification outcomes." %}</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn-akhu-outline btn-md" data-bs-toggle="modal" data-bs-target="#infoModal">
+          <i class="bi bi-info-circle-fill me-1"></i>{% trans "Excel Format" %}
+        </button>
+        <button class="btn-akhu-outline btn-md" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+          <i class="bi bi-person-plus-fill me-1"></i>{% trans "Add Candidate" %}
+        </button>
+        <button class="btn-akhu-primary btn-md" data-bs-toggle="modal" data-bs-target="#importModal">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>{% trans "Import Candidates" %}
+        </button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="akhu-card mb-4 py-3">
+      <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-5">
+          <div class="search-input-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" name="q" value="{{ query }}" class="form-control ps-5" placeholder="{% trans 'Search by passport, name, email...' %}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select name="status" class="form-control">
+            <option value="">-- {% trans "Filter Verification Status" %} --</option>
+            {% for code, label in status_choices %}
+              <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-funnel-fill me-1"></i>{% trans "Filter" %}
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a href="{% url 'admin_panel:applicants' %}" class="btn-akhu-outline w-100 justify-content-center text-center">
+            {% trans "Reset" %}
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <ul class="nav nav-tabs border-bottom-0 mb-3" id="applicantTabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link tab-btn active" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-content" type="button" role="tab">
+          <i class="bi bi-person-check-fill me-2"></i>{% trans "Completed Verifications" %} ({{ applicants.paginator.count|default:0 }})
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link tab-btn" id="allowed-tab" data-bs-toggle="tab" data-bs-target="#allowed-content" type="button" role="tab">
+          <i class="bi bi-card-list me-2"></i>{% trans "Allowed Candidates (Pending)" %} ({{ pre_registered.paginator.count|default:0 }})
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="applicantTabsContent">
+      
+      <!-- Tab 1: Completed / Verified Applicants -->
+      <div class="tab-pane fade show active" id="completed-content" role="tabpanel">
+        <div class="akhu-card">
+          <div class="table-responsive">
+            <table class="akhu-table">
+              <thead>
+                <tr>
+                  <th>{% trans "Applicant ID" %}</th>
+                  <th>{% trans "Passport" %}</th>
+                  <th>{% trans "Full Name" %}</th>
+                  <th>{% trans "Program" %}</th>
+                  <th>{% trans "Selected Region" %}</th>
+                  <th>{% trans "Biometrics" %}</th>
+                  <th>{% trans "Actions" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for applicant in applicants %}
+                  {% with session=applicant.user.verification_sessions.first %}
+                  {% with fp=session.face_profile %}
+                  <tr>
+                    <td>
+                      <span class="badge-admission-id">{{ applicant.applicant_id|default:"—" }}</span>
+                    </td>
+                    <td><strong>{{ applicant.passport_number }}</strong></td>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        {% if fp.selfie_image %}
+                          <img src="{{ fp.selfie_image.url }}" alt="Selfie" class="rounded border border-secondary" style="width: 40px; height: 40px; object-fit: cover; cursor: zoom-in;" onclick="window.open('{{ fp.selfie_image.url }}')">
+                        {% else %}
+                          <div class="rounded bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-person-fill text-light"></i>
+                          </div>
+                        {% endif %}
+                        <div>
+                          <div class="fw-bold text-light">{{ applicant.full_name }}</div>
+                          <div class="text-secondary small">{{ applicant.email|default:"" }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ applicant.program|default:"—" }}</td>
+                    <td><span class="badge bg-secondary">{{ applicant.selected_region|default:"—" }}</span></td>
+                    <td>
+                      {% if fp %}
+                        <span class="status-badge {{ fp.status }}">
+                          {{ fp.get_status_display }} ({{ fp.match_percentage|floatformat:1 }}%)
+                        </span>
+                      {% else %}
+                        <span class="status-badge pending">{% trans "Not Started" %}</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <button class="btn-akhu-outline btn-sm me-2 edit-applicant-btn"
+                              data-id="{{ applicant.id }}"
+                              data-applicant-id="{{ applicant.applicant_id|default:'' }}"
+                              data-admission-id="{{ applicant.admission_id }}"
+                              data-passport="{{ applicant.passport_number }}"
+                              data-first-name="{{ applicant.first_name }}"
+                              data-last-name="{{ applicant.last_name }}"
+                              data-middle-name="{{ applicant.middle_name }}"
+                              data-dob="{{ applicant.date_of_birth|date:'Y-m-d' }}"
+                              data-gender="{{ applicant.gender }}"
+                              data-phone="{{ applicant.phone_number }}"
+                              data-email="{{ applicant.email }}"
+                              data-program="{{ applicant.program }}"
+                              data-region="{{ applicant.selected_region }}"
+                              data-exam-venue="{{ applicant.exam_venue }}"
+                              data-exam-date="{{ applicant.exam_date|date:'Y-m-d\TH:i' }}"
+                              data-locked="{% if applicant.is_locked %}1{% else %}0{% endif %}"
+                              data-active="{% if applicant.user.is_active %}1{% else %}0{% endif %}"
+                              data-bs-toggle="modal"
+                              data-bs-target="#editApplicantModal"
+                              style="padding: 6px 10px;"
+                              title="{% trans 'Edit applicant information' %}">
+                        <i class="bi bi-pencil-square"></i>
+                      </button>
+                      {% if fp %}
+                        <button class="btn-akhu-outline btn-sm me-2 view-biometrics-btn" 
+                                data-name="{{ applicant.full_name }}" 
+                                data-passport="{{ applicant.passport_number }}"
+                                data-straight="{% if fp.selfie_image %}{{ fp.selfie_image.url }}{% endif %}"
+                                data-left="{% if fp.selfie_left %}{{ fp.selfie_left.url }}{% endif %}"
+                                data-right="{% if fp.selfie_right %}{{ fp.selfie_right.url }}{% endif %}"
+                                data-up="{% if fp.selfie_up %}{{ fp.selfie_up.url }}{% endif %}"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#viewBiometricsModal"
+                                style="padding: 6px 10px;"
+                                title="{% trans 'View captured face photos' %}">
+                          <i class="bi bi-images"></i>
+                        </button>
+                      {% endif %}
+                      <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="profile_id" value="{{ applicant.id }}">
+                        <button name="action" value="delete" class="btn-sm text-danger border-0 rounded" 
+                                style="background:rgba(239,68,68,0.1); padding: 6px 10px;" 
+                                onclick="return confirm('Delete verified applicant? This removes their profile and verification history.')">
+                          <i class="bi bi-trash3"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endwith %}
+                  {% endwith %}
+                {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center py-5 text-secondary">
+                      <i class="bi bi-people mb-2" style="font-size: 2rem;"></i>
+                      <p class="mb-0">{% trans "No completed verifications found." %}</p>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if applicants.has_other_pages %}
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span class="text-secondary small">{% trans "Showing page" %} {{ applicants.number }} {% trans "of" %} {{ applicants.paginator.num_pages }}</span>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  {% if applicants.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ applicants.previous_page_number }}&q={{ query }}&status={{ status_filter }}">{% trans "Prev" %}</a></li>
+                  {% endif %}
+                  {% for p in applicants.paginator.page_range %}
+                    <li class="page-item {% if applicants.number == p %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ query }}&status={{ status_filter }}">{{ p }}</a></li>
+                  {% endfor %}
+                  {% if applicants.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ applicants.next_page_number }}&q={{ query }}&status={{ status_filter }}">{% trans "Next" %}</a></li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tab 2: Allowed Candidates (Pre-Registered) -->
+      <div class="tab-pane fade" id="allowed-content" role="tabpanel">
+        <div class="akhu-card">
+          <div class="table-responsive">
+            <table class="akhu-table">
+              <thead>
+                <tr>
+                  <th>{% trans "Applicant ID" %}</th>
+                  <th>{% trans "Passport" %}</th>
+                  <th>{% trans "Full Name" %}</th>
+                  <th>{% trans "Program" %}</th>
+                  <th>{% trans "Region" %}</th>
+                  <th>{% trans "Upload Date" %}</th>
+                  <th>{% trans "Actions" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for pre in pre_registered %}
+                  <tr>
+                    <td><span class="badge-admission-id">{{ pre.applicant_id|default:"—" }}</span></td>
+                    <td><strong>{{ pre.passport_number }}</strong></td>
+                    <td>{{ pre.surname }} {{ pre.given_name }} {% if pre.middle_name %}{{ pre.middle_name }}{% endif %}</td>
+                    <td>{{ pre.program|default:"—" }}</td>
+                    <td>{{ pre.region|default:"—" }}</td>
+                    <td><small class="text-secondary">{{ pre.created_at|date:"Y-m-d H:i" }}</small></td>
+                    <td>
+                      <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="pre_id" value="{{ pre.id }}">
+                        <button name="action" value="delete_pre" class="btn-sm text-danger border-0 rounded" 
+                                style="background:rgba(239,68,68,0.1); padding: 6px 10px;" 
+                                onclick="return confirm('Delete this pre-registered candidate? They will not be able to undergo Face ID.')">
+                          <i class="bi bi-trash3"></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="7" class="text-center py-5 text-secondary">
+                      <i class="bi bi-cloud-upload mb-2" style="font-size: 2rem;"></i>
+                      <p class="mb-0">{% trans "No allowed candidates list uploaded yet." %}</p>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if pre_registered.has_other_pages %}
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span class="text-secondary small">{% trans "Showing page" %} {{ pre_registered.number }} {% trans "of" %} {{ pre_registered.paginator.num_pages }}</span>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  {% if pre_registered.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?pre_page={{ pre_registered.previous_page_number }}&q={{ query }}">{% trans "Prev" %}</a></li>
+                  {% endif %}
+                  {% for p in pre_registered.paginator.page_range %}
+                    <li class="page-item {% if pre_registered.number == p %}active{% endif %}"><a class="page-link" href="?pre_page={{ p }}&q={{ query }}">{{ p }}</a></li>
+                  {% endfor %}
+                  {% if pre_registered.has_next %}
+                    <li class="page-item"><a class="page-link" href="?pre_page={{ pre_registered.next_page_number }}&q={{ query }}">{% trans "Next" %}</a></li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div><style>
+.admin-page-header { display:flex; justify-content:space-between; align-items:flex-start; }
+.page-title { font-size:1.6rem; font-weight:800; margin-bottom:4px; }
+.page-sub { color:var(--text-secondary); font-size:0.9rem; margin:0; }
+.search-input-wrapper { position:relative; }
+.search-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
+.badge-admission-id { background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:var(--akhu-gold); border-radius:var(--radius-sm); padding:4px 8px; font-size:0.8rem; font-family:monospace; }
+.tab-btn { background:transparent !important; border:none !important; color:var(--text-secondary) !important; padding:10px 20px !important; font-weight:600; border-radius:var(--radius-md) !important; margin-right:8px; font-size:0.9rem; }
+.tab-btn.active { background:var(--akhu-blue) !important; color:var(--text-primary) !important; box-shadow:var(--shadow-sm); }
+.nav-tabs { border-bottom: none !important; }
+.btn-sm { font-size: 0.8rem !important; padding: 4px 8px !important; }
+.pagination .page-link { background: var(--bg-secondary); border-color: var(--border-color); color: var(--text-secondary); }
+.pagination .page-item.active .page-link { background: var(--akhu-blue-light); border-color: var(--akhu-blue-light); color: white; }
+.admin-edit-modal { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl); box-shadow:0 24px 80px rgba(0,0,0,0.45); }
+.edit-form-section { background:rgba(255,255,255,0.025); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; margin-bottom:14px; }
+.edit-form-section .section-title { color:var(--akhu-gold); font-weight:800; font-size:0.86rem; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:12px; }
+.edit-form-section .form-label { color:var(--text-secondary); font-size:0.78rem; font-weight:700; margin-bottom:6px; }
+.switch-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--text-primary); background:rgba(255,255,255,0.025); cursor:pointer; }
+.switch-row input { width:18px; height:18px; accent-color:var(--akhu-gold); }
+@media (max-width: 768px) {
+  .admin-page-header { flex-direction:column; gap:14px; }
+  .admin-page-header > .d-flex { flex-wrap:wrap; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Restore tab selection if page reload occurred due to query params
+  const hash = window.location.hash;
+  if (hash) {
+    const tabEl = document.querySelector(`button[data-bs-target="${hash}"]`);
+    if (tabEl) {
+      bootstrap.Tab.getInstance(tabEl)?.show() || new bootstrap.Tab(tabEl).show();
+    }
+  }
+  
+  document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener('shown.bs.tab', function (e) {
+      window.location.hash = e.target.getAttribute('data-bs-target');
+    });
+  });
+});
+</script>
+{% endblock %}
+
+{% block modals %}
+<!-- Add Single Candidate Modal -->
+<div class="modal fade" id="addCandidateModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>{% trans "Add Allowed Candidate" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'admin_panel:applicants' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_candidate">
+          
+          <div class="mb-3">
+            <label class="form-label text-secondary small">{% trans "Applicant ID (Optional)" %}</label>
+            <input type="text" name="applicant_id" class="form-control" placeholder="e.g. 1460">
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label text-secondary small">{% trans "Given Name" %}</label>
+              <input type="text" name="given_name" class="form-control" required placeholder="Ism">
+            </div>
+            <div class="col-6">
+              <label class="form-label text-secondary small">{% trans "Surname" %}</label>
+              <input type="text" name="surname" class="form-control" required placeholder="Familya">
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label text-secondary small">{% trans "Middle Name (Optional)" %}</label>
+            <input type="text" name="middle_name" class="form-control" placeholder="Otasining ismi">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label text-secondary small">{% trans "Program" %}</label>
+            <input type="text" name="program" class="form-control" placeholder="e.g. Software Engineering">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label text-secondary small">{% trans "Card / Passport Number" %}</label>
+            <input type="text" name="passport_number" class="form-control" required placeholder="e.g. AD8921445" style="text-transform: uppercase;">
+          </div>
+          
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-check-circle-fill me-2"></i>{% trans "Save Candidate" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title"><i class="bi bi-file-earmark-excel me-2 text-success"></i>{% trans "Import Candidate List" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-3">
+          {% trans "Select an Excel file (.xlsx or .xls) to upload. Validated candidates will be allowed to complete the Face ID verification wizard." %}
+        </p>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="import_excel">
+          <div class="mb-4">
+            <label class="form-label">{% trans "Choose Excel File" %}</label>
+            <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required>
+          </div>
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-cloud-arrow-up-fill me-2"></i>{% trans "Upload and Parse" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">{% trans "Excel Format Specification" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-secondary mb-3">{% trans "Your Excel file must contain columns with headers equivalent to the following:" %}</p>
+        <table class="table table-dark table-sm table-bordered border-secondary" style="font-size:0.82rem;">
+          <thead>
+            <tr>
+              <th>{% trans "Field" %}</th>
+              <th>{% trans "Required" %}</th>
+              <th>{% trans "Supported Header Names" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{% trans "Applicant ID" %}</td>
+              <td>{% trans "No" %}</td>
+              <td>`Applicant ID`, `applicant_id`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Surname" %}</td>
+              <td><span class="text-danger">{% trans "Yes" %}</span></td>
+              <td>`Surname`, `Last Name`, `Familya`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Given Name" %}</td>
+              <td><span class="text-danger">{% trans "Yes" %}</span></td>
+              <td>`Given Name`, `First Name`, `Ism`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Middle Name" %}</td>
+              <td>{% trans "No" %}</td>
+              <td>`Middle Name`, `Sharif`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Program" %}</td>
+              <td>{% trans "No" %}</td>
+              <td>`Program`, `Yonalish`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Region" %}</td>
+              <td>{% trans "No" %}</td>
+              <td>`Region`, `Hudud`, `Viloyat`</td>
+            </tr>
+            <tr>
+              <td>{% trans "Card / Passport Number" %}</td>
+              <td><span class="text-danger">{% trans "Yes" %}</span></td>
+              <td>`Card / Passport Number`, `Passport Number`, `Passport`</td>
+            </tr>
+
+
+          </tbody>
+        </table>
+        <div class="alert alert-info py-2 small border-0 bg-opacity-10 text-info">
+          <i class="bi bi-info-circle-fill me-2"></i>{% trans "The parser dynamically maps headers, supporting English and Uzbek names." %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Completed Applicant Modal -->
+<div class="modal fade" id="editApplicantModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content admin-edit-modal">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title">
+            <i class="bi bi-pencil-square me-2 text-gold"></i>{% trans "Edit Applicant Information" %}
+          </h5>
+          <p class="text-secondary small mb-0">{% trans "Update completed verification profile data without deleting biometric history." %}</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'admin_panel:applicants' %}" id="editApplicantForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="edit_applicant">
+          <input type="hidden" name="profile_id" id="editProfileId">
+
+          <div class="edit-form-section">
+            <div class="section-title"><i class="bi bi-person-vcard me-2"></i>{% trans "Identity" %}</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Applicant ID" %}</label>
+                <input type="text" name="applicant_id" id="editApplicantId" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Admission ID" %}</label>
+                <input type="text" name="admission_id" id="editAdmissionId" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Passport / Card Number" %}</label>
+                <input type="text" name="passport_number" id="editPassport" class="form-control" required style="text-transform: uppercase;">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Last Name" %}</label>
+                <input type="text" name="last_name" id="editLastName" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "First Name" %}</label>
+                <input type="text" name="first_name" id="editFirstName" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Middle Name" %}</label>
+                <input type="text" name="middle_name" id="editMiddleName" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Date of Birth" %}</label>
+                <input type="date" name="date_of_birth" id="editDob" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Gender" %}</label>
+                <select name="gender" id="editGender" class="form-control">
+                  <option value="">-</option>
+                  <option value="M">{% trans "Male" %}</option>
+                  <option value="F">{% trans "Female" %}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-form-section">
+            <div class="section-title"><i class="bi bi-telephone me-2"></i>{% trans "Contact & Program" %}</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Phone Number" %}</label>
+                <input type="text" name="phone_number" id="editPhone" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Email" %}</label>
+                <input type="email" name="email" id="editEmail" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Program" %}</label>
+                <input type="text" name="program" id="editProgram" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Selected Region" %}</label>
+                <input type="text" name="selected_region" id="editRegion" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Exam Venue" %}</label>
+                <input type="text" name="exam_venue" id="editExamVenue" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{% trans "Exam Date & Time" %}</label>
+                <input type="datetime-local" name="exam_date" id="editExamDate" class="form-control">
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-form-section mb-0">
+            <div class="section-title"><i class="bi bi-shield-check me-2"></i>{% trans "Status" %}</div>
+            <div class="d-flex flex-wrap gap-3">
+              <label class="switch-row">
+                <input type="checkbox" name="is_locked" id="editIsLocked">
+                <span>{% trans "Profile locked" %}</span>
+              </label>
+              <label class="switch-row">
+                <input type="checkbox" name="user_is_active" id="editUserIsActive">
+                <span>{% trans "User active" %}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn-akhu-outline" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+            <button type="submit" class="btn-akhu-primary">
+              <i class="bi bi-check2-circle me-2"></i>{% trans "Save Changes" %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Captured Biometrics Modal -->
+<div class="modal fade" id="viewBiometricsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">
+          <i class="bi bi-images me-2 text-primary"></i>
+          <span id="bioModalTitleName">{% trans "Biometric Images" %}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 text-secondary small">
+          <strong>{% trans "Passport" %}:</strong> <span id="bioModalPassport" class="text-light"></span>
+        </div>
+        
+        <div class="row g-3">
+          <!-- 1. Straight/Frontal -->
+          <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary h-100">
+              <div class="card-header py-2 bg-secondary bg-opacity-25 border-secondary small text-center text-uppercase fw-bold">
+                {% trans "Frontal View (Asosiy)" %}
+              </div>
+              <div class="card-body p-2 d-flex align-items-center justify-content-center bg-black bg-opacity-25" style="height:200px; min-height:200px;">
+                <img id="bioImgStraight" src="" alt="Frontal View" class="img-fluid rounded shadow-sm" style="max-height:100%; max-width:100%; object-fit:contain; display:none; cursor: zoom-in;" onclick="window.open(this.src)">
+                <div id="bioImgStraightPlaceholder" class="text-muted small"><i class="bi bi-image me-1"></i> {% trans "Not Captured" %}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 2. Left -->
+          <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary h-100">
+              <div class="card-header py-2 bg-secondary bg-opacity-25 border-secondary small text-center text-uppercase fw-bold">
+                {% trans "Left Side View (Chap)" %}
+              </div>
+              <div class="card-body p-2 d-flex align-items-center justify-content-center bg-black bg-opacity-25" style="height:200px; min-height:200px;">
+                <img id="bioImgLeft" src="" alt="Left Side View" class="img-fluid rounded shadow-sm" style="max-height:100%; max-width:100%; object-fit:contain; display:none; cursor: zoom-in;" onclick="window.open(this.src)">
+                <div id="bioImgLeftPlaceholder" class="text-muted small"><i class="bi bi-image me-1"></i> {% trans "Not Captured" %}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 3. Right -->
+          <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary h-100">
+              <div class="card-header py-2 bg-secondary bg-opacity-25 border-secondary small text-center text-uppercase fw-bold">
+                {% trans "Right Side View (O'ng)" %}
+              </div>
+              <div class="card-body p-2 d-flex align-items-center justify-content-center bg-black bg-opacity-25" style="height:200px; min-height:200px;">
+                <img id="bioImgRight" src="" alt="Right Side View" class="img-fluid rounded shadow-sm" style="max-height:100%; max-width:100%; object-fit:contain; display:none; cursor: zoom-in;" onclick="window.open(this.src)">
+                <div id="bioImgRightPlaceholder" class="text-muted small"><i class="bi bi-image me-1"></i> {% trans "Not Captured" %}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 4. Up -->
+          <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary h-100">
+              <div class="card-header py-2 bg-secondary bg-opacity-25 border-secondary small text-center text-uppercase fw-bold">
+                {% trans "Top View (Yuqori)" %}
+              </div>
+              <div class="card-body p-2 d-flex align-items-center justify-content-center bg-black bg-opacity-25" style="height:200px; min-height:200px;">
+                <img id="bioImgUp" src="" alt="Top View" class="img-fluid rounded shadow-sm" style="max-height:100%; max-width:100%; object-fit:contain; display:none; cursor: zoom-in;" onclick="window.open(this.src)">
+                <div id="bioImgUpPlaceholder" class="text-muted small"><i class="bi bi-image me-1"></i> {% trans "Not Captured" %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const editModal = document.getElementById('editApplicantModal');
+  if (editModal) {
+    editModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const setValue = (id, attr) => {
+        const el = document.getElementById(id);
+        if (el) el.value = button.getAttribute(attr) || '';
+      };
+
+      setValue('editProfileId', 'data-id');
+      setValue('editApplicantId', 'data-applicant-id');
+      setValue('editAdmissionId', 'data-admission-id');
+      setValue('editPassport', 'data-passport');
+      setValue('editFirstName', 'data-first-name');
+      setValue('editLastName', 'data-last-name');
+      setValue('editMiddleName', 'data-middle-name');
+      setValue('editDob', 'data-dob');
+      setValue('editGender', 'data-gender');
+      setValue('editPhone', 'data-phone');
+      setValue('editEmail', 'data-email');
+      setValue('editProgram', 'data-program');
+      setValue('editRegion', 'data-region');
+      setValue('editExamVenue', 'data-exam-venue');
+      setValue('editExamDate', 'data-exam-date');
+
+      document.getElementById('editIsLocked').checked = button.getAttribute('data-locked') === '1';
+      document.getElementById('editUserIsActive').checked = button.getAttribute('data-active') === '1';
+    });
+  }
+
+  const bioModal = document.getElementById('viewBiometricsModal');
+  if (bioModal) {
+    bioModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const name = button.getAttribute('data-name');
+      const passport = button.getAttribute('data-passport');
+      const straight = button.getAttribute('data-straight');
+      const left = button.getAttribute('data-left');
+      const right = button.getAttribute('data-right');
+      const up = button.getAttribute('data-up');
+      
+      document.getElementById('bioModalTitleName').textContent = name;
+      document.getElementById('bioModalPassport').textContent = passport;
+      
+      const images = [
+        { id: 'bioImgStraight', placeholderId: 'bioImgStraightPlaceholder', url: straight },
+        { id: 'bioImgLeft', placeholderId: 'bioImgLeftPlaceholder', url: left },
+        { id: 'bioImgRight', placeholderId: 'bioImgRightPlaceholder', url: right },
+        { id: 'bioImgUp', placeholderId: 'bioImgUpPlaceholder', url: up }
+      ];
+      
+      images.forEach(img => {
+        const imgEl = document.getElementById(img.id);
+        const phEl = document.getElementById(img.placeholderId);
+        if (img.url && img.url !== 'None' && img.url !== '') {
+          imgEl.src = img.url;
+          imgEl.style.display = 'block';
+          phEl.style.display = 'none';
+        } else {
+          imgEl.src = '';
+          imgEl.style.display = 'none';
+          phEl.style.display = 'block';
+        }
+      });
+    });
+  }
+});
+</script>
+{% endblock %}

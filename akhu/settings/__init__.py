@@ -1,0 +1,1 @@
+"""AKHU AFIVS — Settings package"""

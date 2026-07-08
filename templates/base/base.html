@@ -1,0 +1,204 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    // Early check to avoid theme flicker
+    (function() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{% block meta_description %}{{ SITE_NAME }} — Secure biometric identity verification{% endblock %}">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ page_title|default:"Face ID" }} | {{ INSTITUTION_NAME }}{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- AKHU Main CSS -->
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=1.2">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="akhu-navbar" id="mainNavbar">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center justify-content-between">
+        <!-- Logo -->
+        <a href="{% url 'verification:home' %}" class="navbar-brand-custom">
+          <img src="{% static 'images/logo-dark.png' %}" alt="Logo" class="logo-theme-dark" style="height: 38px; width: auto; object-fit: contain;">
+          <img src="{% static 'images/logo-light.png' %}" alt="Logo" class="logo-theme-light" style="height: 38px; width: auto; object-fit: contain;">
+          <div class="brand-text">
+            <span class="brand-name">Al Xorazmiy</span>
+            <span class="brand-sub">{% trans "Face ID" %}</span>
+          </div>
+        </a>
+
+        <!-- Right Controls -->
+        <div class="d-flex align-items-center gap-3">
+          <!-- Language Switcher -->
+          <div class="lang-switcher">
+            <form action="{% url 'set_language' %}" method="post" class="d-inline" onsubmit="return setLanguageNext(this, 'en')">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <input type="hidden" name="language" value="en">
+              <button type="submit" class="lang-btn {% if LANGUAGE_CODE == 'en' %}active{% endif %}">EN</button>
+            </form>
+            <span class="lang-divider">|</span>
+            <form action="{% url 'set_language' %}" method="post" class="d-inline" onsubmit="return setLanguageNext(this, 'uz')">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.path }}">
+              <input type="hidden" name="language" value="uz">
+              <button type="submit" class="lang-btn {% if LANGUAGE_CODE == 'uz' %}active{% endif %}">UZ</button>
+            </form>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <button type="button" class="theme-toggle-btn ms-1 me-1" id="themeToggleBtn" onclick="toggleTheme()" title="{% trans 'Toggle Theme' %}">
+            <i class="bi bi-moon-stars-fill" id="themeToggleIcon"></i>
+          </button>
+
+          <!-- Mobile Toggle -->
+          <button class="mobile-menu-btn d-lg-none" id="mobileMenuBtn">
+            <i class="bi bi-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content {% block main_class %}{% endblock %}">
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="messages-container" id="messagesContainer">
+      {% for message in messages %}
+      <div class="akhu-alert akhu-alert-{{ message.tags }}" role="alert">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'error' or message.tags == 'danger' %}bi-x-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+        <span>{{ message }}</span>
+        <button class="alert-close" onclick="this.parentElement.remove()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="akhu-footer">
+    <div class="container text-center">
+      <div class="footer-brand">
+        <i class="bi bi-shield-check me-2"></i>
+        <strong>{{ INSTITUTION_NAME }}</strong> | {% trans "Face ID" %}
+      </div>
+      <p class="footer-copy">
+        © {{ CURRENT_YEAR }} {{ INSTITUTION_NAME }}. {% trans "All rights reserved." %}
+      </p>
+      <p class="footer-security">
+        <i class="bi bi-lock-fill me-1"></i>
+        {% trans "Secured with AES-256 encryption and TLS 1.3" %}
+      </p>
+    </div>
+  </footer>
+
+  {% block modals %}{% endblock %}
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- AKHU Core JS -->
+  <script src="{% static 'js/main.js' %}"></script>
+  <script>
+    function setLanguageNext(form, langCode) {
+      let currentPath = window.location.pathname;
+      let cleanPath = currentPath;
+      
+      if (currentPath.startsWith('/uz/')) {
+        cleanPath = currentPath.substring(3);
+      } else if (currentPath === '/uz') {
+        cleanPath = '/';
+      }
+      
+      let nextPath = cleanPath;
+      if (langCode === 'uz') {
+        if (cleanPath === '/') {
+          nextPath = '/uz/';
+        } else {
+          nextPath = '/uz' + cleanPath;
+        }
+      }
+      
+      form.querySelector('input[name="next"]').value = nextPath;
+      return true;
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      const icon = document.getElementById('themeToggleIcon');
+      if (icon) {
+        if (theme === 'light') {
+          icon.className = 'bi bi-sun-fill text-warning';
+        } else {
+          icon.className = 'bi bi-moon-stars-fill text-light';
+        }
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(newTheme);
+    }
+
+    // Run this to sync icon classes on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      applyTheme(savedTheme);
+
+      // Attach mobile sidebar click trigger
+      const mobileToggleBtn = document.getElementById('mobileMenuBtn');
+      if (mobileToggleBtn) {
+        mobileToggleBtn.addEventListener('click', toggleMobileSidebar);
+      }
+    });
+
+    function toggleMobileSidebar() {
+      const adminSidebar = document.querySelector('.admin-sidebar');
+      const supervisorSidebar = document.querySelector('.supervisor-sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const activeSidebar = adminSidebar || supervisorSidebar;
+      if (activeSidebar && backdrop) {
+        activeSidebar.classList.toggle('active');
+        backdrop.classList.toggle('active');
+      }
+    }
+
+    function closeMobileSidebar() {
+      const adminSidebar = document.querySelector('.admin-sidebar');
+      const supervisorSidebar = document.querySelector('.supervisor-sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const activeSidebar = adminSidebar || supervisorSidebar;
+      if (activeSidebar && backdrop) {
+        activeSidebar.classList.remove('active');
+        backdrop.classList.remove('active');
+      }
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

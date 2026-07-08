@@ -1,0 +1,481 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block meta_description %}{{ SITE_NAME }} — {% trans "Secure biometric identity verification for admission applicants" %}{% endblock %}
+
+{% block content %}
+<!-- ── HERO SECTION ── -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center min-vh-85">
+      <div class="col-lg-6 animate-slide-up">
+        <!-- Badge -->
+        <div class="hero-badge mb-4">
+          <i class="bi bi-shield-check-fill"></i>
+          <span>{% trans "AI-Powered Biometric Security" %}</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="hero-title">
+          {% trans "Face Identity" %}
+          <span class="gradient-text">{% trans "Verification" %}</span>
+          {% trans "System" %}
+        </h1>
+
+        <p class="hero-desc">
+          {% trans "Complete your biometric enrollment using our AI-powered facial recognition system. Your data is encrypted and securely stored." %}
+        </p>
+
+        <!-- Real info pills -->
+        <div class="hero-pills mb-5">
+          <div class="hero-pill">
+            <i class="bi bi-camera-video-fill"></i>
+            <span>{% trans "Live Face Capture" %}</span>
+          </div>
+          <div class="hero-pill">
+            <i class="bi bi-person-bounding-box"></i>
+            <span>{% trans "Multi-Angle Liveness" %}</span>
+          </div>
+          <div class="hero-pill">
+            <i class="bi bi-qr-code"></i>
+            <span>{% trans "Instant QR Permit" %}</span>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="{% url 'verification:start' %}" class="btn-akhu-gold btn-lg-custom" id="startVerificationBtn">
+            <i class="bi bi-camera-fill"></i>
+            {% trans "Start Verification" %}
+          </a>
+          <a href="#how-it-works" class="btn-akhu-outline btn-lg-custom">
+            <i class="bi bi-play-circle"></i>
+            {% trans "How It Works" %}
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero Visual -->
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center animate-fade-in">
+        <div class="hero-visual">
+          <div class="hero-visual-ring ring-1"></div>
+          <div class="hero-visual-ring ring-2"></div>
+          <div class="hero-visual-ring ring-3"></div>
+          <div class="hero-visual-center">
+            <i class="bi bi-person-bounding-box"></i>
+            <div class="scan-line"></div>
+          </div>
+          <!-- Floating cards -->
+          <div class="float-card float-top-right">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <span>{% trans "Verified" %}</span>
+          </div>
+          <div class="float-card float-bottom-left">
+            <i class="bi bi-lock-fill text-gold"></i>
+            <span>{% trans "Encrypted" %}</span>
+          </div>
+          <div class="float-card float-top-left">
+            <i class="bi bi-eye-fill text-info"></i>
+            <span>{% trans "Liveness Check" %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="section-how" id="how-it-works">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">{% trans "Process" %}</div>
+      <h2 class="section-title">{% trans "How Verification Works" %}</h2>
+      <p class="section-desc">{% trans "Complete in 4 simple steps — fully automated, no manual uploads" %}</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <!-- Step 1 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="how-card">
+          <div class="how-step-number">01</div>
+          <div class="how-icon"><i class="bi bi-person-lines-fill"></i></div>
+          <h3 class="how-title">{% trans "Personal Details" %}</h3>
+          <p class="how-desc">{% trans "Enter your surname, given name, passport number, and select your exam region." %}</p>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="how-card">
+          <div class="how-step-number">02</div>
+          <div class="how-icon"><i class="bi bi-camera-fill"></i></div>
+          <h3 class="how-title">{% trans "Face Capture" %}</h3>
+          <p class="how-desc">{% trans "The camera activates automatically. Look straight — the system captures your selfie when your face is centered and well-lit." %}</p>
+        </div>
+      </div>
+      <!-- Step 3 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="how-card">
+          <div class="how-step-number">03</div>
+          <div class="how-icon"><i class="bi bi-person-bounding-box"></i></div>
+          <h3 class="how-title">{% trans "Liveness Check" %}</h3>
+          <p class="how-desc">{% trans "Follow voice instructions — turn your head left, right, and up. This confirms you are physically present." %}</p>
+        </div>
+      </div>
+      <!-- Step 4 -->
+      <div class="col-md-6 col-lg-3">
+        <div class="how-card how-card-gold">
+          <div class="how-step-number">04</div>
+          <div class="how-icon"><i class="bi bi-qr-code"></i></div>
+          <h3 class="how-title">{% trans "Permit & QR Code" %}</h3>
+          <p class="how-desc">{% trans "Upon successful enrollment, your unique QR code and admission permit are ready to download." %}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="{% url 'verification:start' %}" class="btn-akhu-primary" id="startBtn2">
+        <i class="bi bi-arrow-right-circle-fill"></i>
+        {% trans "Begin Verification" %}
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECURITY FEATURES ── -->
+<section class="section-security">
+  <div class="container">
+    <div class="security-banner">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-5">
+          <h2 class="mb-3">{% trans "Secure & Reliable" %}</h2>
+          <p class="text-secondary mb-4">
+            {% trans "Your biometric data is protected with industry-leading encryption and processed entirely on secure servers." %}
+          </p>
+          <div class="security-features">
+            <div class="security-feature">
+              <i class="bi bi-shield-lock-fill"></i>
+              <span>{% trans "End-to-End Encrypted Storage" %}</span>
+            </div>
+            <div class="security-feature">
+              <i class="bi bi-person-check-fill"></i>
+              <span>{% trans "Anti-Spoofing Liveness Detection" %}</span>
+            </div>
+            <div class="security-feature">
+              <i class="bi bi-cpu-fill"></i>
+              <span>{% trans "InsightFace ArcFace AI Engine" %}</span>
+            </div>
+            <div class="security-feature">
+              <i class="bi bi-clipboard-data-fill"></i>
+              <span>{% trans "Full Admin Audit Trail" %}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="mini-stat-card">
+                <i class="bi bi-cpu-fill"></i>
+                <div class="mini-stat-value">ArcFace</div>
+                <div class="mini-stat-label">{% trans "AI Engine" %}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-stat-card">
+                <i class="bi bi-arrows-angle-contract"></i>
+                <div class="mini-stat-value">4 {% trans "Steps" %}</div>
+                <div class="mini-stat-label">{% trans "Full Enrollment" %}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-stat-card">
+                <i class="bi bi-eye-fill"></i>
+                <div class="mini-stat-value">3 {% trans "Angles" %}</div>
+                <div class="mini-stat-label">{% trans "Liveness Poses" %}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mini-stat-card">
+                <i class="bi bi-qr-code-scan"></i>
+                <div class="mini-stat-value">JWT</div>
+                <div class="mini-stat-label">{% trans "Signed QR Codes" %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ── HOME PAGE SPECIFIC STYLES ── */
+.hero-section {
+  padding: 80px 0 60px;
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+}
+
+.min-vh-85 { min-height: 85vh; }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: var(--akhu-gold);
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin-bottom: 20px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #3B82F6, #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+
+.hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.hero-stat-value { font-size: 1.5rem; font-weight: 800; color: var(--akhu-blue-light); }
+.hero-stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.hero-stat-divider { width: 1px; height: 40px; background: var(--border-color); }
+
+/* Hero Pills (replaces stats) */
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 7px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.83rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.hero-pill i { color: var(--akhu-gold); font-size: 0.9rem; }
+.hero-pill:hover {
+  border-color: rgba(245,158,11,0.3);
+  color: var(--text-primary);
+  background: rgba(245,158,11,0.05);
+}
+
+.btn-lg-custom { padding: 14px 28px; font-size: 1rem; }
+
+/* Hero Visual */
+.hero-visual {
+  width: 380px;
+  height: 380px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-visual-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: rotate-ring linear infinite;
+}
+
+.ring-1 { width: 360px; height: 360px; border-color: rgba(37, 99, 235, 0.15); animation-duration: 20s; }
+.ring-2 { width: 280px; height: 280px; border-color: rgba(245, 158, 11, 0.12); animation-duration: 15s; animation-direction: reverse; }
+.ring-3 { width: 200px; height: 200px; border-color: rgba(37, 99, 235, 0.25); animation-duration: 10s; }
+
+@keyframes rotate-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hero-visual-center {
+  width: 140px;
+  height: 140px;
+  background: var(--gradient-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  color: white;
+  box-shadow: var(--shadow-glow-blue);
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  animation: scan 2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+.float-card {
+  position: absolute;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  animation: float-card 3s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.float-top-right { top: 10%; right: -5%; animation-delay: 0s; }
+.float-bottom-left { bottom: 10%; left: -5%; animation-delay: 1s; }
+.float-top-left { top: 30%; left: -10%; animation-delay: 0.5s; }
+
+@keyframes float-card {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* How It Works */
+.section-how {
+  padding: 80px 0;
+  background: rgba(255,255,255,0.01);
+  border-top: 1px solid var(--border-color);
+}
+
+.section-badge {
+  display: inline-block;
+  background: rgba(37, 99, 235, 0.10);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: var(--akhu-blue-light);
+  padding: 4px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.section-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
+.section-desc { color: var(--text-secondary); font-size: 1rem; }
+
+.how-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  height: 100%;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.how-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-glow-blue);
+}
+
+.how-card-gold:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: var(--shadow-glow-gold);
+}
+
+.how-step-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.05);
+  line-height: 1;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+}
+
+.how-icon {
+  font-size: 1.8rem;
+  color: var(--akhu-blue-light);
+  margin-bottom: 16px;
+}
+
+.how-card-gold .how-icon { color: var(--akhu-gold); }
+.how-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.how-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6; margin: 0; }
+
+/* Security Section */
+.section-security {
+  padding: 80px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.security-banner {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 48px;
+}
+
+.security-features { display: flex; flex-direction: column; gap: 12px; }
+
+.security-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.security-feature i { color: var(--akhu-success); font-size: 1.1rem; }
+
+.mini-stat-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.mini-stat-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); }
+.mini-stat-card i { font-size: 1.5rem; color: var(--akhu-blue-light); margin-bottom: 8px; display: block; }
+.mini-stat-value { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+.mini-stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+</style>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+{% block content %}
+<div class="admin-layout">
+  {% include "admin_panel/includes/sidebar.html" with active="supervisors" %}
+  <div class="admin-content">
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Supervisor Management" %}</h2>
+        <p class="page-sub">{% trans "Create and manage supervisor accounts" %}</p>
+      </div>
+      <button class="btn-akhu-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+        <i class="bi bi-person-plus-fill me-2"></i>{% trans "Add Supervisor" %}
+      </button>
+    </div>
+
+    <!-- Supervisors Table & Stats -->
+    <div class="akhu-card">
+      <h5 class="mb-3"><i class="bi bi-people-fill me-2 text-gold"></i>{% trans "Supervisor Accounts & Statistics" %}</h5>
+      <div class="table-responsive">
+        <table class="akhu-table">
+          <thead>
+            <tr>
+              <th>{% trans "Username" %}</th>
+              <th>{% trans "Full Name" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Total Scans" %}</th>
+              <th>{% trans "Verified / Failed" %}</th>
+              <th>{% trans "Last Activity" %}</th>
+              <th>{% trans "Created" %}</th>
+              <th>{% trans "Actions" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sup in supervisors %}
+            <tr>
+              <td><strong>{{ sup.user.username }}</strong></td>
+              <td>{{ sup.full_name }}</td>
+              <td>
+                {% if sup.is_active %}
+                  <span class="status-badge verified">{% trans "Active" %}</span>
+                {% else %}
+                  <span class="status-badge rejected">{% trans "Inactive" %}</span>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-primary fs-6">{{ sup.total_scans }}</span></td>
+              <td>
+                <span class="text-success fw-bold">{{ sup.verified_scans }}</span> / 
+                <span class="text-danger fw-bold">{{ sup.failed_scans }}</span>
+              </td>
+              <td>{% if sup.last_activity %}{{ sup.last_activity|timesince }} {% trans "ago" %}{% else %}—{% endif %}</td>
+              <td>{{ sup.created_at|date:"Y-m-d" }}</td>
+              <td>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="supervisor_id" value="{{ sup.id }}">
+                  <button name="action" value="deactivate" class="btn-akhu-outline btn-sm"
+                    {% if not sup.is_active %}disabled{% endif %}>
+                    <i class="bi bi-pause-circle"></i>
+                  </button>
+                  <button name="action" value="delete" class="btn-sm text-danger"
+                    style="background:rgba(239,68,68,0.1);border:1px solid var(--akhu-danger);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;"
+                    onclick="return confirm('Delete this supervisor?')">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center py-4 text-muted">{% trans "No supervisors yet" %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Supervisor Activity Logs -->
+    <div class="akhu-card mt-4">
+      <h5 class="mb-3"><i class="bi bi-journal-text me-2 text-gold"></i>{% trans "Supervisor Activity Logs (Exam Day)" %}</h5>
+      <div class="table-responsive">
+        <table class="akhu-table">
+          <thead>
+            <tr>
+              <th>{% trans "Time" %}</th>
+              <th>{% trans "Supervisor" %}</th>
+              <th>{% trans "Candidate" %}</th>
+              <th>{% trans "Passport" %}</th>
+              <th>{% trans "Result" %}</th>
+              <th>{% trans "Match Score" %}</th>
+              <th>{% trans "Details" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in activity_logs %}
+            <tr>
+              <td>{{ log.verified_at|date:"Y-m-d H:i:s" }}</td>
+              <td><strong>{{ log.supervisor.supervisor_account.full_name|default:log.supervisor.username }}</strong></td>
+              <td>
+                {% if log.applicant_profile %}
+                  {{ log.applicant_profile.full_name }} ({{ log.applicant_profile.admission_id }})
+                {% else %}—{% endif %}
+              </td>
+              <td>{{ log.applicant_profile.passport_number|default:"—" }}</td>
+              <td>
+                <span class="status-badge {% if log.result == 'verified' %}verified{% elif log.result == 'review_required' %}review{% else %}rejected{% endif %}">
+                  {{ log.get_result_display }}
+                </span>
+              </td>
+              <td>
+                {% if log.score %}
+                  <strong>{{ log.score|floatformat:1 }}%</strong>
+                {% else %}—{% endif %}
+              </td>
+              <td><span class="text-secondary small">{{ log.notes|default:"Face match verified" }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center py-4 text-muted">{% trans "No exam day activity logged yet" %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.btn-sm { padding:7px 14px !important;font-size:0.82rem !important; }
+</style>
+{% endblock %}
+
+{% block modals %}
+<!-- Create Supervisor Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">{% trans "Create Supervisor" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create">
+          <div class="mb-3">
+            <label class="form-label">{% trans "Full Name" %}</label>
+            <input type="text" name="full_name" class="form-control" required placeholder="{% trans 'e.g. John Smith' %}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{% trans "Username" %}</label>
+            <input type="text" name="username" class="form-control" required placeholder="{% trans 'Login username' %}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{% trans "Password" %}</label>
+            <input type="password" name="password" class="form-control" required minlength="8">
+          </div>
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-person-check-fill me-2"></i>{% trans "Create Supervisor" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

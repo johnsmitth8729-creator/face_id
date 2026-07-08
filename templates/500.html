@@ -1,0 +1,87 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block title %}500 - {% trans "Internal Server Error" %} | {{ INSTITUTION_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-75">
+  <div class="error-container text-center animate-slide-up">
+    <!-- Glowing Error Circle -->
+    <div class="error-glow-circle error-500 mx-auto mb-4">
+      <div class="error-code">500</div>
+      <div class="error-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    </div>
+
+    <!-- Title & Description -->
+    <h1 class="error-title mb-3">{% trans "Internal Server Error" %}</h1>
+    <p class="error-desc text-secondary mx-auto mb-5">
+      {% trans "An unexpected error occurred on the server. Our technical team has been notified. Please try again later or contact the administrator." %}
+    </p>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'verification:home' %}" class="btn-akhu-primary px-4 py-2">
+        <i class="bi bi-house-door-fill me-2"></i>{% trans "Go to Home" %}
+      </a>
+      <button onclick="location.reload()" class="btn-akhu-outline px-4 py-2">
+        <i class="bi bi-arrow-clockwise me-2"></i>{% trans "Refresh Page" %}
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.min-vh-75 {
+  min-height: 75vh;
+}
+.error-container {
+  max-width: 520px;
+}
+.error-glow-circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+.error-glow-circle.error-500 {
+  border-color: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.15);
+}
+.error-glow-circle.error-500:hover {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 45px rgba(239, 68, 68, 0.25);
+  transform: translateY(-5px);
+}
+.error-code {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #ef4444, var(--akhu-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.error-icon {
+  font-size: 1.5rem;
+  color: #ef4444;
+  margin-top: 4px;
+}
+.error-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.error-desc {
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+</style>
+{% endblock %}

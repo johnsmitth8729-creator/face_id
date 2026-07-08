@@ -1,0 +1,52 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+ActiveState.venv/
+
+# Environment Variables & Secrets
+.env
+*.env
+.env.local
+.env.*.local
+.env.production
+credentials.json
+client_secrets.json
+
+# Python Cache & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.tox/
+
+# Django Specific
+db.sqlite3
+*.db
+media/
+staticfiles/
+ear_debug.txt
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# OS Specific
+Thumbs.db
+db.properties
+.DS_Store
+
+# Logs
+logs/
+*.log

@@ -1,0 +1,131 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="verification-layout">
+  <div class="container">
+    <!-- Step Progress -->
+    {% include "public/includes/step_progress.html" with current_step=3 %}
+
+    <div class="row justify-content-center g-4">
+      <!-- Liveness Camera -->
+      <div class="col-lg-5">
+        <div class="akhu-card animate-slide-up text-center">
+          <!-- Challenge Display -->
+          <div class="challenge-card mb-4" id="challengeDisplay">
+            <div class="challenge-icon" id="challengeIcon">
+              <i class="bi bi-eye-fill" id="challengeIconEl"></i>
+            </div>
+            <p class="challenge-instruction" id="challengeInstruction">{% trans "Get ready..." %}</p>
+            <div class="challenge-timer d-none" id="challengeTimer">30</div>
+            <div class="progress-dots" id="progressDots"></div>
+          </div>
+
+          <!-- Camera -->
+          <div class="camera-container mb-3">
+            <video id="livenessVideo" class="camera-video" autoplay muted playsinline></video>
+            <div class="camera-overlay">
+              <div class="face-guide-oval" id="livenessGuide"></div>
+            </div>
+          </div>
+
+
+
+          <!-- Status -->
+          <div id="livenessStatus" class="camera-status mb-3">
+            <div class="status-dot animate-pulse"></div>
+            <span>{% trans "Starting face capture..." %}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Challenge Progress Panel -->
+      <div class="col-lg-4">
+        <div class="akhu-card animate-slide-up">
+          <h5 class="mb-4"><i class="bi bi-camera-fill me-2 text-gold"></i>{% trans "Multi-Angle Face Capture" %}</h5>
+
+          <!-- Challenge List -->
+          <div class="challenge-list" id="challengeList">
+            <!-- Populated by JS -->
+          </div>
+
+          <hr style="border-color: var(--border-color);">
+
+          <!-- Instructions -->
+          <div class="liveness-hint mt-3">
+            <i class="bi bi-info-circle-fill me-2" style="color:var(--akhu-info)"></i>
+            <p class="mb-0" style="font-size:0.84rem;color:var(--text-secondary)">
+              {% trans "Please turn your face in the direction indicated by the instructions. The system will automatically scan and verify your movement." %}
+            </p>
+          </div>
+
+          <!-- Complete button (shown after all pass) -->
+          <div id="livenessComplete" class="d-none mt-4">
+            <div class="alert-box-success mb-3">
+              <i class="bi bi-check-circle-fill"></i>
+              <div>
+                <strong>{% trans "Capture Completed!" %}</strong>
+                <p class="mb-0 mt-1" style="font-size:0.83rem;">{% trans "All angles saved successfully. Proceeding to verification result..." %}</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="livenessError" class="d-none mt-4">
+            <div class="alert-box-error mb-3">
+              <i class="bi bi-x-circle-fill"></i>
+              <div><strong>{% trans "Capture Failed" %}</strong>
+              <p class="mb-0 mt-1" style="font-size:0.83rem;" id="livenessErrorMsg"></p></div>
+            </div>
+            <a href="{% url 'verification:step4' %}" class="btn-akhu-outline w-100">
+              <i class="bi bi-arrow-repeat me-2"></i>{% trans "Try Again" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Challenge data from Django -->
+<script>
+const CHALLENGES = {{ challenges_json|safe }};
+const LIVENESS_COMPLETE_URL = "{% url 'verification:result' %}";
+const API_VERIFY_URL = "/api/verification/liveness/verify/";
+const API_COMPLETE_URL = "/api/verification/liveness/complete/";
+const API_MATCH_URL = "/api/verification/match/";
+const CSRF_TOKEN = "{{ csrf_token }}";
+
+const CHALLENGE_ICONS = {
+  blink: 'bi-eye-fill',
+  look_left: 'bi-arrow-left-circle-fill',
+  look_right: 'bi-arrow-right-circle-fill',
+  look_up: 'bi-arrow-up-circle-fill',
+};
+</script>
+<script src="{% static 'js/liveness.js' %}?v=2.0"></script>
+
+<style>
+.verification-layout { padding: 40px 0 80px; }
+.challenge-list { display:flex;flex-direction:column;gap:10px; }
+.challenge-item {
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-radius:var(--radius-md);
+  background:var(--bg-glass);border:1px solid var(--border-color);
+  transition:all var(--transition-normal);
+}
+.challenge-item.active { border-color:var(--akhu-blue-light);background:rgba(37,99,235,0.08); }
+.challenge-item.done { border-color:var(--akhu-success);background:var(--akhu-success-bg); }
+.challenge-item.failed { border-color:var(--akhu-danger);background:var(--akhu-danger-bg); }
+.challenge-item-icon { font-size:1.1rem;width:28px;text-align:center; }
+.challenge-item-icon.active { color:var(--akhu-blue-light); }
+.challenge-item-icon.done { color:var(--akhu-success); }
+.challenge-item-icon.failed { color:var(--akhu-danger); }
+.challenge-item-text { flex:1;font-size:0.9rem;font-weight:500; }
+.challenge-check { font-size:1rem; }
+.alert-box-success { display:flex;gap:12px;align-items:flex-start;background:rgba(16,185,129,0.08);border:1px solid var(--akhu-success);border-radius:var(--radius-md);padding:14px; }
+.alert-box-success i { color:var(--akhu-success);font-size:1.3rem; }
+.alert-box-error { display:flex;gap:12px;align-items:flex-start;background:rgba(239,68,68,0.08);border:1px solid var(--akhu-danger);border-radius:var(--radius-md);padding:14px; }
+.alert-box-error i { color:var(--akhu-danger);font-size:1.3rem; }
+.liveness-hint { display:flex;align-items:flex-start;gap:8px; }
+</style>
+{% endblock %}

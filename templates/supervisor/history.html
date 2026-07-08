@@ -1,0 +1,238 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="supervisor-layout">
+  <!-- Sidebar -->
+  <nav class="supervisor-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-avatar">
+        <i class="bi bi-person-badge-fill"></i>
+      </div>
+      <div>
+        <div class="sidebar-username">{{ request.session.supervisor_username }}</div>
+        <div class="sidebar-role">{% trans "Supervisor" %}</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <a href="{% url 'supervisor:dashboard' %}" class="sidebar-link">
+        <i class="bi bi-grid-1x2-fill"></i>{% trans "Dashboard" %}
+      </a>
+      <a href="{% url 'supervisor:exam-verify-auto' %}" class="sidebar-link">
+        <i class="bi bi-camera-video-fill"></i>{% trans "Live Verify" %}
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <a href="{% url 'supervisor:logout' %}" class="sidebar-link text-danger">
+        <i class="bi bi-box-arrow-left"></i>{% trans "Logout" %}
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="supervisor-main">
+
+    <!-- Breadcrumb -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="{% url 'supervisor:dashboard' %}" class="btn-akhu-outline btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>{% trans "Back" %}
+      </a>
+      <div>
+        <h4 class="mb-0 fw-bold">{% trans "Verification History" %}</h4>
+        <div class="text-muted small mt-1">{{ profile.full_name }} — {{ profile.admission_id }}</div>
+      </div>
+    </div>
+
+    <!-- Applicant Profile Card -->
+    <div class="akhu-card mb-4">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div class="history-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="flex-grow-1">
+          <h5 class="mb-1 fw-bold">{{ profile.full_name }}</h5>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">{% trans "Admission ID" %}</span>
+              <span class="info-value">{{ profile.admission_id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Passport" %}</span>
+              <span class="info-value">{{ profile.passport_number }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Email" %}</span>
+              <span class="info-value">{{ profile.user.email|default:"—" }}</span>
+            </div>
+            {% if profile.qr_code %}
+            <div class="info-item">
+              <span class="info-label">{% trans "QR Token" %}</span>
+              <span class="info-value text-gold fw-bold">{{ profile.qr_code.token }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'supervisor:exam-verify' profile.id %}" class="btn-akhu-primary btn-sm">
+            <i class="bi bi-camera-fill me-1"></i>{% trans "Verify Now" %}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Face Profiles -->
+    {% if face_profiles %}
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3"><i class="bi bi-person-bounding-box me-2"></i>{% trans "Face Profiles" %}</h5>
+      <div class="face-profiles-grid">
+        {% for fp in face_profiles %}
+        <div class="face-profile-card">
+          {% if fp.face_image %}
+          <img src="{{ fp.face_image.url }}" alt="{% trans 'Face' %}" class="face-profile-img">
+          {% else %}
+          <div class="face-profile-img-placeholder">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          {% endif %}
+          <div class="face-profile-info">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="status-badge {{ fp.status }}">{{ fp.get_status_display }}</span>
+              {% if fp.liveness_passed %}
+              <span class="status-badge verified" title="{% trans 'Liveness Passed' %}">
+                <i class="bi bi-shield-check"></i> {% trans "Live" %}
+              </span>
+              {% endif %}
+            </div>
+            <div class="text-muted small">{{ fp.created_at|date:"d.m.Y H:i" }}</div>
+            {% if fp.match_score is not None %}
+            <div class="match-score mt-1">
+              {% trans "Match" %}: <strong>{{ fp.match_score|floatformat:1 }}%</strong>
+            </div>
+            {% endif %}
+            {% if fp.score is not None %}
+            <div class="match-score mt-1">
+              {% trans "Score" %}: <strong>{{ fp.score|floatformat:1 }}</strong>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Verification Logs Table -->
+    <div class="akhu-card">
+      <h5 class="mb-3"><i class="bi bi-clock-history me-2"></i>{% trans "Verification Logs" %}
+        <span class="ms-2 text-muted small">({{ logs.paginator.count }})</span>
+      </h5>
+      {% if logs %}
+      <div class="table-responsive">
+        <table class="akhu-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{% trans "Date & Time" %}</th>
+              <th>{% trans "Type" %}</th>
+              <th>{% trans "Result" %}</th>
+              <th>{% trans "Verified By" %}</th>
+              <th>{% trans "Notes" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td class="text-muted small">{{ forloop.counter0|add:logs.start_index }}</td>
+              <td>{{ log.verified_at|date:"d.m.Y" }}<br><span class="text-muted small">{{ log.verified_at|time:"H:i:s" }}</span></td>
+              <td>
+                <span class="log-type-badge {{ log.verification_type|default:'auto' }}">
+                  {{ log.get_verification_type_display|default:log.verification_type|default:"—" }}
+                </span>
+              </td>
+              <td>
+                {% if log.result == 'verified' %}
+                  <span class="status-badge verified"><i class="bi bi-check-circle-fill me-1"></i>{% trans "Passed" %}</span>
+                {% elif log.result == 'rejected' %}
+                  <span class="status-badge rejected"><i class="bi bi-x-circle-fill me-1"></i>{% trans "Failed" %}</span>
+                {% elif log.result == 'review_required' %}
+                  <span class="status-badge review"><i class="bi bi-exclamation-circle-fill me-1"></i>{% trans "Review" %}</span>
+                {% else %}
+                  <span class="status-badge pending">{{ log.get_result_display }}</span>
+                {% endif %}
+              </td>
+              <td>{% if log.supervisor %}{{ log.supervisor.get_full_name|default:log.supervisor.username }}{% else %}—{% endif %}</td>
+              <td class="text-muted small">{% if log.score %}<span class="text-gold fw-bold">{{ log.score|floatformat:1 }}%</span> — {% endif %}{{ log.notes|default:"—"|truncatechars:60 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if logs.has_other_pages %}
+      <div class="d-flex justify-content-center gap-2 mt-4">
+        {% if logs.has_previous %}
+        <a href="?page={{ logs.previous_page_number }}" class="btn-akhu-outline btn-sm">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+        {% endif %}
+        {% for num in logs.paginator.page_range %}
+          {% if logs.number == num %}
+          <button class="btn-akhu-primary btn-sm" disabled>{{ num }}</button>
+          {% elif num > logs.number|add:'-3' and num < logs.number|add:'3' %}
+          <a href="?page={{ num }}" class="btn-akhu-outline btn-sm">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if logs.has_next %}
+        <a href="?page={{ logs.next_page_number }}" class="btn-akhu-outline btn-sm">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-inbox" style="font-size:3rem;color:var(--text-muted);"></i>
+        <p class="mt-3 text-muted">{% trans "No verification logs found for this applicant." %}</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<style>
+.supervisor-layout { display:flex;min-height:calc(100vh - 70px); }
+.supervisor-sidebar { width:240px;background:var(--bg-secondary);border-right:1px solid var(--border-color);display:flex;flex-direction:column;flex-shrink:0; }
+.supervisor-main { flex:1;padding:32px;overflow-y:auto; }
+.sidebar-header { padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px; }
+.sidebar-avatar { width:40px;height:40px;background:var(--gradient-blue);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white; }
+.sidebar-username { font-weight:700;font-size:0.9rem; }
+.sidebar-role { font-size:0.75rem;color:var(--akhu-gold); }
+.sidebar-nav { flex:1;padding:12px 0; }
+.sidebar-footer { padding:12px 0;border-top:1px solid var(--border-color); }
+.sidebar-link { display:flex;align-items:center;gap:12px;padding:11px 20px;color:var(--text-secondary);text-decoration:none;font-size:0.9rem;font-weight:500;transition:all var(--transition-fast); }
+.sidebar-link:hover { background:var(--bg-card-hover);color:var(--text-primary); }
+.sidebar-link.active { background:rgba(37,99,235,0.10);color:var(--akhu-blue-light); }
+.btn-sm { padding:6px 14px !important;font-size:0.82rem !important; }
+
+/* Applicant profile card */
+.history-avatar { width:64px;height:64px;background:var(--gradient-blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;flex-shrink:0; }
+.info-grid { display:flex;flex-wrap:wrap;gap:16px 32px;margin-top:8px; }
+.info-item { display:flex;flex-direction:column;gap:2px; }
+.info-label { font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:600; }
+.info-value { font-size:0.9rem;color:var(--text-primary);font-weight:500; }
+
+/* Face profiles grid */
+.face-profiles-grid { display:flex;flex-wrap:wrap;gap:16px; }
+.face-profile-card { background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:12px;display:flex;align-items:center;gap:12px;min-width:220px; }
+.face-profile-img { width:56px;height:56px;border-radius:8px;object-fit:cover;border:2px solid var(--border-color); }
+.face-profile-img-placeholder { width:56px;height:56px;border-radius:8px;background:var(--bg-card-hover);display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:var(--text-muted); }
+.face-profile-info { flex:1; }
+.match-score { font-size:0.82rem;color:var(--text-secondary); }
+
+/* Log type badge */
+.log-type-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.78rem;font-weight:600;background:rgba(37,99,235,0.12);color:var(--akhu-blue-light); }
+</style>
+{% endblock %}

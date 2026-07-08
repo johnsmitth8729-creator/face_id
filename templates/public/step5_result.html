@@ -1,0 +1,166 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="result-layout">
+  <div class="container">
+    <!-- Step Progress -->
+    {% include "public/includes/step_progress.html" with current_step=4 %}
+
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="akhu-card text-center animate-slide-up">
+          {% if face_profile %}
+
+          <!-- Result Circle -->
+          <div class="result-circle {{ face_profile.status }} mx-auto mb-4">
+            {% if face_profile.status == 'verified' %}
+              <i class="bi bi-check-lg" style="font-size:3rem;"></i>
+            {% elif face_profile.status == 'review_required' %}
+              <i class="bi bi-clock-fill" style="font-size:3rem;"></i>
+            {% else %}
+              <i class="bi bi-x-lg" style="font-size:3rem;"></i>
+            {% endif %}
+          </div>
+
+          <!-- Status Badge -->
+          <div class="mb-3">
+            <span class="status-badge {{ face_profile.status }} fs-6">
+              {% if face_profile.status == 'verified' %}
+                <i class="bi bi-check-circle-fill"></i> {% trans "Verified" %}
+              {% elif face_profile.status == 'review_required' %}
+                <i class="bi bi-clock-fill"></i> {% trans "Pending Review" %}
+              {% else %}
+                <i class="bi bi-x-circle-fill"></i> {% trans "Rejected" %}
+              {% endif %}
+            </span>
+          </div>
+
+          <!-- Title -->
+          {% if face_profile.status == 'verified' %}
+            <h2 class="mb-2">{% trans "Identity Verified!" %}</h2>
+            <p class="text-secondary">{% trans "Congratulations! Your face has been successfully matched with your identity document." %}</p>
+          {% elif face_profile.status == 'review_required' %}
+            <h2 class="mb-2">{% trans "Under Review" %}</h2>
+            <p class="text-secondary">{% trans "Your verification is pending manual review by an administrator. You will be notified of the result." %}</p>
+          {% else %}
+            <h2 class="mb-2">{% trans "Verification Failed" %}</h2>
+            <p class="text-secondary">{% trans "Your face could not be matched with the uploaded document. Please try again." %}</p>
+          {% endif %}
+
+          <!-- Score Display -->
+          {% if face_profile.match_percentage %}
+          <div class="score-card mt-4 mb-4">
+            <div class="score-row">
+              <div class="score-item">
+                <div class="score-val">{{ face_profile.match_percentage|floatformat:1 }}%</div>
+                <div class="score-lbl">{% trans "Match Score" %}</div>
+              </div>
+              <div class="score-divider"></div>
+              <div class="score-item">
+                <div class="score-val">{% if face_profile.liveness_passed %}✓{% else %}✗{% endif %}</div>
+                <div class="score-lbl">{% trans "Liveness" %}</div>
+              </div>
+              <div class="score-divider"></div>
+              <div class="score-item">
+                <div class="score-val">{{ face_profile.status|title }}</div>
+                <div class="score-lbl">{% trans "Status" %}</div>
+              </div>
+            </div>
+            <!-- Score Bar -->
+            <div class="score-bar-container mt-3">
+              <div class="score-bar-track">
+                <div class="score-bar-fill {{ face_profile.status }}"
+                  style="width: {{ face_profile.match_percentage|floatformat:0 }}%"></div>
+              </div>
+              <div class="score-bar-labels">
+                <span>0%</span>
+                <span style="left:80%">80%</span>
+                <span style="left:90%">90%</span>
+                <span>100%</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- QR Code (if verified and permit is ready) -->
+          {% if qr_code and permit_ready %}
+          <div class="qr-section mt-4 mb-4">
+            <h5 class="mb-3"><i class="bi bi-qr-code me-2 text-gold"></i>{% trans "Your Verification QR Code" %}</h5>
+            <div class="qr-container mx-auto mb-3">
+              <img src="{{ qr_code.qr_image.url }}" alt="QR Code {{ qr_code.token }}">
+            </div>
+            <p class="qr-token">{{ qr_code.token }}</p>
+            <p class="text-muted small">{% trans "Present this QR code on examination day for quick identity verification." %}</p>
+          </div>
+          {% elif face_profile.status == 'verified' and not permit_ready %}
+          <div class="alert alert-warning border border-warning-subtle py-3 px-4 mx-auto mb-4 mt-4" style="max-width: 600px; background: rgba(245,158,11,0.08);">
+            <i class="bi bi-info-circle-fill fs-4 text-warning mb-2 d-block"></i>
+            <h5 class="alert-heading text-warning fw-bold">
+              {% trans "Identity Verified" %}
+            </h5>
+            <p class="mb-0 text-light small">
+              {% if release_date_str %}
+                {% blocktrans with release_date=release_date_str %}Your identity has been successfully verified. Your admission permit will be released on <strong>{{ release_date }}</strong>. You can download your permit starting from that date.{% endblocktrans %}
+              {% else %}
+                {% trans "Your identity has been successfully verified. Your admission permit will become available shortly." %}
+              {% endif %}
+            </p>
+          </div>
+          {% endif %}
+
+          <!-- Actions -->
+          <div class="result-actions mt-4 d-flex gap-3 justify-content-center flex-wrap">
+            {% if face_profile.status == 'verified' %}
+              {% if permit_ready %}
+                <a href="{% url 'verification:download' session.id %}" class="btn-akhu-primary" id="downloadConfirmBtn">
+                  <i class="bi bi-download me-2"></i>{% trans "Download Confirmation" %}
+                </a>
+              {% endif %}
+            {% elif face_profile.status == 'rejected' %}
+              <a href="{% url 'verification:start' %}" class="btn-akhu-primary" id="retryBtn">
+                <i class="bi bi-arrow-repeat me-2"></i>{% trans "Try Again" %}
+              </a>
+            {% endif %}
+            <a href="{% url 'verification:home' %}" class="btn-akhu-outline" id="homeBtn">
+              <i class="bi bi-house-fill me-2"></i>{% trans "Home" %}
+            </a>
+          </div>
+
+          {% else %}
+          <h2>{% trans "Processing..." %}</h2>
+          <div class="loading-spinner mx-auto mt-4"></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.result-layout { padding: 60px 0 80px; }
+.score-card {
+  background:var(--bg-glass);border:1px solid var(--border-color);
+  border-radius:var(--radius-lg);padding:20px;
+}
+.score-row { display:flex;align-items:center;justify-content:center;gap:0; }
+.score-item { flex:1;text-align:center; }
+.score-val { font-size:1.4rem;font-weight:800; }
+.score-lbl { font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px; }
+.score-divider { width:1px;height:50px;background:var(--border-color); }
+
+.score-bar-container { position:relative; }
+.score-bar-track { height:8px;background:var(--bg-card-hover);border-radius:4px;overflow:hidden; }
+.score-bar-fill { height:100%;border-radius:4px;transition:width 1.5s ease; }
+.score-bar-fill.verified { background:var(--gradient-blue); }
+.score-bar-fill.review_required { background:var(--gradient-gold); }
+.score-bar-fill.rejected { background:var(--akhu-danger); }
+.score-bar-labels { display:flex;justify-content:space-between;margin-top:4px; }
+.score-bar-labels span { font-size:0.7rem;color:var(--text-muted); }
+
+.qr-section { border-top:1px solid var(--border-color);padding-top:24px; }
+.qr-container { width:fit-content;background:white;border-radius:var(--radius-lg);padding:16px; }
+.qr-container img { width:180px;height:180px;display:block; }
+.qr-token { font-size:1rem;font-weight:700;color:var(--akhu-gold);letter-spacing:1px;margin:8px 0; }
+</style>
+{% endblock %}

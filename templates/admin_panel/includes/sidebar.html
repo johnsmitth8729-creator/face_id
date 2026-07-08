@@ -1,0 +1,73 @@
+{% load i18n %}
+<!-- Admin Sidebar -->
+<nav class="admin-sidebar">
+  <div class="sidebar-admin-header">
+    <div class="admin-avatar"><i class="bi bi-gear-wide-connected"></i></div>
+    <div>
+      <div class="admin-name">{{ request.session.admin_username|default:"Admin" }}</div>
+      <div class="admin-role-tag">{% trans "Administrator" %}</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">{% trans "Overview" %}</div>
+    <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link {% if active == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid-1x2-fill"></i>{% trans "Dashboard" %}
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">{% trans "Verification" %}</div>
+    <a href="{% url 'admin_panel:applicants' %}" class="sidebar-link {% if active == 'applicants' %}active{% endif %}">
+      <i class="bi bi-people-fill"></i>{% trans "Applicants" %}
+    </a>
+    <a href="{% url 'admin_panel:qr-management' %}" class="sidebar-link {% if active == 'qr' %}active{% endif %}">
+      <i class="bi bi-qr-code"></i>{% trans "QR Codes" %}
+    </a>
+    <a href="{% url 'admin_panel:permits' %}" class="sidebar-link {% if active == 'permits' %}active{% endif %}">
+      <i class="bi bi-file-earmark-pdf-fill"></i>{% trans "Permits" %}
+    </a>
+    <a href="{% url 'admin_panel:liveness-biometrics' %}" class="sidebar-link {% if active == 'liveness' %}active{% endif %}">
+      <i class="bi bi-person-bounding-box"></i>{% trans "Liveness Biometrics" %}
+    </a>
+    <a href="{% url 'admin_panel:attendance' %}" class="sidebar-link {% if active == 'attendance' %}active{% endif %}">
+      <i class="bi bi-clipboard-check-fill"></i>{% trans "Attendance" %}
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">{% trans "Administration" %}</div>
+    <a href="{% url 'admin_panel:supervisors' %}" class="sidebar-link {% if active == 'supervisors' %}active{% endif %}">
+      <i class="bi bi-person-badge-fill"></i>{% trans "Supervisors" %}
+    </a>
+    <a href="{% url 'admin_panel:reports' %}" class="sidebar-link {% if active == 'reports' %}active{% endif %}">
+      <i class="bi bi-file-earmark-bar-graph-fill"></i>{% trans "Reports" %}
+    </a>
+    <a href="{% url 'admin_panel:audit-logs' %}" class="sidebar-link {% if active == 'audit' %}active{% endif %}">
+      <i class="bi bi-journal-check"></i>{% trans "Audit Logs" %}
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">{% trans "Configuration" %}</div>
+    <a href="{% url 'admin_panel:ai-config' %}" class="sidebar-link {% if active == 'ai' %}active{% endif %}">
+      <i class="bi bi-cpu-fill"></i>{% trans "AI Configuration" %}
+    </a>
+    <a href="{% url 'admin_panel:settings' %}" class="sidebar-link {% if active == 'settings' %}active{% endif %}">
+      <i class="bi bi-gear-fill"></i>{% trans "System Settings" %}
+    </a>
+  </div>
+
+  <div class="sidebar-section mt-auto">
+    <a href="{% url 'admin_panel:logout' %}" class="sidebar-link" style="color:var(--akhu-danger)">
+      <i class="bi bi-box-arrow-left"></i>{% trans "Logout" %}
+    </a>
+  </div>
+</nav>
+
+<style>
+.sidebar-admin-header { padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px;margin-bottom:8px; }
+.admin-avatar { width:42px;height:42px;background:linear-gradient(135deg,#7C3AED,#4F46E5);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:white;flex-shrink:0; }
+.admin-name { font-weight:700;font-size:0.9rem; }
+.admin-role-tag { font-size:0.7rem;color:#A78BFA;font-weight:600;text-transform:uppercase;letter-spacing:0.5px; }
+</style>

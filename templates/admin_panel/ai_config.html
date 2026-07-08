@@ -1,0 +1,122 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  {% include "admin_panel/includes/sidebar.html" with active="ai" %}
+
+  <!-- Content -->
+  <div class="admin-content">
+    <!-- Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "AI Engine Configuration" %}</h2>
+        <p class="page-sub">{% trans "Overview of face recognition thresholds, models, and liveness parameters" %}</p>
+      </div>
+      <div class="header-meta">
+        {% if current.mode == 'insightface' %}
+          <span class="badge bg-success px-3 py-2"><i class="bi bi-cpu-fill me-1"></i> Production Mode</span>
+        {% else %}
+          <span class="badge bg-info text-dark px-3 py-2"><i class="bi bi-shield-slash me-1"></i> Mock Mode Active</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Face Recognition Card -->
+      <div class="col-md-6">
+        <div class="akhu-card h-100">
+          <h5 class="mb-4 text-gold"><i class="bi bi-person-bounding-box me-2"></i>{% trans "Face Recognition Model" %}</h5>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">{% trans "Engine Mode" %}</span>
+              <span class="info-value text-uppercase fw-bold">{{ current.mode }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Model Pack" %}</span>
+              <span class="info-value"><code>{{ current.model_pack }}</code></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Embedding Dimensions" %}</span>
+              <span class="info-value">512-dim (float32)</span>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-dark-subtle rounded border border-secondary small text-secondary">
+            <i class="bi bi-info-circle me-1"></i>
+            {% trans "The system extracts facial features using ArcFace to verify candidate identity during liveness check and exam registration." %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Thresholds Card -->
+      <div class="col-md-6">
+        <div class="akhu-card h-100">
+          <h5 class="mb-4 text-gold"><i class="bi bi-sliders2 me-2"></i>{% trans "Verification Thresholds" %}</h5>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">{% trans "Verified Threshold" %}</span>
+              <span class="info-value text-success fw-bold">{{ current.threshold_verified }}%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Review Threshold" %}</span>
+              <span class="info-value text-gold fw-bold">{{ current.threshold_review }}%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{% trans "Rejected Threshold" %}</span>
+              <span class="info-value text-danger fw-bold">&lt; {{ current.threshold_review }}%</span>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-dark-subtle rounded border border-secondary small text-secondary">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {% trans "Matches below the review threshold are rejected. Scores in between trigger manual verification queue entry." %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Liveness Card -->
+      <div class="col-12">
+        <div class="akhu-card">
+          <h5 class="mb-4 text-gold"><i class="bi bi-shield-lock-fill me-2"></i>{% trans "Liveness Detection Parameters" %}</h5>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 bg-dark-subtle rounded border border-secondary text-center">
+                <div class="text-secondary small mb-1">{% trans "Eye Blink Threshold" %}</div>
+                <div class="fs-4 fw-bold text-light">{{ current.liveness_blink }} <span class="small text-secondary" style="font-size:0.75rem;">EAR</span></div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-dark-subtle rounded border border-secondary text-center">
+                <div class="text-secondary small mb-1">{% trans "Challenge Timeout" %}</div>
+                <div class="fs-4 fw-bold text-light">{{ current.liveness_timeout }}s</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 bg-dark-subtle rounded border border-secondary text-center">
+                <div class="text-secondary small mb-1">{% trans "Maximum Retries" %}</div>
+                <div class="fs-4 fw-bold text-light">{{ current.liveness_retries }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 bg-dark-subtle rounded border border-secondary small text-secondary">
+            <i class="bi bi-activity me-1"></i>
+            {% trans "Liveness utilizes real-time head turns (yaw/pitch tracking) and blink aspect ratios using MediaPipe Face Mesh algorithms." %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.info-grid { display:flex;flex-direction:column;gap:12px; }
+.info-item { display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04); }
+.info-label { font-size:0.85rem;color:var(--text-muted); }
+.info-value { font-size:0.95rem; }
+</style>
+{% endblock %}

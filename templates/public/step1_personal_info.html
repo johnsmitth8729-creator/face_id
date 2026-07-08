@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+{% load i18n static crispy_forms_tags %}
+
+{% block content %}
+<div class="verification-layout">
+  <div class="container">
+    <!-- Step Progress -->
+    {% include "public/includes/step_progress.html" with current_step=1 %}
+
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="akhu-card animate-slide-up">
+          <div class="form-header mb-4">
+            <div class="form-icon"><i class="bi bi-person-lines-fill"></i></div>
+            <h2 class="form-title">{% trans "Personal Information" %}</h2>
+            <p class="form-subtitle">{% trans "Please provide your personal details exactly as they appear on your official documents." %}</p>
+          </div>
+
+          <form method="post" novalidate id="personalInfoForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger py-2 small mb-3">
+                {{ form.non_field_errors.0 }}
+              </div>
+            {% endif %}
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">{% trans "Surname" %} <span class="req">*</span></label>
+                {{ form.surname }}
+                {% if form.surname.errors %}<div class="field-error text-danger small mt-1">{{ form.surname.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">{% trans "Given Name" %} <span class="req">*</span></label>
+                {{ form.given_name }}
+                {% if form.given_name.errors %}<div class="field-error text-danger small mt-1">{{ form.given_name.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">{% trans "Card / Passport Number" %} <span class="req">*</span></label>
+                {{ form.passport_number }}
+                {% if form.passport_number.errors %}<div class="field-error text-danger small mt-1">{{ form.passport_number.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">{% trans "Exam Region" %} <span class="req">*</span></label>
+                {{ form.selected_region }}
+                {% if form.selected_region.errors %}<div class="field-error text-danger small mt-1">{{ form.selected_region.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-end">
+              <button type="submit" class="btn-akhu-primary" id="nextStep1">
+                {% trans "Continue" %} <i class="bi bi-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.verification-layout { padding: 40px 0 80px; }
+.form-header { text-align: center; }
+.form-icon {
+  width: 60px; height: 60px;
+  background: rgba(37,99,235,0.12);
+  border: 2px solid rgba(37,99,235,0.3);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: var(--akhu-blue-light);
+  margin: 0 auto 16px;
+}
+.form-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
+.form-subtitle { color: var(--text-secondary); font-size: 0.9rem; }
+.req { color: var(--akhu-danger); }
+.optional { color: var(--text-muted); font-size: 0.82rem; }
+.field-error { color: var(--akhu-danger); font-size: 0.82rem; margin-top: 4px; }
+.field-hint { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
+</style>
+{% endblock %}

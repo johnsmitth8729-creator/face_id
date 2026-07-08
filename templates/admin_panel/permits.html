@@ -1,0 +1,163 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  {% include "admin_panel/includes/sidebar.html" with active="permits" %}
+
+  <!-- Content -->
+  <div class="admin-content">
+    <!-- Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Candidate Permits Management" %}</h2>
+        <p class="page-sub">{% trans "View verified candidate admission permits and download the database in bulk." %}</p>
+      </div>
+      <div class="header-meta d-flex gap-2">
+        <a href="{% url 'admin_panel:permits-download-zip' %}" class="btn btn-gold px-4 fw-bold">
+          <i class="bi bi-file-zip-fill me-2"></i>{% trans "Download All Permits (ZIP)" %}
+        </a>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-4" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Filter Card -->
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>{% trans "Search & Filters" %}</h5>
+      <form method="get" class="row g-3">
+        <div class="col-md-10">
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" value="{{ query }}" class="form-control border-secondary"
+              placeholder="{% trans 'Search by Applicant ID, Passport, Name, or Program...' %}" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-akhu-primary w-100">
+            {% trans "Filter" %}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Permits Table -->
+    <div class="akhu-card">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h5 class="card-title-custom mb-0"><i class="bi bi-file-earmark-pdf-fill me-2 text-gold"></i>{% trans "Verified Candidate Permits" %} ({{ applicants.paginator.count|default:0 }})</h5>
+        <span class="text-secondary small">{% trans "Showing page" %} {{ applicants.number }} {% trans "of" %} {{ applicants.paginator.num_pages }}</span>
+      </div>
+      
+      {% if applicants %}
+      <div class="table-responsive">
+        <table class="akhu-table align-middle">
+          <thead>
+            <tr>
+              <th>{% trans "Applicant ID" %}</th>
+              <th>{% trans "Full Name" %}</th>
+              <th>{% trans "Passport" %}</th>
+              <th>{% trans "Program" %}</th>
+              <th>{% trans "Selected Region" %}</th>
+              <th>{% trans "Verification Date" %}</th>
+              <th>{% trans "Action" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in applicants %}
+            <tr>
+              <td>
+                <span class="badge-admission-id fw-bold">{{ p.applicant_id|default:"—" }}</span>
+              </td>
+              <td>
+                <div class="fw-bold text-light">{{ p.full_name }}</div>
+              </td>
+              <td><strong>{{ p.passport_number }}</strong></td>
+              <td>{{ p.program|default:"—" }}</td>
+              <td><span class="badge bg-secondary">{{ p.selected_region|default:"—" }}</span></td>
+              <td>
+                <span class="text-secondary small">{{ p.verification_date|date:"Y-m-d H:i"|default:"—" }}</span>
+              </td>
+              <td>
+                {% if p.verified_session %}
+                  <a href="{% url 'verification:download' p.verified_session.id %}" class="btn btn-sm btn-akhu-outline px-3">
+                    <i class="bi bi-download me-1"></i> {% trans "Download PDF" %}
+                  </a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if applicants.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span class="text-secondary small">{% trans "Showing page" %} {{ applicants.number }} {% trans "of" %} {{ applicants.paginator.num_pages }}</span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              {% if applicants.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ applicants.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Prev" %}</a></li>
+              {% endif %}
+              {% for num in applicants.paginator.page_range %}
+                <li class="page-item {% if applicants.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a></li>
+              {% endfor %}
+              {% if applicants.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ applicants.next_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Next" %}</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-file-earmark-pdf" style="font-size:3rem;color:var(--text-muted)"></i>
+        <p class="mt-3 text-secondary">{% trans "No verified candidate permits found." %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.badge-admission-id {
+  font-family: var(--font-mono);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: var(--akhu-gold);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+.btn-gold {
+  background-color: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--dark-bg);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+.btn-gold:hover {
+  background-color: var(--gold-hover);
+  border-color: var(--gold-hover);
+  color: var(--dark-bg);
+  transform: translateY(-1px);
+}
+</style>
+{% endblock %}

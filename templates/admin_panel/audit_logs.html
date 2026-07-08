@@ -1,0 +1,190 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  {% include "admin_panel/includes/sidebar.html" with active="audit" %}
+
+  <!-- Content -->
+  <div class="admin-content">
+    <!-- Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "System Audit Logs" %}</h2>
+        <p class="page-sub">{% trans "Security monitoring and system activity tracking logs" %}</p>
+      </div>
+      <div class="header-meta">
+        <span class="badge-date"><i class="bi bi-shield-check me-2"></i>{% trans "Compliance Log" %}</span>
+      </div>
+    </div>
+
+    <!-- Filtering Panel -->
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3"><i class="bi bi-filter-square me-2"></i>{% trans "Search & Filter" %}</h5>
+      <form method="get" action="{% url 'admin_panel:audit-logs' %}">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label text-secondary small">{% trans "Keywords" %}</label>
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="{% trans 'Search action, user, IP...' %}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label text-secondary small">{% trans "Category" %}</label>
+            <select name="category" class="form-select">
+              <option value="">-- {% trans "All Categories" %} --</option>
+              {% for cat_val, cat_label in categories %}
+                <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-secondary small">{% trans "Date From" %}</label>
+            <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label text-secondary small">{% trans "Date To" %}</label>
+            <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <div class="d-flex gap-2 w-100">
+              <button type="submit" class="btn-akhu-primary px-3 flex-grow-1" title="{% trans 'Filter' %}">
+                <i class="bi bi-filter"></i>
+              </button>
+              <a href="{% url 'admin_panel:audit-logs' %}" class="btn-akhu-outline px-3" title="{% trans 'Clear Filters' %}">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="akhu-card">
+      {% if logs %}
+      <div class="table-responsive">
+        <table class="akhu-table align-middle">
+          <thead>
+            <tr>
+              <th>{% trans "Timestamp" %}</th>
+              <th>{% trans "User" %}</th>
+              <th>{% trans "Category" %}</th>
+              <th>{% trans "Action Details" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "IP Address" %}</th>
+              <th>{% trans "Metadata" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td><span class="text-secondary small">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span></td>
+              <td>
+                <div class="d-flex flex-column">
+                  <span class="fw-bold">{{ log.username_snapshot|default:"System" }}</span>
+                  {% if log.user_role_snapshot %}
+                    <span class="text-gold small" style="font-size:0.75rem;">{{ log.user_role_snapshot|upper }}</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                {% if log.category == 'auth' %}
+                  <span class="status-badge bg-primary text-white">Auth</span>
+                {% elif log.category == 'verification' %}
+                  <span class="status-badge bg-success text-white">Verification</span>
+                {% elif log.category == 'admin' %}
+                  <span class="status-badge bg-warning text-dark">Admin</span>
+                {% elif log.category == 'supervisor' %}
+                  <span class="status-badge bg-info text-dark">Supervisor</span>
+                {% elif log.category == 'security' %}
+                  <span class="status-badge bg-danger text-white">Security</span>
+                {% else %}
+                  <span class="status-badge bg-secondary text-white">{{ log.category|title }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div>
+                  <div class="fw-bold text-light">{{ log.action }}</div>
+                  <div class="text-secondary small">{{ log.description }}</div>
+                </div>
+              </td>
+              <td>
+                {% if log.success %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size:0.75rem;">
+                    <i class="bi bi-check-circle-fill me-1"></i>{% trans "Success" %}
+                  </span>
+                {% else %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size:0.75rem;" title="{{ log.error_message }}">
+                    <i class="bi bi-x-circle-fill me-1"></i>{% trans "Failed" %}
+                  </span>
+                {% endif %}
+              </td>
+              <td><code>{{ log.ip_address|default:"—" }}</code></td>
+              <td>
+                {% if log.extra_data %}
+                  <button class="btn btn-sm btn-akhu-outline py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#extra-{{ log.id }}" aria-expanded="false">
+                    <i class="bi bi-braces"></i>
+                  </button>
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% if log.extra_data %}
+            <tr id="extra-{{ log.id }}" class="collapse bg-dark-subtle">
+              <td colspan="7" class="p-3">
+                <div class="p-3 bg-black text-info rounded border border-secondary" style="max-height: 250px; overflow-y: auto;">
+                  <h6 class="text-gold mb-2"><i class="bi bi-file-earmark-code me-2"></i>{% trans "Extra Metadata JSON" %}</h6>
+                  <pre class="m-0" style="font-family: var(--font-monospace); font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word;">{{ log.extra_data }}</pre>
+                  {% if log.error_message %}
+                    <h6 class="text-danger mt-3 mb-2"><i class="bi bi-bug me-2"></i>{% trans "Error Details" %}</h6>
+                    <pre class="m-0 text-danger" style="font-family: var(--font-monospace); font-size: 0.8rem; white-space: pre-wrap;">{{ log.error_message }}</pre>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if logs.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span class="text-secondary small">{% trans "Showing page" %} {{ logs.number }} {% trans "of" %} {{ logs.paginator.num_pages }}</span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              {% if logs.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ logs.previous_page_number }}&q={{ query }}&category={{ selected_category }}&date_from={{ date_from }}&date_to={{ date_to }}">{% trans "Prev" %}</a></li>
+              {% endif %}
+              {% for p in logs.paginator.page_range %}
+                <li class="page-item {% if logs.number == p %}active{% endif %}"><a class="page-link" href="?page={{ p }}&q={{ query }}&category={{ selected_category }}&date_from={{ date_from }}&date_to={{ date_to }}">{{ p }}</a></li>
+              {% endfor %}
+              {% if logs.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ logs.next_page_number }}&q={{ query }}&category={{ selected_category }}&date_from={{ date_from }}&date_to={{ date_to }}">{% trans "Next" %}</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
+      {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-journal-x" style="font-size:3rem;color:var(--text-muted)"></i>
+        <p class="mt-3 text-secondary">{% trans "No audit logs found matching current filters." %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.badge-date { background:var(--bg-glass);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:6px 14px;font-size:0.82rem;color:var(--text-secondary); }
+.status-badge { display:inline-block;padding:4px 8px;font-size:0.75rem;font-weight:600;border-radius:var(--radius-sm);text-transform:uppercase; }
+</style>
+{% endblock %}

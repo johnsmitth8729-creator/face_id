@@ -1,0 +1,180 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="verification-layout">
+  <div class="container">
+    <!-- Step Progress -->
+    <div class="step-progress-wrapper mb-5">
+      <div class="step-progress">
+        {% for i in "12345" %}
+        {% if not forloop.first %}<div class="step-connector {% if forloop.counter0 < 2 %}completed{% endif %}"></div>{% endif %}
+        <div class="step-item {% if forloop.counter == 2 %}active{% elif forloop.counter < 2 %}completed{% endif %}">
+          <div class="step-circle">{% if forloop.counter < 2 %}<i class="bi bi-check-lg"></i>{% else %}{{ forloop.counter }}{% endif %}</div>
+          <span class="step-label d-none d-md-block">
+            {% if forloop.counter == 1 %}{% trans "Info" %}{% elif forloop.counter == 2 %}{% trans "Document" %}{% elif forloop.counter == 3 %}{% trans "Face" %}{% elif forloop.counter == 4 %}{% trans "Liveness" %}{% else %}{% trans "Result" %}{% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="akhu-card animate-slide-up">
+          <div class="form-header mb-4">
+            <div class="form-icon"><i class="bi bi-file-earmark-image-fill"></i></div>
+            <h2 class="form-title">{% trans "Upload Identity Document" %}</h2>
+            <p class="form-subtitle">{% trans "Upload a clear photo or scan of your passport or national ID card." %}</p>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" id="documentForm">
+            {% csrf_token %}
+
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" name="document" id="documentInput"
+                accept=".jpg,.jpeg,.png,.pdf" class="upload-input" required>
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <div class="upload-icon"><i class="bi bi-cloud-upload-fill"></i></div>
+                <h4 class="upload-title">{% trans "Drag & Drop or Click to Upload" %}</h4>
+                <p class="upload-desc">{% trans "Passport or ID Card — JPG, JPEG, PNG, PDF" %}</p>
+                <p class="upload-limit">{% trans "Maximum file size: 10 MB" %}</p>
+                <button type="button" class="btn-akhu-outline mt-3" onclick="document.getElementById('documentInput').click()">
+                  <i class="bi bi-folder2-open"></i> {% trans "Browse File" %}
+                </button>
+              </div>
+              <div class="upload-preview d-none" id="uploadPreview">
+                <div class="preview-icon"><i class="bi bi-file-earmark-check-fill"></i></div>
+                <div class="preview-info">
+                  <span class="preview-name" id="previewName"></span>
+                  <span class="preview-size" id="previewSize"></span>
+                </div>
+                <button type="button" class="preview-remove" onclick="clearUpload()">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </div>
+            </div>
+
+            {% if form.document.errors %}
+            <div class="field-error mt-2">{{ form.document.errors.0 }}</div>
+            {% endif %}
+
+            <!-- Requirements -->
+            <div class="doc-requirements mt-4">
+              <h5 class="req-title"><i class="bi bi-info-circle-fill me-2"></i>{% trans "Requirements" %}</h5>
+              <ul class="req-list">
+                <li><i class="bi bi-check2"></i>{% trans "Document must be clearly readable" %}</li>
+                <li><i class="bi bi-check2"></i>{% trans "Face photo must be visible" %}</li>
+                <li><i class="bi bi-check2"></i>{% trans "All edges of the document must be visible" %}</li>
+                <li><i class="bi bi-check2"></i>{% trans "No blurry or dark images" %}</li>
+              </ul>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+              <a href="{% url 'verification:step1' %}" class="btn-akhu-outline">
+                <i class="bi bi-arrow-left me-2"></i>{% trans "Back" %}
+              </a>
+              <button type="submit" class="btn-akhu-primary" id="nextStep2" disabled>
+                {% trans "Continue" %} <i class="bi bi-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.verification-layout { padding: 40px 0 80px; }
+.form-header { text-align: center; }
+.form-icon { width:60px;height:60px;background:rgba(37,99,235,0.12);border:2px solid rgba(37,99,235,0.3);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--akhu-blue-light);margin:0 auto 16px; }
+.form-title { font-size:1.5rem;font-weight:800;margin-bottom:6px; }
+.form-subtitle { color:var(--text-secondary);font-size:0.9rem; }
+
+.upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  text-align: center;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  position: relative;
+  background: var(--bg-input);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--akhu-blue-light);
+  background: rgba(37,99,235,0.05);
+}
+.upload-input { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.upload-icon { font-size:2.5rem;color:var(--akhu-blue-light);margin-bottom:12px; }
+.upload-title { font-size:1.1rem;font-weight:600;margin-bottom:6px; }
+.upload-desc { color:var(--text-secondary);font-size:0.88rem;margin-bottom:4px; }
+.upload-limit { color:var(--text-muted);font-size:0.8rem; }
+
+.upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid var(--akhu-success);
+  border-radius: var(--radius-md);
+}
+.preview-icon { font-size:2rem;color:var(--akhu-success); }
+.preview-info { flex:1;text-align:left; }
+.preview-name { display:block;font-weight:600;font-size:0.9rem; }
+.preview-size { display:block;color:var(--text-muted);font-size:0.8rem; }
+.preview-remove { background:transparent;border:none;color:var(--akhu-danger);cursor:pointer;font-size:1.2rem; }
+
+.doc-requirements {
+  background: rgba(37,99,235,0.06);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+.req-title { font-size:0.9rem;font-weight:600;color:var(--akhu-blue-light);margin-bottom:10px; }
+.req-list { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px; }
+.req-list li { display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-secondary); }
+.req-list li i { color:var(--akhu-success); }
+.field-error { color:var(--akhu-danger);font-size:0.82rem; }
+</style>
+
+<script>
+const input = document.getElementById('documentInput');
+const placeholder = document.getElementById('uploadPlaceholder');
+const preview = document.getElementById('uploadPreview');
+const nextBtn = document.getElementById('nextStep2');
+const zone = document.getElementById('uploadZone');
+
+input.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) showPreview(file);
+});
+
+zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) { const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; showPreview(file); }
+});
+
+function showPreview(file) {
+  document.getElementById('previewName').textContent = file.name;
+  document.getElementById('previewSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+  placeholder.classList.add('d-none');
+  preview.classList.remove('d-none');
+  nextBtn.disabled = false;
+}
+
+function clearUpload() {
+  input.value = '';
+  placeholder.classList.remove('d-none');
+  preview.classList.add('d-none');
+  nextBtn.disabled = true;
+}
+</script>
+{% endblock %}

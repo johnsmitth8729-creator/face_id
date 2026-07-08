@@ -1,0 +1,132 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  {% include "admin_panel/includes/sidebar.html" with active="dashboard" %}
+
+  <!-- Content -->
+  <div class="admin-content">
+    <!-- Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Dashboard" %}</h2>
+        <p class="page-sub">{% trans "System overview and today's verification activity" %}</p>
+      </div>
+      <div class="header-meta">
+        <span class="badge-date"><i class="bi bi-calendar3 me-2"></i>{% now "N j, Y" %}</span>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card blue">
+          <div class="stat-icon blue"><i class="bi bi-people-fill"></i></div>
+          <div class="stat-value">{{ total_applicants|default:0 }}</div>
+          <div class="stat-label">{% trans "Total Applicants" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card success">
+          <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="stat-value">{{ verified_count|default:0 }}</div>
+          <div class="stat-label">{% trans "Verified" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card gold">
+          <div class="stat-icon gold"><i class="bi bi-hourglass-split"></i></div>
+          <div class="stat-value">{{ pending_count|default:0 }}</div>
+          <div class="stat-label">{% trans "Pending Review" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card danger">
+          <div class="stat-icon danger"><i class="bi bi-x-circle-fill"></i></div>
+          <div class="stat-value">{{ rejected_count|default:0 }}</div>
+          <div class="stat-label">{% trans "Rejected" %}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="akhu-card text-center">
+          <i class="bi bi-calendar-check-fill" style="font-size:1.6rem;color:var(--akhu-info)"></i>
+          <div class="stat-value mt-2">{{ today_total|default:0 }}</div>
+          <div class="stat-label">{% trans "Today's Verifications" %}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="akhu-card text-center">
+          <i class="bi bi-person-badge-fill" style="font-size:1.6rem;color:var(--akhu-gold)"></i>
+          <div class="stat-value mt-2">{{ supervisor_count|default:0 }}</div>
+          <div class="stat-label">{% trans "Active Supervisors" %}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="akhu-card text-center">
+          <i class="bi bi-qr-code" style="font-size:1.6rem;color:var(--akhu-success)"></i>
+          <div class="stat-value mt-2">{{ qr_count|default:0 }}</div>
+          <div class="stat-label">{% trans "Active QR Codes" %}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Verifications Table -->
+    <div class="akhu-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>{% trans "Recent Verifications" %}</h5>
+        <a href="{% url 'admin_panel:applicants' %}" class="btn-akhu-outline btn-sm">
+          {% trans "View All" %} <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+      {% if recent_verifications %}
+      <div class="table-responsive">
+        <table class="akhu-table">
+          <thead>
+            <tr>
+              <th>{% trans "Applicant" %}</th>
+              <th>{% trans "Type" %}</th>
+              <th>{% trans "Result" %}</th>
+              <th>{% trans "Score" %}</th>
+              <th>{% trans "Time" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in recent_verifications %}
+            <tr>
+              <td><strong>{{ log.applicant_profile.full_name|default:"—" }}</strong></td>
+              <td><span class="badge-type">{{ log.get_verification_type_display }}</span></td>
+              <td><span class="status-badge {{ log.result }}">{{ log.result|title }}</span></td>
+              <td>{% if log.score %}{{ log.score|floatformat:1 }}%{% else %}—{% endif %}</td>
+              <td>{{ log.verified_at|timesince }} ago</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4">
+        <i class="bi bi-inbox" style="font-size:2rem;color:var(--text-muted)"></i>
+        <p class="mt-2 text-secondary">{% trans "No verifications yet" %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.badge-date { background:var(--bg-glass);border:1px solid var(--border-color);border-radius:var(--radius-full);padding:6px 14px;font-size:0.82rem;color:var(--text-secondary); }
+.badge-type { background:rgba(37,99,235,0.1);color:var(--akhu-blue-light);border-radius:var(--radius-full);padding:3px 10px;font-size:0.78rem;font-weight:600; }
+.btn-sm { padding:7px 14px !important;font-size:0.82rem !important; }
+</style>
+{% endblock %}

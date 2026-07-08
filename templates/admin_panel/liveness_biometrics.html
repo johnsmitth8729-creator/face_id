@@ -1,0 +1,422 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block body_class %}admin-portal{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+  <!-- Sidebar -->
+  {% include "admin_panel/includes/sidebar.html" with active="liveness" %}
+
+  <!-- Content -->
+  <div class="admin-content">
+    <!-- Header -->
+    <div class="admin-page-header mb-4">
+      <div>
+        <h2 class="page-title">{% trans "Liveness Biometrics" %}</h2>
+        <p class="page-sub">{% trans "Review and export multi-angle liveness captures for verified candidates." %}</p>
+      </div>
+      <div class="header-meta d-flex gap-2">
+        <a href="{% url 'admin_panel:liveness-download-all-zip' %}" class="btn btn-gold px-4 fw-bold">
+          <i class="bi bi-file-zip-fill me-2"></i>{% trans "Download All (ZIP)" %}
+        </a>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-4" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="liveness-summary mb-4">
+      <div class="summary-tile">
+        <span class="summary-icon"><i class="bi bi-person-check-fill"></i></span>
+        <div>
+          <div class="summary-value">{{ applicants.paginator.count|default:0 }}</div>
+          <div class="summary-label">{% trans "Verified records" %}</div>
+        </div>
+      </div>
+      <div class="summary-note">
+        <i class="bi bi-folder-symlink text-gold me-2"></i>
+        {% trans "Bulk ZIP exports every verified user into a separate folder named by Applicant ID." %}
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="akhu-card mb-4">
+      <h5 class="mb-3 text-gold"><i class="bi bi-search me-2"></i>{% trans "Search & Filters" %}</h5>
+      <form method="get" class="row g-3">
+        <div class="col-md-10">
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-secondary text-secondary"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" value="{{ query }}" class="form-control border-secondary"
+              placeholder="{% trans 'Search by Applicant ID, Passport, Name, or Program...' %}" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-akhu-primary w-100">{% trans "Filter" %}</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">
+        <i class="bi bi-person-bounding-box me-2 text-gold"></i>
+        {% trans "Biometric Records" %} <span class="text-gold">({{ applicants.paginator.count|default:0 }})</span>
+      </h5>
+      <span class="text-secondary small">{% trans "Page" %} {{ applicants.number }} {% trans "of" %} {{ applicants.paginator.num_pages }}</span>
+    </div>
+
+    {% if liveness_data %}
+      {% for item in liveness_data %}
+      {% with p=item.profile fp=item.face_profile %}
+      <div class="biometric-card mb-4">
+        <!-- Candidate Header -->
+        <div class="biometric-card-header">
+          <div class="candidate-info">
+            <div class="candidate-id">{{ p.applicant_id|default:"-" }}</div>
+            <div class="candidate-name">{{ p.full_name }}</div>
+            <div class="candidate-meta">
+              <span><i class="bi bi-passport me-1"></i>{{ p.passport_number }}</span>
+              <span class="mx-2">/</span>
+              <span><i class="bi bi-geo-alt me-1"></i>{{ p.selected_region|default:"-" }}</span>
+              {% if p.program %}
+              <span class="mx-2">/</span>
+              <span><i class="bi bi-mortarboard me-1"></i>{{ p.program }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="candidate-actions">
+            {% if fp %}
+            <span class="status-badge verified me-3">
+              <i class="bi bi-check-circle-fill me-1"></i>{% trans "Verified" %}
+              {% if fp.match_percentage %} / {{ fp.match_percentage|floatformat:1 }}%{% endif %}
+            </span>
+            {% endif %}
+            <a href="{% url 'admin_panel:liveness-download-zip' p.id %}" class="btn btn-sm btn-gold">
+              <i class="bi bi-file-zip me-1"></i>{% trans "Download ZIP" %}
+            </a>
+          </div>
+        </div>
+
+        <!-- Photo Grid -->
+        <div class="photo-grid">
+          {% if fp %}
+            <!-- Frontal -->
+            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_frontal')">
+              {% if fp.selfie_image %}
+                <img src="{{ fp.selfie_image.url }}" alt="Frontal" id="{{ p.id }}_frontal" loading="lazy">
+              {% else %}
+                <div class="photo-missing"><i class="bi bi-person-x"></i></div>
+              {% endif %}
+              <div class="photo-label"><i class="bi bi-person-square me-1"></i>{% trans "Frontal" %}</div>
+            </div>
+            <!-- Left -->
+            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_left')">
+              {% if fp.selfie_left %}
+                <img src="{{ fp.selfie_left.url }}" alt="Left" id="{{ p.id }}_left" loading="lazy">
+              {% else %}
+                <div class="photo-missing"><i class="bi bi-arrow-left-circle"></i></div>
+              {% endif %}
+              <div class="photo-label"><i class="bi bi-arrow-left me-1"></i>{% trans "Left" %}</div>
+            </div>
+            <!-- Right -->
+            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_right')">
+              {% if fp.selfie_right %}
+                <img src="{{ fp.selfie_right.url }}" alt="Right" id="{{ p.id }}_right" loading="lazy">
+              {% else %}
+                <div class="photo-missing"><i class="bi bi-arrow-right-circle"></i></div>
+              {% endif %}
+              <div class="photo-label"><i class="bi bi-arrow-right me-1"></i>{% trans "Right" %}</div>
+            </div>
+            <!-- Up -->
+            <div class="photo-cell" onclick="openLightbox('{{ p.id }}_up')">
+              {% if fp.selfie_up %}
+                <img src="{{ fp.selfie_up.url }}" alt="Up" id="{{ p.id }}_up" loading="lazy">
+              {% else %}
+                <div class="photo-missing"><i class="bi bi-arrow-up-circle"></i></div>
+              {% endif %}
+              <div class="photo-label"><i class="bi bi-arrow-up me-1"></i>{% trans "Up" %}</div>
+            </div>
+          {% else %}
+            <div class="col-span-4 text-center py-4 text-secondary">
+              <i class="bi bi-camera-video-off" style="font-size:2rem;"></i>
+              <p class="mt-2 mb-0 small">{% trans "No liveness images found." %}</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if applicants.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span class="text-secondary small">{% trans "Showing page" %} {{ applicants.number }} {% trans "of" %} {{ applicants.paginator.num_pages }}</span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              {% if applicants.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ applicants.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Prev" %}</a></li>
+              {% endif %}
+              {% for num in applicants.paginator.page_range %}
+                <li class="page-item {% if applicants.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a></li>
+              {% endfor %}
+              {% if applicants.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ applicants.next_page_number }}{% if query %}&q={{ query }}{% endif %}">{% trans "Next" %}</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="akhu-card text-center py-5">
+        <i class="bi bi-person-bounding-box" style="font-size:3rem;color:var(--text-muted)"></i>
+        <p class="mt-3 text-secondary">{% trans "No verified liveness biometric records found." %}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+  <div class="lightbox-container" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeLightbox()"><i class="bi bi-x-lg"></i></button>
+    <img id="lightboxImg" src="" alt="Biometric Photo">
+  </div>
+</div>
+
+<style>
+.admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.liveness-summary {
+  display:grid;
+  grid-template-columns: minmax(220px, 320px) 1fr;
+  gap:14px;
+  align-items:stretch;
+}
+.summary-tile,
+.summary-note {
+  background:var(--card-bg);
+  border:1px solid var(--border-color);
+  border-radius:var(--radius-md);
+  padding:16px;
+}
+.summary-tile { display:flex;align-items:center;gap:14px; }
+.summary-icon {
+  width:44px;
+  height:44px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(245,158,11,0.12);
+  color:var(--akhu-gold);
+  font-size:1.2rem;
+}
+.summary-value { color:var(--text-primary);font-size:1.45rem;font-weight:900;line-height:1; }
+.summary-label { color:var(--text-secondary);font-size:0.8rem;margin-top:4px; }
+.summary-note { display:flex;align-items:center;color:var(--text-secondary);font-size:0.88rem; }
+
+/* Biometric Card */
+.biometric-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.biometric-card:hover {
+  border-color: rgba(245,158,11,0.3);
+}
+.biometric-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.candidate-id {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--akhu-gold);
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.candidate-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.candidate-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.candidate-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Photo Grid */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.photo-cell {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 3/4;
+  background: var(--dark-surface);
+  border-right: 1px solid var(--border-color);
+}
+.photo-cell:last-child {
+  border-right: none;
+}
+.photo-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  display: block;
+}
+.photo-cell:hover img {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+.photo-missing {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--text-muted);
+}
+.photo-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+.photo-cell:hover .photo-label {
+  color: var(--akhu-gold);
+}
+
+/* Lightbox */
+.lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.lightbox-overlay.active {
+  display: flex;
+}
+.lightbox-container {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+.lightbox-container img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  object-fit: contain;
+}
+.lightbox-close {
+  position: absolute;
+  top: -42px;
+  right: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Gold button */
+.btn-gold {
+  background-color: var(--gold-primary);
+  border-color: var(--gold-primary);
+  color: var(--dark-bg);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+.btn-gold:hover {
+  background-color: var(--gold-hover);
+  border-color: var(--gold-hover);
+  color: var(--dark-bg);
+  transform: translateY(-1px);
+}
+
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+@media (max-width: 640px) {
+  .admin-page-header { flex-direction:column;gap:12px; }
+  .header-meta { width:100%; }
+  .header-meta .btn { width:100%; }
+  .liveness-summary { grid-template-columns:1fr; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .biometric-card-header { flex-direction: column; align-items: flex-start; }
+  .candidate-actions { width:100%;justify-content:space-between; }
+}
+</style>
+
+<script>
+function openLightbox(imgId) {
+  const img = document.getElementById(imgId);
+  if (!img || img.tagName !== 'IMG') return;
+  document.getElementById('lightboxImg').src = img.src;
+  document.getElementById('lightboxOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightboxOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "QR Verification" %} | {{ INSTITUTION_NAME }}{% endblock %}
+{% block meta_description %}{% trans "Public QR verification result" %}{% endblock %}
+
+{% block content %}
+<section class="qr-verify-section">
+  <div class="container">
+    <div class="qr-shell mx-auto">
+      <div class="qr-status-card {% if result.valid %}is-valid{% else %}is-invalid{% endif %}">
+        <div class="qr-status-top">
+          <div class="qr-status-icon">
+            {% if result.valid %}
+              <i class="bi bi-patch-check-fill"></i>
+            {% else %}
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            {% endif %}
+          </div>
+          <div>
+            <div class="qr-eyebrow">{% trans "QR Verification" %}</div>
+            <h1 class="qr-title">
+              {{ public_title }}
+            </h1>
+            <p class="qr-sub">
+              {{ public_message }}
+            </p>
+          </div>
+        </div>
+
+        <div class="qr-token-box">
+          <span>{% trans "Token" %}</span>
+          <strong>{{ token }}</strong>
+        </div>
+
+        {% if result.valid %}
+          <div class="qr-public-confirm">
+            <div class="qr-confirm-icon">
+              <i class="bi bi-qr-code-scan"></i>
+            </div>
+            <div class="qr-info-grid">
+              <div class="qr-info-item">
+                <span>{% trans "QR ID" %}</span>
+                <strong class="text-gold">{{ token }}</strong>
+              </div>
+              <div class="qr-info-item">
+                <span>{% trans "Verification" %}</span>
+                <strong class="status-text">{% trans "Confirmed" %}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="qr-safe-note">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>{% trans "No personal applicant information is shown on this public QR verification page." %}</span>
+          </div>
+        {% else %}
+          <div class="qr-error-panel">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>{{ public_message }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.qr-verify-section {
+  min-height: calc(100vh - 180px);
+  padding: 64px 0;
+  display: flex;
+  align-items: center;
+}
+.qr-shell {
+  max-width: 920px;
+}
+.qr-status-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+}
+.qr-status-card.is-valid {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.qr-status-card.is-invalid {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.qr-status-top {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+.qr-status-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  flex: 0 0 auto;
+}
+.is-valid .qr-status-icon {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--akhu-success);
+}
+.is-invalid .qr-status-icon {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--akhu-danger);
+}
+.qr-eyebrow {
+  color: var(--akhu-gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.qr-title {
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.qr-sub {
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+.qr-token-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.025);
+  margin-bottom: 22px;
+}
+.qr-token-box span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.qr-token-box strong {
+  color: var(--akhu-gold);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+.qr-public-confirm {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+.qr-confirm-icon {
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: var(--radius-lg);
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--akhu-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+}
+.qr-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.qr-info-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  background: rgba(255,255,255,0.025);
+}
+.qr-info-item.full {
+  grid-column: 1 / -1;
+}
+.qr-info-item span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+.qr-info-item strong {
+  color: var(--text-primary);
+  font-size: 0.98rem;
+  overflow-wrap: anywhere;
+}
+.text-gold {
+  color: var(--akhu-gold) !important;
+}
+.status-text {
+  color: var(--akhu-success) !important;
+}
+.qr-safe-note {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.07);
+  color: var(--text-secondary);
+  padding: 14px;
+  margin-top: 16px;
+}
+.qr-safe-note i {
+  color: var(--akhu-gold);
+  font-size: 1.1rem;
+}
+.qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.qr-error-panel {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--text-secondary);
+  padding: 14px;
+}
+.qr-error-panel i {
+  color: var(--akhu-danger);
+  font-size: 1.1rem;
+}
+@media (max-width: 768px) {
+  .qr-verify-section {
+    padding: 32px 0;
+  }
+  .qr-status-card {
+    padding: 20px;
+  }
+  .qr-status-top,
+  .qr-token-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .qr-public-confirm {
+    grid-template-columns: 1fr;
+  }
+  .qr-confirm-icon {
+    min-height: 96px;
+  }
+  .qr-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .qr-actions .btn-akhu-primary,
+  .qr-actions .btn-akhu-outline {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+{% endblock %}

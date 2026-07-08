@@ -1,0 +1,73 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+{% block content %}
+<div class="admin-layout">
+  {% include "admin_panel/includes/sidebar.html" with active="reports" %}
+  <div class="admin-content">
+    <div class="mb-4">
+      <h2 class="page-title">{% trans "Reports" %}</h2>
+      <p class="page-sub">{% trans "Export system data as PDF, Excel, or CSV" %}</p>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Verified Report -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon success"><i class="bi bi-check-circle-fill"></i></div>
+          <h5 class="report-title">{% trans "Verified Applicants" %}</h5>
+          <p class="report-desc">{% trans "All applicants with successful verification" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'verified' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'verified' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'verified' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+      <!-- Failed Report -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon danger"><i class="bi bi-x-circle-fill"></i></div>
+          <h5 class="report-title">{% trans "Failed Verifications" %}</h5>
+          <p class="report-desc">{% trans "All rejected verification attempts" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'failed' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'failed' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'failed' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+      <!-- Supervisor Activity -->
+      <div class="col-md-6 col-lg-4">
+        <div class="report-card akhu-card">
+          <div class="report-icon gold"><i class="bi bi-person-badge-fill"></i></div>
+          <h5 class="report-title">{% trans "Supervisor Activity" %}</h5>
+          <p class="report-desc">{% trans "All exam-day verification logs by supervisor" %}</p>
+          <div class="report-actions mt-3 d-flex gap-2">
+            <a href="{% url 'reports:export' 'supervisor_activity' 'pdf' %}" class="export-btn pdf"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+            <a href="{% url 'reports:export' 'supervisor_activity' 'excel' %}" class="export-btn excel"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Excel</a>
+            <a href="{% url 'reports:export' 'supervisor_activity' 'csv' %}" class="export-btn csv"><i class="bi bi-filetype-csv"></i> CSV</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+.report-icon { width:50px;height:50px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:16px; }
+.report-icon.success { background:var(--akhu-success-bg);color:var(--akhu-success); }
+.report-icon.danger { background:var(--akhu-danger-bg);color:var(--akhu-danger); }
+.report-icon.gold { background:rgba(245,158,11,0.12);color:var(--akhu-gold); }
+.report-icon.blue { background:rgba(37,99,235,0.12);color:var(--akhu-blue-light); }
+.report-title { font-size:1rem;font-weight:700;margin-bottom:6px; }
+.report-desc { font-size:0.85rem;color:var(--text-secondary);margin:0; }
+.export-btn { display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:var(--radius-sm);font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.15s; }
+.export-btn.pdf { background:rgba(239,68,68,0.1);color:var(--akhu-danger);border:1px solid rgba(239,68,68,0.3); }
+.export-btn.excel { background:rgba(16,185,129,0.1);color:var(--akhu-success);border:1px solid rgba(16,185,129,0.3); }
+.export-btn.csv { background:rgba(37,99,235,0.1);color:var(--akhu-blue-light);border:1px solid rgba(37,99,235,0.3); }
+.export-btn:hover { transform:translateY(-2px);filter:brightness(1.2); }
+</style>
+{% endblock %}
