@@ -853,7 +853,7 @@ scoreEl.className = 'status-badge verified fs-6';
 scoreEl.textContent = score + '% mos';
 
 if (result.already_verified) {
-attBox.classList.add('d-none');
+attBox.classList.remove('d-none');
 document.getElementById('confirmBtn').classList.add('d-none');
 document.getElementById('confirmSuccess').classList.remove('d-none');
 document.getElementById('confirmSuccess').innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Nomzod allaqachon imtihonga kirgan!';
@@ -1130,11 +1130,11 @@ titleEl.textContent = 'Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli';
 subEl.textContent = ap.full_name;
 scoreEl.className = 'status-badge verified fs-6';
 scoreEl.textContent = score + '% mos';
-if (result.already_verified) {
-attBox.classList.add('d-none');
-} else {
-attBox.classList.remove('d-none');
-}
+      if (result.already_verified) {
+        attBox.classList.remove('d-none');
+      } else {
+        attBox.classList.remove('d-none');
+      }
 } else if (indicator === 'yellow') {
 inner.className = 'result-banner yellow';
 iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-warning)"></i>';

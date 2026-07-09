@@ -145,7 +145,7 @@ class SupervisorExamVerifyAPI(View):
             already_verified = VerificationLog.objects.filter(
                 applicant_profile=profile,
                 verification_type='exam_day',
-                result='verified'
+                notes='Checked-in/Exam Entry Confirmed by Supervisor'
             ).exists()
 
             return JsonResponse({
@@ -399,7 +399,7 @@ class SupervisorExamIdentifyAPI(View):
             already_verified = VerificationLog.objects.filter(
                 applicant_profile=profile,
                 verification_type='exam_day',
-                result='verified'
+                notes='Checked-in/Exam Entry Confirmed by Supervisor'
             ).exists()
 
             return JsonResponse({
@@ -548,7 +548,7 @@ class SupervisorQRLookupAPI(View):
                     already_verified = VerificationLog.objects.filter(
                         applicant_profile_id=profile_id_str,
                         verification_type='exam_day',
-                        result='verified'
+                        notes='Checked-in/Exam Entry Confirmed by Supervisor'
                     ).exists()
                 except Exception:
                     pass
