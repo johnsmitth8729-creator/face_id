@@ -11,6 +11,7 @@ const challengeListEl = document.getElementById('challengeList');
 const completeEl = document.getElementById('livenessComplete');
 const errorEl = document.getElementById('livenessError');
 const errorMsgEl = document.getElementById('livenessErrorMsg');
+const overlayText = document.getElementById('livenessInstructionText');
 
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 let stream = null;
@@ -25,6 +26,7 @@ let lastSpokenText = '';
 let lastSpokenTime = 0;
 
 function speak(text) {
+  return; // Disabled per user request
   if (text === lastSpokenText && Date.now() - lastSpokenTime < 5000) {
     return; // Debounce 5s for the same voice prompt
   }
@@ -168,6 +170,10 @@ function startNextChallenge() {
   const ch = CHALLENGES[currentChallengeIdx];
   iconEl.className = `bi ${CHALLENGE_ICONS[ch.type] || 'bi-eye-fill'}`;
   instructionEl.textContent = ch.instruction;
+  
+  if (overlayText) {
+    overlayText.textContent = ch.instruction;
+  }
 
   document.querySelectorAll('.challenge-item').forEach((el, i) => {
     el.classList.remove('active', 'done', 'failed');
@@ -176,7 +182,11 @@ function startNextChallenge() {
   });
 
   const lang = document.documentElement.lang || 'uz';
-  statusEl.querySelector('span').textContent = lang === 'uz' ? "Kameraga qarang..." : "Look at the camera...";
+  const text = lang === 'uz' ? "Kameraga qarang..." : "Look at the camera...";
+  statusEl.querySelector('span').textContent = text;
+  if (overlayText) {
+    overlayText.textContent = text;
+  }
 
   // Play voice command for the current pose
   if (ch.type === 'look_left') {
@@ -209,9 +219,13 @@ function startAutoChecking() {
     const brightness = checkFrameBrightness(ctx, canvas.width, canvas.height);
     const lang = document.documentElement.lang || 'uz';
     if (brightness < 60 || brightness > 230) {
-      statusEl.querySelector('span').textContent = brightness < 60
+      const text = brightness < 60
         ? (lang === 'uz' ? "⚠️ Xona juda qorong'u!" : "⚠️ Room is too dark!")
         : (lang === 'uz' ? "⚠️ Yorug'lik juda kuchli!" : "⚠️ Too much light!");
+      statusEl.querySelector('span').textContent = text;
+      if (overlayText) {
+        overlayText.textContent = text;
+      }
       return;
     }
 
@@ -245,9 +259,17 @@ function startAutoChecking() {
             errMsg = "Iltimos, ko'zingizni bir soniyaga yuming";
           }
         }
-        statusEl.querySelector('span').textContent = errMsg || (lang === 'uz' ? "Harakat aniqlanmadi. Qayta urinib ko'ring." : "Movement not detected. Please try again.");
+        const text = errMsg || (lang === 'uz' ? "Harakat aniqlanmadi. Qayta urinib ko'ring." : "Movement not detected. Please try again.");
+        statusEl.querySelector('span').textContent = text;
+        if (overlayText) {
+          overlayText.textContent = text;
+        }
       } else {
-        statusEl.querySelector('span').textContent = lang === 'uz' ? "Ulanish xatosi" : "Connection error";
+        const text = lang === 'uz' ? "Ulanish xatosi" : "Connection error";
+        statusEl.querySelector('span').textContent = text;
+        if (overlayText) {
+          overlayText.textContent = text;
+        }
       }
     }
   }, 350); // Check every 350ms

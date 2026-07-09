@@ -22,6 +22,7 @@ let lastSpokenText = '';
 let lastSpokenTime = 0;
 
 function speak(text) {
+  return; // Disabled per user request
   if (text === lastSpokenText && Date.now() - lastSpokenTime < 5000) {
     return; // Debounce 5s for the same voice prompt
   }
@@ -128,6 +129,10 @@ function createMockVideoStream() {
 function setStatus(type, text) {
   statusEl.className = `camera-status ${type}`;
   statusText.textContent = text;
+  const overlayText = document.getElementById('cameraInstructionText');
+  if (overlayText) {
+    overlayText.textContent = text;
+  }
 }
 
 function startFaceDetection() {
