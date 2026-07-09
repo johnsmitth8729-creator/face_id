@@ -30,6 +30,13 @@
   </script>
   <title>{% block title %}{{ page_title|default:"Face ID" }} | {{ INSTITUTION_NAME }}{% endblock %}</title>
 
+  <script>
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.speak = function() {};
+      window.speechSynthesis.cancel = function() {};
+    }
+  </script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
