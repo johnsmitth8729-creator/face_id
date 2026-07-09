@@ -112,6 +112,54 @@
   border-color: var(--akhu-success) !important;
   box-shadow: 0 0 0 9999px rgba(10, 22, 40, 0.6), 0 0 30px rgba(16, 185, 129, 0.6) !important;
 }
+
+/* Responsive UX improvements for mobile and tablets */
+@media (max-width: 992px) {
+  .verification-layout {
+    padding: 12px 0 40px !important;
+  }
+  .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  .form-icon {
+    display: none !important;
+  }
+  .form-title {
+    font-size: 1.15rem !important;
+    margin-bottom: 2px !important;
+  }
+  .form-subtitle {
+    font-size: 0.78rem !important;
+    margin-bottom: 12px !important;
+  }
+  .camera-status {
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+    margin-bottom: 10px !important;
+  }
+  .camera-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 60vh !important;
+    min-height: 460px !important;
+    max-height: 620px !important;
+    aspect-ratio: auto !important;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(37, 99, 235, 0.1);
+    border-radius: 18px !important;
+    margin-bottom: 12px !important;
+  }
+  .camera-video {
+    object-fit: cover !important;
+  }
+  .face-guide-oval {
+    width: 65% !important;
+    height: 60% !important;
+    max-width: 260px !important;
+    max-height: 330px !important;
+  }
+}
 </style>
 {% endblock %}
 
