@@ -444,9 +444,15 @@ async function toggleQRCamera() {
   }
   currentQrFacingMode = currentQrFacingMode === 'environment' ? 'user' : 'environment';
   if (html5QrCode && html5QrCode.isScanning) {
-    await html5QrCode.stop().catch(() => {});
+    try {
+      await html5QrCode.stop();
+    } catch (e) {
+      console.warn(e);
+    }
   }
-  initQRScanner();
+  setTimeout(() => {
+    initQRScanner();
+  }, 300);
 }
 
 async function toggleFaceCamera() {
@@ -456,7 +462,15 @@ async function toggleFaceCamera() {
     return;
   }
   currentFaceFacingMode = currentFaceFacingMode === 'user' ? 'environment' : 'user';
-  await initFaceCamera();
+  if (cameraStream) {
+    try {
+      cameraStream.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+    cameraStream = null;
+  }
+  setTimeout(async () => {
+    await initFaceCamera();
+  }, 300);
 }
 
 async function toggleFaceIdCamera() {
@@ -466,7 +480,15 @@ async function toggleFaceIdCamera() {
     return;
   }
   currentFaceIdFacingMode = currentFaceIdFacingMode === 'user' ? 'environment' : 'user';
-  await initFaceIdMode();
+  if (faceIdStream) {
+    try {
+      faceIdStream.getTracks().forEach(t => t.stop());
+    } catch (e) {}
+    faceIdStream = null;
+  }
+  setTimeout(async () => {
+    await initFaceIdMode();
+  }, 300);
 }
 
 // ═══ PHASE 1 — QR SCANNING ═══
@@ -650,30 +672,48 @@ resetFacePhase();
 // ═══ PHASE 2 — FACE VERIFICATION ═══
 
 async function initFaceCamera() {
-try {
-try {
-if (cameraStream) {
-cameraStream.getTracks().forEach(t => t.stop());
-}
-cameraStream = await navigator.mediaDevices.getUserMedia({
-video: { facingMode: currentFaceFacingMode, width: { ideal: 1280 } }, audio: false,
-});
-} catch (e) {
-console.warn("Real camera failed, creating mock video stream for testing:", e);
-cameraStream = createSupervisorMockStream();
-}
-const video = document.getElementById('examVideo');
-if (video) {
-video.srcObject = cameraStream;
-if (currentFaceFacingMode === 'user') {
-video.style.transform = 'scaleX(-1)';
-} else {
-video.style.transform = 'none';
-}
-}
-} catch (err) {
-alert('Kamera ruxsati yo\'q: ' + err.message);
-}
+  try {
+    try {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+      }
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFaceFacingMode, width: { ideal: 1280 } },
+        audio: false,
+      });
+    } catch (e) {
+      console.warn("First getUserMedia try failed, trying fallback constraints:", e);
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: currentFaceFacingMode },
+          audio: false,
+        });
+      } catch (e2) {
+        console.warn("Fallback constraints failed, trying basic video:", e2);
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+    }
+    const video = document.getElementById('examVideo');
+    if (video) {
+      video.srcObject = cameraStream;
+      if (currentFaceFacingMode === 'user') {
+        video.style.transform = 'scaleX(-1)';
+      } else {
+        video.style.transform = 'none';
+      }
+    }
+  } catch (err) {
+    console.warn("Real camera failed, creating mock video stream for testing:", err);
+    cameraStream = createSupervisorMockStream();
+    const video = document.getElementById('examVideo');
+    if (video) {
+      video.srcObject = cameraStream;
+      video.style.transform = 'scaleX(-1)';
+    }
+  }
 }
 
 function createSupervisorMockStream() {
@@ -927,34 +967,52 @@ initFaceIdMode();
 }
 
 async function initFaceIdMode() {
-clearFaceIdResult();
+  clearFaceIdResult();
 
-try {
-try {
-if (faceIdStream) {
-faceIdStream.getTracks().forEach(t => t.stop());
-}
-faceIdStream = await navigator.mediaDevices.getUserMedia({
-video: { facingMode: currentFaceIdFacingMode, width: { ideal: 1280 } },
-audio: false,
-});
-} catch (e) {
-console.warn("Real camera failed, creating mock video stream for testing:", e);
-faceIdStream = createSupervisorMockStream();
-}
-const video = document.getElementById('faceIdVideo');
-if (video) {
-video.srcObject = faceIdStream;
-if (currentFaceIdFacingMode === 'user') {
-video.style.transform = 'scaleX(-1)';
-} else {
-video.style.transform = 'none';
-}
-}
-startFaceIdScanning();
-} catch (err) {
-alert('Kamera ruxsati yo\'q: ' + err.message);
-}
+  try {
+    try {
+      if (faceIdStream) {
+        faceIdStream.getTracks().forEach(t => t.stop());
+      }
+      faceIdStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFaceIdFacingMode, width: { ideal: 1280 } },
+        audio: false,
+      });
+    } catch (e) {
+      console.warn("First getUserMedia try failed, trying fallback constraints:", e);
+      try {
+        faceIdStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: currentFaceIdFacingMode },
+          audio: false,
+        });
+      } catch (e2) {
+        console.warn("Fallback constraints failed, trying basic video:", e2);
+        faceIdStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+    }
+    const video = document.getElementById('faceIdVideo');
+    if (video) {
+      video.srcObject = faceIdStream;
+      if (currentFaceIdFacingMode === 'user') {
+        video.style.transform = 'scaleX(-1)';
+      } else {
+        video.style.transform = 'none';
+      }
+    }
+    startFaceIdScanning();
+  } catch (err) {
+    console.warn("Real camera failed, creating mock video stream for testing:", err);
+    faceIdStream = createSupervisorMockStream();
+    const video = document.getElementById('faceIdVideo');
+    if (video) {
+      video.srcObject = faceIdStream;
+      video.style.transform = 'scaleX(-1)';
+    }
+    startFaceIdScanning();
+  }
 }
 
 function stopFaceIdMode() {
