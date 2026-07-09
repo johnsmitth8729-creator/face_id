@@ -27,8 +27,18 @@
     box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
   }
   .supervisor-main {
-    padding: 16px !important;
+    padding: 12px 8px !important; /* Compact side padding to make room for camera */
     width: 100% !important;
+  }
+  
+  /* Compact title and subtitle typography to maximize vertical viewport space */
+  .supervisor-main h4 {
+    font-size: 1.1rem !important;
+    margin-bottom: 2px !important;
+  }
+  .supervisor-main p.text-muted.small {
+    font-size: 0.75rem !important;
+    margin-bottom: 8px !important;
   }
   
   /* Touch target sizes and layout spacing for mobile */
@@ -42,29 +52,57 @@
   
   /* Adjust margins on mobile cards */
   .akhu-card {
-    margin-bottom: 16px !important;
-    padding: 16px !important;
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .akhu-card h5 {
+    font-size: 0.9rem !important;
+    margin-bottom: 2px !important;
+  }
+  .akhu-card p.text-muted {
+    font-size: 0.75rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Increase camera viewport height to be the primary card element (65-75% of card height) */
+  .camera-container {
+    aspect-ratio: 4/5 !important; /* Vertical aspect ratio for mobile */
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
+  }
+  .camera-video {
+    object-fit: cover !important;
   }
 }
 
 /* Specific styling for narrow phone displays */
 @media (max-width: 480px) {
   .hud-center-box {
-    width: 160px !important;
-    height: 160px !important;
+    width: 180px !important; /* Fit square container bounds */
+    height: 180px !important;
   }
   .waiting-icon {
-    font-size: 2.5rem !important;
+    font-size: 2.2rem !important;
+    margin-bottom: 8px !important;
   }
   .result-waiting {
-    padding: 30px 16px !important;
+    padding: 24px 12px !important;
+  }
+  .result-waiting h5 {
+    font-size: 0.9rem !important;
+    margin-bottom: 4px !important;
+  }
+  .result-waiting p {
+    font-size: 0.75rem !important;
   }
 }
 
 /* Percentage-based guide oval to prevent overflow inside scaled containers on mobile */
 .face-guide-oval {
-  width: 45% !important;
-  height: 70% !important;
+  width: 55% !important;
+  height: 60% !important;
   max-width: 220px !important;
   max-height: 290px !important;
 }

@@ -32,12 +32,6 @@ class CameraManager {
     return CameraManager.instance;
   }
 
-  checkSecureContext() {
-    if (!window.isSecureContext) {
-      throw new Error("INSECURE_CONTEXT");
-    }
-  }
-
   async checkCameraPermission() {
     if (navigator.permissions && navigator.permissions.query) {
       try {
@@ -47,7 +41,7 @@ class CameraManager {
         console.warn("Permissions API query for camera failed:", e);
       }
     }
-    return 'prompt'; // Fallback for browsers that do not support permissions query for 'camera'
+    return 'prompt';
   }
 
   cleanup() {
@@ -90,7 +84,7 @@ class CameraManager {
       this.activeStream = null;
     }
 
-    // 5. Hide error overlays and switch buttons on activeMode reset
+    // 5. Hide error overlays on cleanup
     this.activeMode = null;
   }
 
@@ -98,19 +92,6 @@ class CameraManager {
     this.cleanup();
     this.activeMode = 'qr';
     this.errorCallback = errorCallback;
-
-    try {
-      this.checkSecureContext();
-    } catch (e) {
-      this.handleError('INSECURE_CONTEXT');
-      return;
-    }
-
-    const permState = await this.checkCameraPermission();
-    if (permState === 'denied') {
-      this.handleError('PERMISSION_DENIED');
-      return;
-    }
 
     if (typeof Html5Qrcode === 'undefined') {
       this.handleError('QR_LIB_NOT_LOADED');
@@ -164,20 +145,10 @@ class CameraManager {
     this.videoElement = document.getElementById(videoElementId);
 
     try {
-      this.checkSecureContext();
-    } catch (e) {
-      this.handleError('INSECURE_CONTEXT');
-      return;
-    }
-
-    const permState = await this.checkCameraPermission();
-    if (permState === 'denied') {
-      this.handleError('PERMISSION_DENIED');
-      return;
-    }
-
-    try {
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("MEDIA_DEVICES_UNSUPPORTED");
+        }
         this.activeStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: this.facingMode, width: { ideal: 1280 } },
           audio: false
@@ -209,20 +180,10 @@ class CameraManager {
     this.videoElement = document.getElementById(videoElementId);
 
     try {
-      this.checkSecureContext();
-    } catch (e) {
-      this.handleError('INSECURE_CONTEXT');
-      return;
-    }
-
-    const permState = await this.checkCameraPermission();
-    if (permState === 'denied') {
-      this.handleError('PERMISSION_DENIED');
-      return;
-    }
-
-    try {
       try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("MEDIA_DEVICES_UNSUPPORTED");
+        }
         this.activeStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: this.facingMode, width: { ideal: 1280 } },
           audio: false
@@ -337,8 +298,18 @@ class CameraManager {
   }
 
   handleError(err) {
+    let errType = err;
+    if (err && typeof err === 'object') {
+      errType = err.name || err.message;
+    }
+    
+    // If it's a media device failure, check if insecure context is the root cause
+    if ((errType === 'MEDIA_DEVICES_UNSUPPORTED' || errType === 'TypeError') && !window.isSecureContext) {
+      errType = 'INSECURE_CONTEXT';
+    }
+
     if (this.errorCallback) {
-      this.errorCallback(this.activeMode, err);
+      this.errorCallback(this.activeMode, errType);
     } else {
       console.error("CameraManager Error in mode", this.activeMode, err);
     }

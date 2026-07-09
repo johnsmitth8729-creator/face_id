@@ -446,8 +446,8 @@
   const PRELOADED_APPLICANT = null;
   {% endif %}
 
-  // Instantiate CameraManager singleton
-  const cameraMgr = CameraManager.getInstance();
+  // Declare CameraManager reference
+  let cameraMgr = null;
 
   // ── State ──
   let currentProfileId = PRELOADED_PROFILE_ID || null;
@@ -1089,6 +1089,7 @@
 
   // ── Initialization ──
   document.addEventListener('DOMContentLoaded', () => {
+    cameraMgr = CameraManager.getInstance();
     cameraMgr.updateSwitchButtonsVisibility();
 
     if (PRELOADED_APPLICANT) {
