@@ -1,7 +1,61 @@
 /* supervisor_responsive.css */
 
+/* Camera Toolbar and Switch Button styling (applied universally but hidden/customized below) */
+.camera-toolbar {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 8px 0 !important;
+  margin-bottom: 12px !important;
+}
+
+.camera-switch-btn {
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  min-height: 44px !important;
+  padding: 0 20px !important;
+  border-radius: 24px !important;
+  background: var(--bg-card, rgba(30, 41, 59, 0.85)) !important;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15)) !important;
+  color: var(--text-primary, #ffffff) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  display: none; /* Managed dynamically by CameraManager, hidden on desktop below */
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: var(--shadow-sm) !important;
+  outline: none !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.camera-switch-btn:hover {
+  background: rgba(30, 41, 59, 1.0) !important;
+  transform: translateY(-1px) !important;
+}
+
+.camera-switch-btn:active {
+  transform: translateY(1px) !important;
+}
+
+/* Hide camera switch button on desktop */
+@media (min-width: 1025px) {
+  .camera-switch-btn {
+    display: none !important;
+  }
+}
+
 /* Responsive Layout overrides for mobile and tablets */
 @media (max-width: 992px) {
+  /* Prevent body scrolling on active camera screens where possible */
+  body {
+    position: relative;
+    overflow-x: hidden;
+  }
+  
   .supervisor-layout {
     flex-direction: column !important;
   }
@@ -27,18 +81,30 @@
     box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
   }
   .supervisor-main {
-    padding: 12px 8px !important; /* Compact side padding to make room for camera */
+    padding: 8px !important; /* Compact side padding to make room for camera */
     width: 100% !important;
+    overflow-y: auto;
   }
   
   /* Compact title and subtitle typography to maximize vertical viewport space */
   .supervisor-main h4 {
-    font-size: 1.1rem !important;
+    font-size: 1.05rem !important;
     margin-bottom: 2px !important;
   }
   .supervisor-main p.text-muted.small {
-    font-size: 0.75rem !important;
-    margin-bottom: 8px !important;
+    font-size: 0.72rem !important;
+    margin-bottom: 6px !important;
+  }
+  
+  /* Compact tab switches */
+  .akhu-card[style*="max-width: 400px"] {
+    margin-bottom: 10px !important;
+    padding: 4px !important;
+  }
+  .btn-akhu-outline.flex-1 {
+    min-height: 36px !important;
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
   }
   
   /* Touch target sizes and layout spacing for mobile */
@@ -50,37 +116,61 @@
     justify-content: center;
   }
   
-  /* Adjust margins on mobile cards */
+  /* Adjust margins and paddings on mobile cards */
   .akhu-card {
-    margin-bottom: 12px !important;
-    padding: 12px !important;
+    margin-bottom: 10px !important;
+    padding: 10px !important;
     border-radius: var(--radius-lg) !important;
   }
   .akhu-card h5 {
-    font-size: 0.9rem !important;
+    font-size: 0.88rem !important;
     margin-bottom: 2px !important;
   }
   .akhu-card p.text-muted {
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
     margin-bottom: 8px !important;
   }
 
-  /* Increase camera viewport height to be the primary card element (65-75% of card height) */
+  /* Increase camera viewport height to be the primary card element (60-70% of viewport height) */
   .camera-container {
-    aspect-ratio: 4/5 !important; /* Vertical aspect ratio for mobile */
-    max-width: 100% !important;
+    height: 60vh !important; /* Forces vertical space occupancy */
     width: 100% !important;
-    margin-bottom: 12px !important;
+    aspect-ratio: auto !important; /* Nullify default landscape aspect ratio */
+    max-width: 100% !important;
+    margin-bottom: 8px !important;
   }
+  
   .camera-video {
     object-fit: cover !important;
+  }
+
+  /* Centered camera toolbar below preview */
+  .camera-toolbar {
+    padding: 4px 0 !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .camera-switch-btn {
+    min-height: 44px !important;
+    font-size: 0.85rem !important;
+    padding: 0 16px !important;
+  }
+
+  /* Compact status overlay and HUD elements */
+  .scan-status-overlay {
+    top: 8px !important;
+    left: 8px !important;
+  }
+  .scan-status-overlay span {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
   }
 }
 
 /* Specific styling for narrow phone displays */
 @media (max-width: 480px) {
   .hud-center-box {
-    width: 180px !important; /* Fit square container bounds */
+    width: 180px !important; /* Enlarged scanning HUD to fit 4/5 portrait box */
     height: 180px !important;
   }
   .waiting-icon {
@@ -95,55 +185,16 @@
     margin-bottom: 4px !important;
   }
   .result-waiting p {
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
   }
 }
 
-/* Percentage-based guide oval to prevent overflow inside scaled containers on mobile */
+/* Proportional guide oval for vertical aspect ratio */
 .face-guide-oval {
-  width: 55% !important;
-  height: 60% !important;
-  max-width: 220px !important;
-  max-height: 290px !important;
-}
-
-/* Glassmorphic Touch-Friendly Camera Switch Button */
-.camera-switch-btn {
-  position: absolute !important;
-  bottom: 16px !important;
-  right: 16px !important;
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  background: rgba(15, 23, 42, 0.6) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #fff !important;
-  display: none; /* Controlled dynamically by CameraManager JS, hidden on desktop by media query below */
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 1.25rem !important;
-  cursor: pointer !important;
-  z-index: 25 !important;
-  transition: background 0.2s, transform 0.2s !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  outline: none !important;
-}
-
-.camera-switch-btn:hover {
-  background: rgba(15, 23, 42, 0.8) !important;
-  transform: scale(1.05) !important;
-}
-
-.camera-switch-btn:active {
-  transform: scale(0.95) !important;
-}
-
-/* Hide switch button on desktop */
-@media (min-width: 1025px) {
-  .camera-switch-btn {
-    display: none !important;
-  }
+  width: 60% !important;  /* Proportionally wider to accommodate 4/5 viewport */
+  height: 65% !important; /* Taller guide */
+  max-width: 250px !important;
+  max-height: 320px !important;
 }
 
 /* Camera Error Overlay Styles */
