@@ -331,33 +331,29 @@ class Step5ResultView(TemplateView):
             context['match_percentage'] = face_profile.match_percentage
             context['qr_code'] = None
 
-            if face_profile.status == 'verified':
-                # Generate QR code
-                profile = session.user.applicant_profile if hasattr(session.user, 'applicant_profile') else None
-                if profile:
-                    qr = generate_qr_code(profile)
-                    context['qr_code'] = qr
-
-            # Dynamic SystemSetting check for permit readiness
-            from apps.accounts.models import SystemSetting
-            from django.utils.timezone import localdate
+            # Dynamic check for permit readiness based only on permits_released setting
+            from apps.accounts.models import check_permit_ready, SystemSetting
+            permit_ready = check_permit_ready()
             
             setting = SystemSetting.objects.first()
-            permit_ready = False
             release_date_str = ""
-            
-            if setting:
-                if setting.permits_released:
-                    permit_ready = True
-                elif setting.permit_release_date:
-                    release_date_str = setting.permit_release_date.strftime('%d.%m.%Y')
-                    if localdate() >= setting.permit_release_date:
-                        permit_ready = True
-            
+            if setting and setting.permit_release_date:
+                release_date_str = setting.permit_release_date.strftime('%d.%m.%Y')
+
             context.update({
                 'permit_ready': permit_ready,
                 'release_date_str': release_date_str,
             })
+
+            if face_profile.status == 'verified' and permit_ready:
+                # Read ONLY existing QR code from database. Never create one.
+                profile = session.user.applicant_profile if hasattr(session.user, 'applicant_profile') else None
+                if profile:
+                    from apps.qr_module.models import QRCode
+                    try:
+                        context['qr_code'] = profile.qr_code
+                    except QRCode.DoesNotExist:
+                        context['qr_code'] = None
 
         return render(request, self.template_name, context)
 
@@ -378,6 +374,16 @@ class DownloadConfirmationView(View):
         if not face_profile or face_profile.status not in ('verified', 'review_required'):
             messages.error(request, _('Verification not complete'))
             return redirect('verification:home')
+
+        # Permit release check for normal applicants
+        from apps.admin_panel.views import ADMIN_SESSION_KEY
+        is_admin = request.session.get(ADMIN_SESSION_KEY) or (request.user.is_authenticated and getattr(request.user, 'is_staff', False))
+        
+        if not is_admin:
+            from apps.accounts.models import check_permit_ready
+            if not check_permit_ready():
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied(_('Admission permits are not yet released.'))
 
         from apps.reports.views import generate_confirmation_pdf
         return generate_confirmation_pdf(session)

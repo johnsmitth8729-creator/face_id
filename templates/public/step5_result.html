@@ -97,13 +97,13 @@
           <div class="alert alert-warning border border-warning-subtle py-3 px-4 mx-auto mb-4 mt-4" style="max-width: 600px; background: rgba(245,158,11,0.08);">
             <i class="bi bi-info-circle-fill fs-4 text-warning mb-2 d-block"></i>
             <h5 class="alert-heading text-warning fw-bold">
-              {% trans "Identity Verified" %}
+              {% trans "Verification Successful" %}
             </h5>
             <p class="mb-0 text-light small">
               {% if release_date_str %}
                 {% blocktrans with release_date=release_date_str %}Your identity has been successfully verified. Your admission permit will be released on <strong>{{ release_date }}</strong>. You can download your permit starting from that date.{% endblocktrans %}
               {% else %}
-                {% trans "Your identity has been successfully verified. Your admission permit will become available shortly." %}
+                {% trans "Verification completed successfully. Your examination permit has not been released yet. Please wait until the university publishes permits." %}
               {% endif %}
             </p>
           </div>

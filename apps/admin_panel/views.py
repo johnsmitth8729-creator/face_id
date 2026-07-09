@@ -1447,50 +1447,130 @@ class SystemSettingsView(View):
         })
 
     def post(self, request):
-        from apps.accounts.models import SystemSetting, ExamVenueConfig
-        
-        # Save general settings (singleton pattern)
-        setting = SystemSetting.objects.first()
-        if not setting:
-            setting = SystemSetting.objects.create(qr_domain='id.akhu.uz')
-        setting.qr_domain = request.POST.get('qr_domain', 'id.akhu.uz').strip()
-        setting.permits_released = 'permits_released' in request.POST
-        
-        release_date_str = request.POST.get('permit_release_date', '').strip()
-        if release_date_str:
-            try:
-                from datetime import datetime
-                setting.permit_release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                setting.permit_release_date = None
-        else:
-            setting.permit_release_date = None
-        setting.save()
-        
-        # Save venue configs
-        venues = ExamVenueConfig.objects.all()
-        for venue in venues:
-            venue_name = request.POST.get(f'venue_{venue.id}', '').strip()
-            exam_date_str = request.POST.get(f'date_{venue.id}', '').strip()
-            
-            venue.venue_name = venue_name
-            if exam_date_str:
-                try:
-                    from django.utils.dateparse import parse_datetime
-                    from django.utils.timezone import make_aware
-                    dt = parse_datetime(exam_date_str)
-                    if dt:
-                        venue.exam_date = make_aware(dt) if settings.USE_TZ else dt
+        from apps.accounts.models import SystemSetting, ExamVenueConfig, ApplicantProfile
+        from django.db import transaction
+        import time
+
+        start_time = time.time()
+        logger.info("Permit Release: Settings save initiated by admin.")
+
+        try:
+            with transaction.atomic():
+                # 1. Save general settings (singleton pattern)
+                setting = SystemSetting.objects.first()
+                if not setting:
+                    setting = SystemSetting.objects.create(qr_domain='id.akhu.uz')
+                setting.qr_domain = request.POST.get('qr_domain', 'id.akhu.uz').strip()
+                setting.permits_released = 'permits_released' in request.POST
+                
+                release_date_str = request.POST.get('permit_release_date', '').strip()
+                if release_date_str:
+                    try:
+                        from datetime import datetime
+                        setting.permit_release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        setting.permit_release_date = None
+                else:
+                    setting.permit_release_date = None
+                setting.save()
+                
+                # 2. Save venue configs
+                venues = ExamVenueConfig.objects.all()
+                for venue in venues:
+                    venue_name = request.POST.get(f'venue_{venue.id}', '').strip()
+                    exam_date_str = request.POST.get(f'date_{venue.id}', '').strip()
+                    
+                    venue.venue_name = venue_name
+                    if exam_date_str:
+                        try:
+                            from django.utils.dateparse import parse_datetime
+                            from django.utils.timezone import make_aware
+                            dt = parse_datetime(exam_date_str)
+                            if dt:
+                                venue.exam_date = make_aware(dt) if settings.USE_TZ else dt
+                            else:
+                                venue.exam_date = None
+                        except Exception:
+                            venue.exam_date = None
                     else:
                         venue.exam_date = None
-                except Exception:
-                    venue.exam_date = None
-            else:
-                venue.exam_date = None
-            venue.save()
+                    venue.save()
+                
+                # 3. Synchronize verified candidates
+                # Retrieve all verified candidates in a single query using select_related/prefetch_related
+                verified_profiles = list(ApplicantProfile.objects.filter(
+                    user__verification_sessions__face_profile__status='verified'
+                ).select_related('user').prefetch_related(
+                    'user__verification_sessions__face_profile', 
+                    'qr_code'
+                ).distinct())
+
+                logger.info(f"Permit Release: found {len(verified_profiles)} verified candidate profiles to sync.")
+
+                venue_configs = {config.region: config for config in ExamVenueConfig.objects.all()}
+                
+                updated_profiles = []
+                for profile in verified_profiles:
+                    changed = False
+                    if setting.permits_released:
+                        # Sync to regional config
+                        if profile.selected_region in venue_configs:
+                            conf = venue_configs[profile.selected_region]
+                            if profile.exam_venue != conf.venue_name:
+                                profile.exam_venue = conf.venue_name
+                                changed = True
+                            if profile.exam_date != conf.exam_date:
+                                profile.exam_date = conf.exam_date
+                                changed = True
+                    else:
+                        # Clear exam info if permits are not released
+                        if profile.exam_venue != "":
+                            profile.exam_venue = ""
+                            changed = True
+                        if profile.exam_date is not None:
+                            profile.exam_date = None
+                            changed = True
+                            
+                    if changed:
+                        updated_profiles.append(profile)
+
+                if updated_profiles:
+                    ApplicantProfile.objects.bulk_update(updated_profiles, ['exam_venue', 'exam_date'])
+                    
+                logger.info(f"Permit Release: synchronized {len(updated_profiles)} candidate profiles in database.")
+
+            # Transaction is successfully committed! Now execute post-commit filesystem writes (QR codes)
+            qr_generated_count = 0
+            if setting.permits_released:
+                from apps.qr_module.services import generate_applicant_qr
+                for profile in verified_profiles:
+                    has_qr = False
+                    try:
+                        has_qr = bool(profile.qr_code)
+                    except Exception:
+                        pass
+                        
+                    if not has_qr:
+                        try:
+                            generate_applicant_qr(profile)
+                            qr_generated_count += 1
+                        except Exception as e:
+                            logger.error(f"Failed to generate QR code for verified applicant {profile.admission_id}: {e}")
+
+            duration = time.time() - start_time
+            logger.info(f"Permit Release: process completed. Synced profiles: {len(updated_profiles)}, Generated QRs: {qr_generated_count}. Duration: {duration:.2f}s.")
+
+            messages.success(request, _('System settings and exam venues updated successfully.'))
+            if qr_generated_count > 0:
+                messages.info(request, _("Generated QR codes for {count} verified candidates.").format(count=qr_generated_count))
             
-        messages.success(request, _('System settings and exam venues updated successfully.'))
-        return redirect('admin_panel:settings')
+            return redirect('admin_panel:settings')
+
+        except Exception as e:
+            duration = time.time() - start_time
+            logger.error(f"Permit Release: process failed after {duration:.2f}s, transaction rolled back. Error: {e}")
+            messages.error(request, _("An error occurred: {error}").format(error=str(e)))
+            return redirect('admin_panel:settings')
 
 
 # ─── REPORTS ─────────────────────────────────────────────────────────────────

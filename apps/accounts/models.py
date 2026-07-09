@@ -196,6 +196,25 @@ class PreRegisteredApplicant(models.Model):
         return f'{self.surname} {self.given_name} — {self.passport_number}'
 
 
+def check_permit_ready() -> bool:
+    """Helper to check if permits have been officially released by admin settings."""
+    setting = SystemSetting.objects.first()
+    return bool(setting and setting.permits_released)
+
+
+def _generate_qr_post_commit(profile_id):
+    """Helper to generate QR code after transaction commit."""
+    from apps.accounts.models import ApplicantProfile
+    from apps.qr_module.services import generate_applicant_qr
+    try:
+        profile = ApplicantProfile.objects.get(id=profile_id)
+        generate_applicant_qr(profile)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to generate QR code in on_commit for applicant {profile_id}: {e}")
+
+
 def finalize_verification_success(profile):
     """Finalizes an applicant's profile upon successful verification:
        1. Generates a sequential Admission ID.
@@ -222,14 +241,18 @@ def finalize_verification_success(profile):
 
         next_id = f'AKHU-2026-{max_num + 1:04d}'
 
-        # Look up regional exam configs
-        if profile.selected_region:
-            try:
-                venue_conf = ExamVenueConfig.objects.get(region=profile.selected_region)
-                profile.exam_venue = venue_conf.venue_name
-                profile.exam_date = venue_conf.exam_date
-            except ExamVenueConfig.DoesNotExist:
-                pass
+        # Look up regional exam configs ONLY if permits are ready
+        if check_permit_ready():
+            if profile.selected_region:
+                try:
+                    venue_conf = ExamVenueConfig.objects.get(region=profile.selected_region)
+                    profile.exam_venue = venue_conf.venue_name
+                    profile.exam_date = venue_conf.exam_date
+                except ExamVenueConfig.DoesNotExist:
+                    pass
+        else:
+            profile.exam_venue = ""
+            profile.exam_date = None
 
         profile.admission_id = next_id
         profile.is_locked = True
@@ -237,6 +260,10 @@ def finalize_verification_success(profile):
 
         # Remove from PreRegisteredApplicant list
         PreRegisteredApplicant.objects.filter(passport_number=profile.passport_number).delete()
+
+        # Post-commit QR generation if permits are ready
+        if check_permit_ready():
+            transaction.on_commit(lambda: _generate_qr_post_commit(profile.id))
 
 
 

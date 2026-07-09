@@ -218,13 +218,17 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
     # Get QR image
     qr_img = None
     qr = getattr(applicant, 'qr_code', None)
-    if qr and qr.qr_image:
-        try:
-            p = qr.qr_image.path
-            if os.path.exists(p):
-                qr_img = get_scaled_reportlab_image(p, 96, 96)
-        except Exception:
-            pass
+    if not qr or not qr.qr_image:
+        from apps.qr_module.exceptions import PermitNotReleasedError
+        raise PermitNotReleasedError(f"QR code does not exist for applicant {applicant.admission_id if applicant else 'unknown'}")
+
+    try:
+        p = qr.qr_image.path
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"QR code image file not found at {p}")
+        qr_img = get_scaled_reportlab_image(p, 96, 96)
+    except Exception as e:
+        raise e
 
     # Left column content
     left_flowables = [
@@ -326,10 +330,16 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
 def generate_confirmation_pdf(session) -> HttpResponse:
     """Generate a beautifully designed PDF admission permit with photo, QR and logo."""
     import io
+    from apps.qr_module.exceptions import PermitNotReleasedError
     buffer = io.BytesIO()
-    success = generate_confirmation_pdf_stream(session, buffer)
-    if not success:
-        return HttpResponse('No data available', status=404)
+    try:
+        success = generate_confirmation_pdf_stream(session, buffer)
+        if not success:
+            return HttpResponse('No data available', status=404)
+    except PermitNotReleasedError as e:
+        return HttpResponse(str(e), status=403)
+    except Exception as e:
+        return HttpResponse(f'Error generating PDF: {e}', status=500)
 
     applicant = getattr(session.user, 'applicant_profile', None) if session.user else None
     passport = applicant.passport_number if applicant else 'unknown'
