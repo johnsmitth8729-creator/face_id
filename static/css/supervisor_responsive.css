@@ -1,0 +1,141 @@
+/* supervisor_responsive.css */
+
+/* Responsive Layout overrides for mobile and tablets */
+@media (max-width: 992px) {
+  .supervisor-layout {
+    flex-direction: column !important;
+  }
+  .supervisor-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -280px !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 1050 !important;
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color) !important;
+    transition: transform var(--transition-normal), visibility var(--transition-normal) !important;
+    visibility: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding-top: calc(var(--navbar-height) + 16px) !important;
+  }
+  .supervisor-sidebar.active {
+    transform: translateX(280px) !important;
+    visibility: visible !important;
+    display: flex !important;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
+  }
+  .supervisor-main {
+    padding: 16px !important;
+    width: 100% !important;
+  }
+  
+  /* Touch target sizes and layout spacing for mobile */
+  .btn-akhu-outline, .btn-akhu-gold, .btn-success, .btn,
+  .input-group .btn, .input-group input {
+    min-height: 44px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Adjust margins on mobile cards */
+  .akhu-card {
+    margin-bottom: 16px !important;
+    padding: 16px !important;
+  }
+}
+
+/* Specific styling for narrow phone displays */
+@media (max-width: 480px) {
+  .hud-center-box {
+    width: 160px !important;
+    height: 160px !important;
+  }
+  .waiting-icon {
+    font-size: 2.5rem !important;
+  }
+  .result-waiting {
+    padding: 30px 16px !important;
+  }
+}
+
+/* Percentage-based guide oval to prevent overflow inside scaled containers on mobile */
+.face-guide-oval {
+  width: 45% !important;
+  height: 70% !important;
+  max-width: 220px !important;
+  max-height: 290px !important;
+}
+
+/* Glassmorphic Touch-Friendly Camera Switch Button */
+.camera-switch-btn {
+  position: absolute !important;
+  bottom: 16px !important;
+  right: 16px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  display: none; /* Controlled dynamically by CameraManager JS, hidden on desktop by media query below */
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  cursor: pointer !important;
+  z-index: 25 !important;
+  transition: background 0.2s, transform 0.2s !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  outline: none !important;
+}
+
+.camera-switch-btn:hover {
+  background: rgba(15, 23, 42, 0.8) !important;
+  transform: scale(1.05) !important;
+}
+
+.camera-switch-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Hide switch button on desktop */
+@media (min-width: 1025px) {
+  .camera-switch-btn {
+    display: none !important;
+  }
+}
+
+/* Camera Error Overlay Styles */
+.camera-error-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  text-align: center !important;
+  z-index: 30 !important;
+  border-radius: var(--radius-xl) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.camera-error-overlay i {
+  font-size: 2.5rem !important;
+}
+
+.camera-error-overlay .error-title {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+
+.camera-error-overlay .error-msg {
+  color: var(--text-muted) !important;
+  max-width: 90% !important;
+}

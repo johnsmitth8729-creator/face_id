@@ -3,6 +3,10 @@
 
 {% block title %}{% trans "Exam Day Verification" %} — {{ SITE_NAME }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/supervisor_responsive.css' %}?v=1.2">
+{% endblock %}
+
 {% block content %}
 <div class="supervisor-layout">
   <nav class="supervisor-sidebar">
@@ -63,6 +67,21 @@
             <div class="camera-container mb-3 position-relative">
               <div id="qrReader" style="width:100%;"></div>
               
+              <!-- Camera Switch Button -->
+              <button type="button" class="camera-switch-btn" id="qrSwitchBtn" onclick="toggleQRCamera()">
+                <i class="bi bi-camera-rotate"></i>
+              </button>
+              
+              <!-- Camera Error Overlay -->
+              <div class="camera-error-overlay d-none" id="qrCameraError">
+                <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
+                <div class="error-title mb-1">{% trans "Camera Error" %}</div>
+                <div class="error-msg text-muted small mb-3"></div>
+                <button type="button" class="btn btn-sm btn-akhu-outline" onclick="retryCamera('qr')">
+                  <i class="bi bi-arrow-repeat me-1"></i>{% trans "Retry" %}
+                </button>
+              </div>
+
               <!-- Custom Futuristic Scanner HUD -->
               <div class="scanner-hud-overlay">
                 <div class="hud-center-box">
@@ -196,6 +215,22 @@
             <h5 class="mb-2"><i class="bi bi-camera-video-fill me-2"></i>{% trans "Live Camera" %}</h5>
             <div class="camera-container mb-3 position-relative">
               <video id="examVideo" class="camera-video" autoplay muted playsinline></video>
+              
+              <!-- Camera Switch Button -->
+              <button type="button" class="camera-switch-btn" id="faceSwitchBtn" onclick="toggleFaceCamera()">
+                <i class="bi bi-camera-rotate"></i>
+              </button>
+              
+              <!-- Camera Error Overlay -->
+              <div class="camera-error-overlay d-none" id="faceCameraError">
+                <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
+                <div class="error-title mb-1">{% trans "Camera Error" %}</div>
+                <div class="error-msg text-muted small mb-3"></div>
+                <button type="button" class="btn btn-sm btn-akhu-outline" onclick="retryCamera('face')">
+                  <i class="bi bi-arrow-repeat me-1"></i>{% trans "Retry" %}
+                </button>
+              </div>
+
               <div class="camera-overlay">
                 <div class="face-guide-oval" id="faceGuide"></div>
               </div>
@@ -291,6 +326,22 @@
             <p class="text-muted small mb-3">{% trans "Point the camera at the candidate's face to identify them." %}</p>
             <div class="camera-container mb-3 position-relative">
               <video id="faceIdVideo" class="camera-video" autoplay muted playsinline style="width: 100%; border-radius: var(--radius-lg);"></video>
+              
+              <!-- Camera Switch Button -->
+              <button type="button" class="camera-switch-btn" id="faceIdSwitchBtn" onclick="toggleFaceIdCamera()">
+                <i class="bi bi-camera-rotate"></i>
+              </button>
+              
+              <!-- Camera Error Overlay -->
+              <div class="camera-error-overlay d-none" id="faceIdCameraError">
+                <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
+                <div class="error-title mb-1">{% trans "Camera Error" %}</div>
+                <div class="error-msg text-muted small mb-3"></div>
+                <button type="button" class="btn btn-sm btn-akhu-outline" onclick="retryCamera('faceId')">
+                  <i class="bi bi-arrow-repeat me-1"></i>{% trans "Retry" %}
+                </button>
+              </div>
+
               <div class="scan-status-overlay" id="faceIdScanStatus">
                 <span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> {% trans "QIDIRILMOQDA..." %}</span>
               </div>
@@ -395,45 +446,50 @@
   const PRELOADED_APPLICANT = null;
   {% endif %}
 
+  // Instantiate CameraManager singleton
+  const cameraMgr = CameraManager.getInstance();
+
   // ── State ──
   let currentProfileId = PRELOADED_PROFILE_ID || null;
-  let cameraStream = null;
-  let html5QrCode = null;
   let lastScannedSelfieUrl = '';
+  let activeVerifyMode = 'qr'; // 'qr' or 'face'
+  
+  let faceIdScanningInProgress = false;
+  let faceIdLastMatchProfileId = null;
+  let faceIdLastMatchTime = 0;
+  
+  const API_EXAM_IDENTIFY = "/api/supervisor/exam-identify/";
+
+  // ── Camera Switch helpers ──
+  function toggleQRCamera() {
+    cameraMgr.toggleQRCamera("qrReader", onQRSuccess, onQRError);
+  }
+
+  function toggleFaceCamera() {
+    cameraMgr.toggleFaceCamera("examVideo");
+  }
+
+  function toggleFaceIdCamera() {
+    cameraMgr.toggleFaceIdCamera("faceIdVideo", faceIdScanFrame);
+  }
 
   // ═══ PHASE 1 — QR SCANNING ═══
 
   function initQRScanner() {
-    if (typeof Html5Qrcode === 'undefined') {
-      document.getElementById('qrStatusOverlay').innerHTML =
-        `<span class="badge bg-danger px-3 py-2"><i class="bi bi-exclamation-triangle me-1"></i> ${I18N.qrScannerNotLoaded}</span>`;
-      return;
-    }
-    html5QrCode = new Html5Qrcode("qrReader");
-    const config = { fps: 10, aspectRatio: 1.0 };
-    html5QrCode.start({ facingMode: "environment" }, config, onQRSuccess, onQRError)
-      .then(() => {
-        document.getElementById('qrStatusOverlay').innerHTML =
-          `<span class="badge bg-success px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
-      })
-      .catch(err => {
-        // Fallback to user camera (laptop webcam)
-        html5QrCode.start({ facingMode: "user" }, config, onQRSuccess, onQRError)
-          .then(() => {
-            document.getElementById('qrStatusOverlay').innerHTML =
-              `<span class="badge bg-success px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
-          })
-          .catch(err2 => {
-            document.getElementById('qrStatusOverlay').innerHTML =
-              `<span class="badge bg-warning px-3 py-2">${I18N.cameraPermissionDenied}</span>`;
-          });
-      });
+    hideCameraErrorUI('qr');
+    document.getElementById('qrStatusOverlay').innerHTML =
+      `<span class="badge bg-primary px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
+      
+    cameraMgr.startQR(
+      "qrReader",
+      onQRSuccess,
+      onQRError,
+      handleCameraError
+    );
   }
 
   function stopQRScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      html5QrCode.stop().catch(() => {});
-    }
+    cameraMgr.cleanup();
   }
 
   let qrProcessing = false;
@@ -580,81 +636,13 @@
 
   // ═══ PHASE 2 — FACE VERIFICATION ═══
 
-  async function initFaceCamera() {
-    try {
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 1280 } }, audio: false,
-        });
-      } catch (e) {
-        console.warn("Real camera failed, creating mock video stream for testing:", e);
-        cameraStream = createSupervisorMockStream();
-      }
-      document.getElementById('examVideo').srcObject = cameraStream;
-    } catch (err) {
-      alert('Kamera ruxsati yo\'q: ' + err.message);
-    }
-  }
-
-  function createSupervisorMockStream() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 640;
-    canvas.height = 480;
-    const ctx = canvas.getContext('2d');
-    
-    function drawFrame() {
-      // Background
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Grid/Lines
-      ctx.strokeStyle = 'rgba(234, 179, 8, 0.2)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < canvas.width; i += 40) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-      }
-      for (let j = 0; j < canvas.height; j += 40) {
-        ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
-      }
-      
-      // Draw a face placeholder
-      ctx.fillStyle = '#3b82f6'; // Blue color
-      ctx.beginPath();
-      ctx.arc(320, 240, 100, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Eyes
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(280, 220, 12, 0, Math.PI * 2);
-      ctx.arc(360, 220, 12, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Smile
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.arc(320, 250, 40, 0, Math.PI);
-      ctx.stroke();
-      
-      // Label text
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('SUPERVISOR WEBCAM ACTIVE', 320, 390);
-      
-      requestAnimationFrame(drawFrame);
-    }
-    
-    drawFrame();
-    return canvas.captureStream(30);
+  function initFaceCamera() {
+    hideCameraErrorUI('face');
+    cameraMgr.startFace("examVideo", handleCameraError);
   }
 
   function stopFaceCamera() {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(t => t.stop());
-      cameraStream = null;
-    }
+    cameraMgr.cleanup();
   }
 
   function captureFrame() {
@@ -663,8 +651,12 @@
     canvas.width = video.videoWidth || 640;
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext('2d');
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    if (cameraMgr.facingMode === 'user') {
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    } else {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
     return canvas.toDataURL('image/jpeg', 0.9);
   }
 
@@ -674,7 +666,7 @@
       return;
     }
     const video = document.getElementById('examVideo');
-    if (!cameraStream || !video.readyState) {
+    if (!cameraMgr.activeStream || !video.readyState) {
       alert('Kamera tayyor emas. Iltimos kuting.');
       return;
     }
@@ -797,15 +789,7 @@
     }
   }
 
-  // ── Face ID Mode JavaScript ──
-  let activeVerifyMode = 'qr'; // 'qr' or 'face'
-  let faceIdStream = null;
-  let faceIdScanInterval = null;
-  let faceIdScanningInProgress = false;
-  let faceIdLastMatchProfileId = null;
-  let faceIdLastMatchTime = 0;
-  
-  const API_EXAM_IDENTIFY = "/api/supervisor/exam-identify/";
+  // ═══ PHASE 3 — FACE ID (IDENTIFICATION) ═══
 
   function switchVerifyMode(mode) {
     activeVerifyMode = mode;
@@ -820,10 +804,8 @@
       if (btnQR) btnQR.classList.add('active');
       document.getElementById('modeLabel').innerHTML = '<i class="bi bi-qr-code-scan me-1"></i> QR Mode';
       
-      // Stop face ID camera & loop
       stopFaceIdMode();
       
-      // Show QR Phase
       document.getElementById('phase1QR').style.display = '';
       document.getElementById('phase2Face').style.display = 'none';
       document.getElementById('phase3FaceID').style.display = 'none';
@@ -833,11 +815,9 @@
       if (btnFace) btnFace.classList.add('active');
       document.getElementById('modeLabel').innerHTML = '<i class="bi bi-camera-fill me-1"></i> Face ID Mode';
       
-      // Stop QR scanner & phase 2 camera
       stopQRScanner();
       stopFaceCamera();
       
-      // Show Face ID Phase
       document.getElementById('phase1QR').style.display = 'none';
       document.getElementById('phase2Face').style.display = 'none';
       document.getElementById('phase3FaceID').style.display = '';
@@ -846,97 +826,75 @@
     }
   }
 
-  async function initFaceIdMode() {
+  function initFaceIdMode() {
     clearFaceIdResult();
-    
-    try {
-      try {
-        faceIdStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 1280 } },
-          audio: false,
-        });
-      } catch (e) {
-        console.warn("Real camera failed, creating mock video stream for testing:", e);
-        faceIdStream = createSupervisorMockStream();
-      }
-      document.getElementById('faceIdVideo').srcObject = faceIdStream;
-      startFaceIdScanning();
-    } catch (err) {
-      alert('Kamera ruxsati yo\'q: ' + err.message);
-    }
+    hideCameraErrorUI('faceId');
+    cameraMgr.startFaceId("faceIdVideo", faceIdScanFrame, handleCameraError);
   }
 
   function stopFaceIdMode() {
-    if (faceIdScanInterval) {
-      clearInterval(faceIdScanInterval);
-      faceIdScanInterval = null;
-    }
-    if (faceIdStream) {
-      faceIdStream.getTracks().forEach(t => t.stop());
-      faceIdStream = null;
-    }
+    cameraMgr.cleanup();
     faceIdScanningInProgress = false;
     faceIdLastMatchProfileId = null;
   }
 
-  function startFaceIdScanning() {
-    if (faceIdScanInterval) clearInterval(faceIdScanInterval);
+  async function faceIdScanFrame(videoEl) {
+    if (faceIdScanningInProgress) return;
+    if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime < 10000)) return;
     
-    faceIdScanInterval = setInterval(async () => {
-      if (faceIdScanningInProgress || !faceIdStream || activeVerifyMode !== 'face') return;
-      
-      // If a candidate is already identified and the 10-second cooldown is not over, do not scan
-      if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime < 10000)) return;
-      
-      const videoEl = document.getElementById('faceIdVideo');
-      if (!videoEl.readyState) return;
-      
-      faceIdScanningInProgress = true;
-      
-      const statusOverlay = document.getElementById('faceIdScanStatus');
+    faceIdScanningInProgress = true;
+    
+    const statusOverlay = document.getElementById('faceIdScanStatus');
+    if (statusOverlay) {
       statusOverlay.innerHTML = `<span class="badge bg-primary px-3 py-2"><i class="bi bi-activity me-1"></i> SKANERLANMOQDA...</span>`;
-      
-      // Capture frame
-      const canvas = document.createElement('canvas');
-      canvas.width = videoEl.videoWidth || 640;
-      canvas.height = videoEl.videoHeight || 480;
-      const ctx = canvas.getContext('2d');
+    }
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoEl.videoWidth || 640;
+    canvas.height = videoEl.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (cameraMgr.facingMode === 'user') {
       ctx.scale(-1, 1);
       ctx.drawImage(videoEl, -canvas.width, 0, canvas.width, canvas.height);
-      const frame = canvas.toDataURL('image/jpeg', 0.9);
+    } else {
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    }
+    const frame = canvas.toDataURL('image/jpeg', 0.9);
+    
+    try {
+      const resp = await fetch(API_EXAM_IDENTIFY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ frame: frame }),
+      });
+      const result = await resp.json();
       
-      try {
-        const resp = await fetch(API_EXAM_IDENTIFY, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-          body: JSON.stringify({ frame: frame }),
-        });
-        const result = await resp.json();
-        
-        if (result.success) {
+      if (result.success) {
+        if (statusOverlay) {
           statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ANIQLANDI</span>`;
-          showFaceIdResult(result);
-          
-          faceIdLastMatchProfileId = result.applicant?.id;
-          faceIdLastMatchTime = Date.now();
-        } else {
-          const noFace = result.error && result.error.includes('No face');
+        }
+        showFaceIdResult(result);
+        
+        faceIdLastMatchProfileId = result.applicant?.id;
+        faceIdLastMatchTime = Date.now();
+      } else {
+        const noFace = result.error && result.error.includes('No face');
+        if (statusOverlay) {
           statusOverlay.innerHTML = noFace
             ? `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> YUZ KO'RINMADI</span>`
             : `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-x-fill me-1"></i> QIDIRILMOQDA...</span>`;
-            
-          // If 10-second view is over, clear old result
-          if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime >= 10000)) {
-            clearFaceIdResult();
-            faceIdLastMatchProfileId = null;
-          }
         }
-      } catch (err) {
-        console.error('Face ID Identify API error:', err);
-      } finally {
-        faceIdScanningInProgress = false;
+          
+        if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime >= 10000)) {
+          clearFaceIdResult();
+          faceIdLastMatchProfileId = null;
+        }
       }
-    }, 2000);
+    } catch (err) {
+      console.error('Face ID Identify API error:', err);
+    } finally {
+      faceIdScanningInProgress = false;
+    }
   }
 
   function showFaceIdResult(result) {
@@ -1033,7 +991,6 @@
         document.getElementById('faceIdConfirmSuccess').classList.remove('d-none');
         btn.classList.add('d-none');
         
-        // After 3 seconds, reset Face ID so scanning can resume for other candidates
         setTimeout(() => {
           clearFaceIdResult();
           faceIdLastMatchProfileId = null;
@@ -1048,10 +1005,93 @@
     }
   }
 
+  // ── Error Helpers ──
+  function getFriendlyCameraError(errCodeOrObj) {
+    let errName = '';
+    let errMsg = '';
+    
+    if (typeof errCodeOrObj === 'string') {
+      errName = errCodeOrObj;
+    } else if (errCodeOrObj && typeof errCodeOrObj === 'object') {
+      errName = errCodeOrObj.name || '';
+      errMsg = errCodeOrObj.message || '';
+    }
+
+    if (errName === 'INSECURE_CONTEXT') {
+      return "{% trans 'Insecure context detected. Camera access requires a secure HTTPS connection.' %}";
+    }
+    if (errName === 'PERMISSION_DENIED' || errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errMsg.includes('denied')) {
+      return "{% trans 'Camera permission denied. Please allow camera access in browser settings.' %}";
+    }
+    if (errName === 'NotReadableError' || errName === 'TrackStartError' || errMsg.includes('in use') || errMsg.includes('readable')) {
+      return "{% trans 'Camera is already in use by another application. Please close other apps.' %}";
+    }
+    if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+      return "{% trans 'No camera device found.' %}";
+    }
+    if (errName === 'OverconstrainedError' || errName === 'ConstraintNotSatisfiedError') {
+      return "{% trans 'Camera configuration constraints error.' %}";
+    }
+    return "{% trans 'An error occurred while starting the camera: ' %}" + (errMsg || errName || "{% trans 'unknown error' %}");
+  }
+
+  function handleCameraError(mode, err) {
+    const errorMsg = getFriendlyCameraError(err);
+    let overlayId = '';
+    let statusOverlayId = '';
+    
+    if (mode === 'qr') {
+      overlayId = 'qrCameraError';
+      statusOverlayId = 'qrStatusOverlay';
+    } else if (mode === 'face') {
+      overlayId = 'faceCameraError';
+    } else if (mode === 'faceId') {
+      overlayId = 'faceIdCameraError';
+      statusOverlayId = 'faceIdScanStatus';
+    }
+    
+    const overlay = document.getElementById(overlayId);
+    if (overlay) {
+      overlay.querySelector('.error-msg').textContent = errorMsg;
+      overlay.classList.remove('d-none');
+    }
+    
+    if (statusOverlayId) {
+      const statusOverlay = document.getElementById(statusOverlayId);
+      if (statusOverlay) {
+        statusOverlay.innerHTML = `<span class="badge bg-danger px-3 py-2"><i class="bi bi-exclamation-triangle me-1"></i> ${I18N.error}</span>`;
+      }
+    }
+  }
+
+  function hideCameraErrorUI(mode) {
+    let overlayId = '';
+    if (mode === 'qr') overlayId = 'qrCameraError';
+    else if (mode === 'face') overlayId = 'faceCameraError';
+    else if (mode === 'faceId') overlayId = 'faceIdCameraError';
+    
+    const overlay = document.getElementById(overlayId);
+    if (overlay) {
+      overlay.classList.add('d-none');
+    }
+  }
+
+  function retryCamera(mode) {
+    hideCameraErrorUI(mode);
+    if (mode === 'qr') {
+      initQRScanner();
+    } else if (mode === 'face') {
+      initFaceCamera();
+    } else if (mode === 'faceId') {
+      initFaceIdMode();
+    }
+  }
+
   // ── Initialization ──
   document.addEventListener('DOMContentLoaded', () => {
+    cameraMgr.updateSwitchButtonsVisibility();
+
     if (PRELOADED_APPLICANT) {
-      // Profile passed via URL: go straight to face verify
       document.getElementById('phase1QR').style.display = 'none';
       document.getElementById('phase2Face').style.display = '';
       document.getElementById('modeLabel').innerHTML = '<i class="bi bi-camera-fill me-1"></i> Face Verify';
@@ -1059,15 +1099,12 @@
       fillFacePhaseInfo(PRELOADED_APPLICANT, PRELOADED_PROFILE_ID);
       initFaceCamera();
     } else {
-      // QR scan mode
       initQRScanner();
     }
   });
 
   window.addEventListener('beforeunload', () => {
-    stopFaceCamera();
-    stopQRScanner();
-    stopFaceIdMode();
+    cameraMgr.cleanup();
   });
 </script>
 
@@ -1206,4 +1243,5 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="{% static 'js/camera_manager.js' %}?v=1.2"></script>
 {% endblock %}
