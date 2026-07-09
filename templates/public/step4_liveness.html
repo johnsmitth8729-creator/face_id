@@ -1,6 +1,8 @@
 {% extends "base/base.html" %}
 {% load i18n static %}
 
+{% block contact_banner %}{% endblock %}
+
 {% block content %}
 <div class="verification-layout">
   <div class="container">
@@ -131,7 +133,7 @@ const CHALLENGE_ICONS = {
 /* Responsive UX improvements for mobile and tablets */
 @media (max-width: 992px) {
   .verification-layout {
-    padding: 12px 0 40px !important;
+    padding: 8px 0 16px !important;
   }
   .container {
     padding-left: 8px !important;
@@ -156,13 +158,16 @@ const CHALLENGE_ICONS = {
     padding: 6px 14px !important;
     font-size: 0.78rem !important;
     margin-bottom: 10px !important;
+    display: inline-flex !important;
   }
+  
+  /* Lock camera container height to prevent scrolling */
   .camera-container {
     width: 100% !important;
     max-width: 100% !important;
-    height: 60vh !important;
-    min-height: 460px !important;
-    max-height: 620px !important;
+    height: 42vh !important;
+    min-height: 280px !important;
+    max-height: 380px !important;
     aspect-ratio: auto !important;
     border: 1px solid rgba(37, 99, 235, 0.25);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 12px rgba(37, 99, 235, 0.1);
@@ -175,8 +180,54 @@ const CHALLENGE_ICONS = {
   .face-guide-oval {
     width: 65% !important;
     height: 60% !important;
-    max-width: 260px !important;
-    max-height: 330px !important;
+    max-width: 240px !important;
+    max-height: 300px !important;
+  }
+
+  /* Make challenge checklist compact and horizontal at the bottom */
+  .col-lg-4 .akhu-card {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  .col-lg-4 h5, .col-lg-4 hr, .liveness-hint {
+    display: none !important;
+  }
+  .challenge-list {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+  .challenge-item {
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-size: 0.75rem !important;
+    flex: 1 !important;
+    justify-content: center !important;
+    min-width: 50px !important;
+    margin: 0 !important;
+  }
+  .challenge-item.active {
+    border-color: var(--akhu-blue-light) !important;
+    background: rgba(37, 99, 235, 0.15) !important;
+  }
+  .challenge-item.done {
+    border-color: var(--akhu-success) !important;
+    background: rgba(16, 185, 129, 0.15) !important;
+  }
+  .challenge-item-icon {
+    font-size: 0.9rem !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+  .challenge-item-text, .challenge-check {
+    display: none !important;
   }
 }
 </style>
