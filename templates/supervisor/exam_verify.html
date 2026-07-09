@@ -66,7 +66,7 @@
             <p class="text-muted small mb-3">{% trans "Point the camera at the candidate's QR code on their permit." %}</p>
             <div class="camera-container mb-3 position-relative">
               <div id="qrReader" style="width:100%;"></div>
-              
+
               <!-- Camera Error Overlay -->
               <div class="camera-error-overlay d-none" id="qrCameraError">
                 <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
@@ -96,7 +96,7 @@
 
             <!-- Dedicated Camera Toolbar -->
             <div class="camera-toolbar text-center">
-              <button type="button" class="camera-switch-btn" id="qrSwitchBtn" onclick="toggleQRCamera()">
+              <button type="button" class="camera-switch-btn cam-toolbar-btn" id="qrSwitchBtn" onclick="toggleQRCamera()">
                 <i class="bi bi-camera-rotate me-2"></i>{% trans "Kamerani almashtirish" %}
               </button>
             </div>
@@ -217,7 +217,7 @@
             <h5 class="mb-2"><i class="bi bi-camera-video-fill me-2"></i>{% trans "Live Camera" %}</h5>
             <div class="camera-container mb-3 position-relative">
               <video id="examVideo" class="camera-video" autoplay muted playsinline></video>
-              
+
               <!-- Camera Error Overlay -->
               <div class="camera-error-overlay d-none" id="faceCameraError">
                 <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
@@ -235,7 +235,7 @@
 
             <!-- Dedicated Camera Toolbar -->
             <div class="camera-toolbar text-center">
-              <button type="button" class="camera-switch-btn" id="faceSwitchBtn" onclick="toggleFaceCamera()">
+              <button type="button" class="camera-switch-btn cam-toolbar-btn" id="faceSwitchBtn" onclick="toggleFaceCamera()">
                 <i class="bi bi-camera-rotate me-2"></i>{% trans "Kamerani almashtirish" %}
               </button>
             </div>
@@ -330,7 +330,7 @@
             <p class="text-muted small mb-3">{% trans "Point the camera at the candidate's face to identify them." %}</p>
             <div class="camera-container mb-3 position-relative">
               <video id="faceIdVideo" class="camera-video" autoplay muted playsinline style="width: 100%; border-radius: var(--radius-lg);"></video>
-              
+
               <!-- Camera Error Overlay -->
               <div class="camera-error-overlay d-none" id="faceIdCameraError">
                 <i class="bi bi-camera-video-off-fill text-danger mb-2"></i>
@@ -348,14 +348,14 @@
 
             <!-- Dedicated Camera Toolbar -->
             <div class="camera-toolbar text-center">
-              <button type="button" class="camera-switch-btn" id="faceIdSwitchBtn" onclick="toggleFaceIdCamera()">
+              <button type="button" class="camera-switch-btn cam-toolbar-btn" id="faceIdSwitchBtn" onclick="toggleFaceIdCamera()">
                 <i class="bi bi-camera-rotate me-2"></i>{% trans "Kamerani almashtirish" %}
               </button>
             </div>
             <p class="text-muted small mt-2 mb-0">{% trans "Verification runs automatically when a face is detected." %}</p>
           </div>
         </div>
-        
+
         <!-- Right: Identified Candidate details -->
         <div class="col-lg-6">
           <!-- Waiting for candidate -->
@@ -364,7 +364,7 @@
             <h5>{% trans "Kameraga qarang" %}</h5>
             <p class="text-secondary small">{% trans "Tizim nomzodni avtomatik tarzda aniqlaydi." %}</p>
           </div>
-          
+
           <!-- Identified result card -->
           <div class="d-none" id="faceIdResultCard">
             <!-- Result banner -->
@@ -376,7 +376,7 @@
                 <span class="status-badge fs-6" id="faceIdScore"></span>
               </div>
             </div>
-            
+
             <!-- Comparison info card -->
             <div class="akhu-card mt-3">
               <h6 class="mb-3 text-gold fw-bold"><i class="bi bi-person-badge-fill me-2"></i>{% trans "Candidate Profile" %}</h6>
@@ -400,7 +400,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Attendance confirm box -->
             <div class="akhu-card mt-3" id="faceIdAttendanceBox" style="border:1px solid var(--akhu-success);background:rgba(16,185,129,0.05);">
               <p class="text-secondary small mb-2">{% trans "Nomzod aniqlandi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?" %}</p>
@@ -459,11 +459,11 @@
   let currentProfileId = PRELOADED_PROFILE_ID || null;
   let lastScannedSelfieUrl = '';
   let activeVerifyMode = 'qr'; // 'qr' or 'face'
-  
+
   let faceIdScanningInProgress = false;
   let faceIdLastMatchProfileId = null;
   let faceIdLastMatchTime = 0;
-  
+
   const API_EXAM_IDENTIFY = "/api/supervisor/exam-identify/";
 
   // ── Camera Switch helpers ──
@@ -485,7 +485,7 @@
     hideCameraErrorUI('qr');
     document.getElementById('qrStatusOverlay').innerHTML =
       `<span class="badge bg-primary px-3 py-2"><i class="bi bi-camera me-1"></i> ${I18N.scanning}</span>`;
-      
+
     cameraMgr.startQR(
       "qrReader",
       onQRSuccess,
@@ -588,14 +588,14 @@
     document.getElementById('fv_admissionId').textContent = ap.admission_id || '—';
     document.getElementById('fv_passport').textContent = ap.passport_number || '—';
     document.getElementById('fv_dob').textContent = ap.date_of_birth || '—';
-    
+
     lastScannedSelfieUrl = ap.selfie_url || '';
     if (ap.selfie_url) {
       document.getElementById('fv_photo').src = ap.selfie_url;
     } else {
       document.getElementById('fv_photo').src = '/static/images/avatar.png';
     }
-    
+
     currentProfileId = profileId;
   }
 
@@ -729,7 +729,7 @@
         subEl.textContent = (result.applicant?.full_name || '') + (result.applicant?.admission_id ? ' — ' + result.applicant.admission_id : '');
         scoreEl.className = 'status-badge verified fs-6';
         scoreEl.textContent = score + '% mos';
-        
+
         if (result.already_verified) {
           attBox.classList.add('d-none');
           document.getElementById('confirmBtn').classList.add('d-none');
@@ -799,35 +799,35 @@
 
   function switchVerifyMode(mode) {
     activeVerifyMode = mode;
-    
+
     // Reset buttons
     const btnQR = document.getElementById('btnQRMode');
     const btnFace = document.getElementById('btnFaceMode');
     if (btnQR) btnQR.classList.remove('active');
     if (btnFace) btnFace.classList.remove('active');
-    
+
     if (mode === 'qr') {
       if (btnQR) btnQR.classList.add('active');
       document.getElementById('modeLabel').innerHTML = '<i class="bi bi-qr-code-scan me-1"></i> QR Mode';
-      
+
       stopFaceIdMode();
-      
+
       document.getElementById('phase1QR').style.display = '';
       document.getElementById('phase2Face').style.display = 'none';
       document.getElementById('phase3FaceID').style.display = 'none';
-      
+
       initQRScanner();
     } else {
       if (btnFace) btnFace.classList.add('active');
       document.getElementById('modeLabel').innerHTML = '<i class="bi bi-camera-fill me-1"></i> Face ID Mode';
-      
+
       stopQRScanner();
       stopFaceCamera();
-      
+
       document.getElementById('phase1QR').style.display = 'none';
       document.getElementById('phase2Face').style.display = 'none';
       document.getElementById('phase3FaceID').style.display = '';
-      
+
       initFaceIdMode();
     }
   }
@@ -847,14 +847,14 @@
   async function faceIdScanFrame(videoEl) {
     if (faceIdScanningInProgress) return;
     if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime < 10000)) return;
-    
+
     faceIdScanningInProgress = true;
-    
+
     const statusOverlay = document.getElementById('faceIdScanStatus');
     if (statusOverlay) {
       statusOverlay.innerHTML = `<span class="badge bg-primary px-3 py-2"><i class="bi bi-activity me-1"></i> SKANERLANMOQDA...</span>`;
     }
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = videoEl.videoWidth || 640;
     canvas.height = videoEl.videoHeight || 480;
@@ -866,7 +866,7 @@
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
     }
     const frame = canvas.toDataURL('image/jpeg', 0.9);
-    
+
     try {
       const resp = await fetch(API_EXAM_IDENTIFY, {
         method: 'POST',
@@ -874,13 +874,13 @@
         body: JSON.stringify({ frame: frame }),
       });
       const result = await resp.json();
-      
+
       if (result.success) {
         if (statusOverlay) {
           statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ANIQLANDI</span>`;
         }
         showFaceIdResult(result);
-        
+
         faceIdLastMatchProfileId = result.applicant?.id;
         faceIdLastMatchTime = Date.now();
       } else {
@@ -890,7 +890,7 @@
             ? `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> YUZ KO'RINMADI</span>`
             : `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-x-fill me-1"></i> QIDIRILMOQDA...</span>`;
         }
-          
+
         if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime >= 10000)) {
           clearFaceIdResult();
           faceIdLastMatchProfileId = null;
@@ -907,17 +907,17 @@
     const indicator = result.indicator;
     const score = result.match_percentage;
     const ap = result.applicant || {};
-    
+
     document.getElementById('faceId_fullName').textContent = ap.full_name || '—';
     document.getElementById('faceId_admissionId').textContent = ap.admission_id || '—';
     document.getElementById('faceId_passport').textContent = ap.passport_number || '—';
-    
+
     if (ap.selfie_url) {
       document.getElementById('faceId_photo').src = ap.selfie_url;
     } else {
       document.getElementById('faceId_photo').src = '/static/images/avatar.png';
     }
-    
+
     const inner = document.getElementById('faceIdResultInner');
     const iconEl = document.getElementById('faceIdIcon');
     const titleEl = document.getElementById('faceIdTitle');
@@ -926,7 +926,7 @@
     const attBox = document.getElementById('faceIdAttendanceBox');
     const confirmBtn = document.getElementById('faceIdConfirmBtn');
     const confirmSuccess = document.getElementById('faceIdConfirmSuccess');
-    
+
     if (result.already_verified) {
       confirmBtn.disabled = true;
       confirmBtn.classList.add('d-none');
@@ -975,7 +975,7 @@
   function clearFaceIdResult() {
     document.getElementById('faceIdWaiting').classList.remove('d-none');
     document.getElementById('faceIdResultCard').classList.add('d-none');
-    
+
     document.getElementById('faceId_fullName').textContent = '—';
     document.getElementById('faceId_admissionId').textContent = '—';
     document.getElementById('faceId_passport').textContent = '—';
@@ -996,7 +996,7 @@
       if (res.success) {
         document.getElementById('faceIdConfirmSuccess').classList.remove('d-none');
         btn.classList.add('d-none');
-        
+
         setTimeout(() => {
           clearFaceIdResult();
           faceIdLastMatchProfileId = null;
@@ -1015,7 +1015,7 @@
   function getFriendlyCameraError(errCodeOrObj) {
     let errName = '';
     let errMsg = '';
-    
+
     if (typeof errCodeOrObj === 'string') {
       errName = errCodeOrObj;
     } else if (errCodeOrObj && typeof errCodeOrObj === 'object') {
@@ -1045,7 +1045,7 @@
     const errorMsg = getFriendlyCameraError(err);
     let overlayId = '';
     let statusOverlayId = '';
-    
+
     if (mode === 'qr') {
       overlayId = 'qrCameraError';
       statusOverlayId = 'qrStatusOverlay';
@@ -1055,13 +1055,13 @@
       overlayId = 'faceIdCameraError';
       statusOverlayId = 'faceIdScanStatus';
     }
-    
+
     const overlay = document.getElementById(overlayId);
     if (overlay) {
       overlay.querySelector('.error-msg').textContent = errorMsg;
       overlay.classList.remove('d-none');
     }
-    
+
     if (statusOverlayId) {
       const statusOverlay = document.getElementById(statusOverlayId);
       if (statusOverlay) {
@@ -1075,7 +1075,7 @@
     if (mode === 'qr') overlayId = 'qrCameraError';
     else if (mode === 'face') overlayId = 'faceCameraError';
     else if (mode === 'faceId') overlayId = 'faceIdCameraError';
-    
+
     const overlay = document.getElementById(overlayId);
     if (overlay) {
       overlay.classList.add('d-none');

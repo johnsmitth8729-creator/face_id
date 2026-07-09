@@ -1,7 +1,22 @@
 /* supervisor_responsive.css */
 
-/* Camera Toolbar and Switch Button styling */
+/* ─────────────────────────────────────────────
+   Camera Switch Button — visibility hook ONLY
+   This class carries NO visual/positioning rules.
+   It exists purely as the JS hook camera_manager.js toggles
+   (display: flex/none) to decide whether the button is shown.
+   Keeping it empty of styling prevents it from ever colliding
+   with an unrelated same-named class elsewhere in the app's
+   global CSS (that collision was the original cause of the
+   button floating on top of the video).
+   ───────────────────────────────────────────── */
+.camera-switch-btn {
+  display: none;
+}
+
+/* Dedicated toolbar row BELOW the camera preview */
 .camera-toolbar {
+  position: static;   /* guarantees normal document flow, never absolute */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,10 +24,10 @@
   margin-bottom: 12px;
 }
 
-.camera-switch-btn {
-  position: relative;
-  bottom: auto;
-  right: auto;
+/* All real visual styling for the switch button lives here,
+   on a page-scoped class name that cannot collide with globals. */
+.cam-toolbar-btn {
+  position: static;   /* never absolute — cannot sit on top of the video */
   min-height: 44px;
   padding: 0 20px;
   border-radius: 24px;
@@ -21,7 +36,6 @@
   color: var(--text-primary, #ffffff);
   font-size: 0.88rem;
   font-weight: 600;
-  display: none; /* Managed dynamically by CameraManager, hidden on desktop below */
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -32,20 +46,13 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-.camera-switch-btn:hover {
+.cam-toolbar-btn:hover {
   background: rgba(30, 41, 59, 1.0);
   transform: translateY(-1px);
 }
 
-.camera-switch-btn:active {
+.cam-toolbar-btn:active {
   transform: translateY(1px);
-}
-
-/* Hide camera switch button on desktop */
-@media (min-width: 1025px) {
-  .camera-switch-btn {
-    display: none !important;
-  }
 }
 
 /* Responsive Layout overrides for mobile and tablets */
@@ -55,11 +62,11 @@
     position: relative;
     overflow-x: hidden;
   }
-  
+
   .supervisor-layout {
     flex-direction: column;
   }
-  
+
   .supervisor-sidebar {
     position: fixed;
     top: 0;
@@ -75,43 +82,43 @@
     flex-direction: column;
     padding-top: calc(var(--navbar-height) + 16px);
   }
-  
+
   .supervisor-sidebar.active {
     transform: translateX(280px);
     visibility: visible;
     display: flex;
     box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
   }
-  
+
   .supervisor-main {
     padding: 8px; /* Compact side padding to make room for camera */
     width: 100%;
     overflow-y: auto;
   }
-  
+
   /* Compact title and subtitle typography to maximize vertical viewport space */
   .supervisor-main h4 {
     font-size: 1.05rem;
     margin-bottom: 2px;
   }
-  
+
   .supervisor-main p.text-muted.small {
     font-size: 0.72rem;
     margin-bottom: 6px;
   }
-  
+
   /* Compact tab switches */
   .akhu-card[style*="max-width: 400px"] {
     margin-bottom: 10px;
     padding: 4px;
   }
-  
+
   .btn-akhu-outline.flex-1 {
     min-height: 36px;
     font-size: 0.8rem;
     padding: 4px 8px;
   }
-  
+
   /* Touch target sizes and layout spacing for mobile */
   .btn-akhu-outline, .btn-akhu-gold, .btn-success, .btn,
   .input-group .btn, .input-group input {
@@ -120,30 +127,33 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   /* Adjust margins and paddings on mobile cards */
   .akhu-card {
     margin-bottom: 10px;
     padding: 10px;
     border-radius: var(--radius-lg);
   }
-  
+
   .akhu-card h5 {
     font-size: 0.88rem;
     margin-bottom: 2px;
   }
-  
+
   .akhu-card p.text-muted {
     font-size: 0.72rem;
     margin-bottom: 8px;
   }
 
-  /* Increase camera viewport height to be the primary card element (70vh, min-height: 500px) */
+  /* Camera becomes the primary element on mobile — ~65-70% of real viewport.
+     dvh accounts for mobile browser chrome (address bar) collapsing;
+     the plain vh line above it is a fallback for older browsers. */
   .camera-container {
     position: relative;
     width: 100%;
-    height: 70vh; /* Forces vertical space occupancy */
-    min-height: 500px;
+    height: 68vh;
+    height: 68dvh;
+    min-height: 460px;
     max-height: 700px;
     overflow: hidden;
     border-radius: 18px;
@@ -151,7 +161,7 @@
     max-width: 100%;
     margin-bottom: 8px;
   }
-  
+
   .camera-video {
     object-fit: cover;
   }
@@ -161,8 +171,8 @@
     padding: 4px 0;
     margin-bottom: 8px;
   }
-  
-  .camera-switch-btn {
+
+  .cam-toolbar-btn {
     min-height: 44px;
     font-size: 0.85rem;
     padding: 0 16px;
@@ -173,7 +183,7 @@
     top: 8px;
     left: 8px;
   }
-  
+
   .scan-status-overlay span {
     font-size: 0.75rem;
     padding: 4px 8px;
@@ -186,21 +196,21 @@
     width: 180px; /* Enlarged scanning HUD to fit portrait box */
     height: 180px;
   }
-  
+
   .waiting-icon {
     font-size: 2.2rem;
     margin-bottom: 8px;
   }
-  
+
   .result-waiting {
     padding: 24px 12px;
   }
-  
+
   .result-waiting h5 {
     font-size: 0.9rem;
     margin-bottom: 4px;
   }
-  
+
   .result-waiting p {
     font-size: 0.72rem;
   }
