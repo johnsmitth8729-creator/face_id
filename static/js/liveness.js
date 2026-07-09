@@ -109,9 +109,7 @@ async function initCamera() {
     await video.play();
     
     const lang = document.documentElement.lang || 'uz';
-    speak(lang === 'uz' ? 'Endi yuzingizni turli burchaklardan saqlaymiz' : 'Now we will capture your face from different angles');
-    
-    setTimeout(startNextChallenge, 1500);
+    setTimeout(startNextChallenge, 100);
   } catch (err) {
     console.error('Camera init error:', err);
     showError('Camera access denied.');
@@ -432,6 +430,10 @@ function showError(msg) {
 
 // Start immediately on load
 buildChallengeList();
+if (CHALLENGES && CHALLENGES.length > 0) {
+  if (overlayText) overlayText.textContent = CHALLENGES[0].instruction;
+  if (instructionEl) instructionEl.textContent = CHALLENGES[0].instruction;
+}
 initCamera();
 
 window.addEventListener('beforeunload', () => {
