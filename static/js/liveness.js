@@ -2,6 +2,12 @@
  * AKHU AFIVS — Liveness Detection JavaScript (Fully Automated & Voice-Guided)
  */
 
+// Force disable any speech synthesis globally to ensure absolute silence
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.speak = function() {};
+  window.speechSynthesis.cancel = function() {};
+}
+
 const video = document.getElementById('livenessVideo');
 const guide = document.getElementById('livenessGuide');
 const statusEl = document.getElementById('livenessStatus');
@@ -12,6 +18,12 @@ const completeEl = document.getElementById('livenessComplete');
 const errorEl = document.getElementById('livenessError');
 const errorMsgEl = document.getElementById('livenessErrorMsg');
 const overlayText = document.getElementById('livenessInstructionText');
+
+// Local shape detection API fallback
+let localDetector = null;
+if ('FaceDetector' in window) {
+  localDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+}
 
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 let stream = null;
@@ -69,6 +81,31 @@ async function initCamera() {
       stream = createMockVideoStream();
     }
     video.srcObject = stream;
+    
+    // Apply continuous autofocus & exposure constraints if supported
+    try {
+      const track = stream.getVideoTracks()[0];
+      if (track && track.getCapabilities) {
+        const capabilities = track.getCapabilities();
+        const advancedConstraints = {};
+        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+          advancedConstraints.focusMode = 'continuous';
+        }
+        if (capabilities.exposureMode && capabilities.exposureMode.includes('continuous')) {
+          advancedConstraints.exposureMode = 'continuous';
+        }
+        if (capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes('continuous')) {
+          advancedConstraints.whiteBalanceMode = 'continuous';
+        }
+        if (Object.keys(advancedConstraints).length > 0) {
+          await track.applyConstraints({ advanced: [advancedConstraints] });
+          console.log("Applied autofocus/exposure in liveness:", advancedConstraints);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not apply autofocus/exposure:", err);
+    }
+
     await video.play();
     
     const lang = document.documentElement.lang || 'uz';
@@ -227,6 +264,40 @@ function startAutoChecking() {
         overlayText.textContent = text;
       }
       return;
+    }
+
+    // Fast client-side face check if native FaceDetector is supported
+    if (localDetector) {
+      try {
+        const faces = await localDetector.detect(video);
+        if (faces.length === 0) {
+          guide.classList.remove('active');
+          const text = lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.';
+          statusEl.querySelector('span').textContent = text;
+          if (overlayText) overlayText.textContent = text;
+          return;
+        }
+        
+        const face = faces[0];
+        const box = face.boundingBox;
+        const videoWidth = video.videoWidth || 640;
+        const videoHeight = video.videoHeight || 480;
+        const faceCenterX = box.x + box.width / 2;
+        const faceCenterY = box.y + box.height / 2;
+        
+        const devX = Math.abs(faceCenterX - videoWidth / 2) / videoWidth;
+        const devY = Math.abs(faceCenterY - videoHeight / 2) / videoHeight;
+        
+        if (devX > 0.22 || devY > 0.22) {
+          guide.classList.remove('active');
+          const text = lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.';
+          statusEl.querySelector('span').textContent = text;
+          if (overlayText) overlayText.textContent = text;
+          return;
+        }
+      } catch (e) {
+        console.warn("Local FaceDetector failed in liveness, falling back to server:", e);
+      }
     }
 
     isChecking = true;

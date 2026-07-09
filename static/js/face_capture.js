@@ -2,6 +2,12 @@
  * AKHU AFIVS — Face Capture JavaScript (Fully Automated & Voice-Guided)
  */
 
+// Force disable any speech synthesis globally to ensure absolute silence
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.speak = function() {};
+  window.speechSynthesis.cancel = function() {};
+}
+
 const video = document.getElementById('cameraVideo');
 const canvas = document.getElementById('captureCanvas');
 const statusEl = document.getElementById('cameraStatus');
@@ -16,6 +22,12 @@ let faceCheckInterval = null;
 let stabilityCounter = 0;
 let isSaving = false;
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+// Local shape detection API fallback
+let localDetector = null;
+if ('FaceDetector' in window) {
+  localDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+}
 
 // Speech synthesis helpers
 let lastSpokenText = '';
@@ -66,6 +78,31 @@ async function initCamera() {
       stream = createMockVideoStream();
     }
     video.srcObject = stream;
+    
+    // Apply continuous autofocus & exposure constraints if supported
+    try {
+      const track = stream.getVideoTracks()[0];
+      if (track && track.getCapabilities) {
+        const capabilities = track.getCapabilities();
+        const advancedConstraints = {};
+        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+          advancedConstraints.focusMode = 'continuous';
+        }
+        if (capabilities.exposureMode && capabilities.exposureMode.includes('continuous')) {
+          advancedConstraints.exposureMode = 'continuous';
+        }
+        if (capabilities.whiteBalanceMode && capabilities.whiteBalanceMode.includes('continuous')) {
+          advancedConstraints.whiteBalanceMode = 'continuous';
+        }
+        if (Object.keys(advancedConstraints).length > 0) {
+          await track.applyConstraints({ advanced: [advancedConstraints] });
+          console.log("Applied autofocus/exposure:", advancedConstraints);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not apply autofocus/exposure:", err);
+    }
+
     video.onloadedmetadata = () => {
       const lang = document.documentElement.lang || 'uz';
       setStatus('active', lang === 'uz' ? '🟢 Kamera tayyor. Doira ichiga qarang.' : '🟢 Camera Ready — Center your face.');
@@ -144,6 +181,40 @@ function startFaceDetection() {
 
 async function checkFaceInFrame() {
   if (!stream || isSaving) return;
+  
+  // Fast client-side face check if native FaceDetector is supported
+  if (localDetector) {
+    const lang = document.documentElement.lang || 'uz';
+    try {
+      const faces = await localDetector.detect(video);
+      if (faces.length === 0) {
+        faceGuide.classList.remove('active');
+        setStatus('active', lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.');
+        stabilityCounter = 0;
+        return;
+      }
+      
+      const face = faces[0];
+      const box = face.boundingBox;
+      const videoWidth = video.videoWidth || 640;
+      const videoHeight = video.videoHeight || 480;
+      const faceCenterX = box.x + box.width / 2;
+      const faceCenterY = box.y + box.height / 2;
+      
+      const devX = Math.abs(faceCenterX - videoWidth / 2) / videoWidth;
+      const devY = Math.abs(faceCenterY - videoHeight / 2) / videoHeight;
+      
+      if (devX > 0.22 || devY > 0.22) {
+        faceGuide.classList.remove('active');
+        setStatus('active', lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.');
+        stabilityCounter = 0;
+        return;
+      }
+    } catch (e) {
+      console.warn("Local FaceDetector failed, falling back to server:", e);
+    }
+  }
+
   try {
     const frameData = captureFrame();
     const resp = await fetch('/api/verification/detect-face/', {
