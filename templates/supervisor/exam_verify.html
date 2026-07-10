@@ -38,7 +38,7 @@
 <p class="text-muted small mb-0">{% trans "Scan QR code or use face identification to verify candidate." %}</p>
 </div>
 <div class="d-flex gap-2">
-<span class="badge bg-primary px-3 py-2" id="modeLabel"><i class="bi bi-qr-code-scan me-1"></i> QR Mode</span>
+<span class="badge bg-primary px-3 py-2" id="modeLabel"><i class="bi bi-qr-code-scan me-1"></i> {% trans "QR Mode" %}</span>
 </div>
 </div>
 
@@ -46,10 +46,10 @@
 {% if not applicant %}
 <div class="akhu-card mb-4 p-2 d-flex justify-content-center gap-2" style="max-width: 400px; margin: 0 auto 20px;">
 <button class="btn btn-akhu-outline flex-1 py-2 fw-bold active" id="btnQRMode" onclick="switchVerifyMode('qr')">
-<i class="bi bi-qr-code-scan me-2"></i>{% trans "QR Code Skaner" %}
+<i class="bi bi-qr-code-scan me-2"></i>{% trans "QR Code Scanner" %}
 </button>
 <button class="btn btn-akhu-outline flex-1 py-2 fw-bold" id="btnFaceMode" onclick="switchVerifyMode('face')">
-<i class="bi bi-camera-fill me-2"></i>{% trans "Face ID (Yuz)" %}
+<i class="bi bi-camera-fill me-2"></i>{% trans "Face ID (Face)" %}
 </button>
 </div>
 {% endif %}
@@ -85,7 +85,7 @@
 <!-- Camera Switch Toolbar -->
 <div class="camera-toolbar text-center">
 <button type="button" class="camera-switch-btn" onclick="toggleQRCamera()">
-<i class="bi bi-camera-rotate me-2"></i>Switch Camera
+<i class="bi bi-camera-rotate me-2"></i>{% trans "Switch Camera" %}
 </button>
 </div>
 <div class="d-flex gap-2 mt-2">
@@ -211,7 +211,7 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 </div>
             <div class="camera-toolbar text-center">
               <button type="button" class="camera-switch-btn" onclick="toggleFaceCamera()">
-                <i class="bi bi-camera-rotate me-2"></i>Switch Camera
+                <i class="bi bi-camera-rotate me-2"></i>{% trans "Switch Camera" %}
               </button>
             </div>
 <button class="btn-akhu-gold w-100 fw-bold" id="captureBtn" onclick="captureAndVerify()">
@@ -311,7 +311,7 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 </div>
             <div class="camera-toolbar text-center">
               <button type="button" class="camera-switch-btn" onclick="toggleFaceIdCamera()">
-                <i class="bi bi-camera-rotate me-2"></i>Switch Camera
+                <i class="bi bi-camera-rotate me-2"></i>{% trans "Switch Camera" %}
               </button>
             </div>
 <p class="text-muted small mt-2 mb-0">{% trans "Verification runs automatically when a face is detected." %}</p>

@@ -134,3 +134,63 @@ msgstr "JWT"
 
 msgid "Signed QR Codes"
 msgstr "Signed QR Codes"
+
+msgid "QR Mode"
+msgstr "QR Mode"
+
+msgid "Face ID (Face)"
+msgstr "Face ID (Face)"
+
+msgid "Switch Camera"
+msgstr "Switch Camera"
+
+msgid "Scan QR code or use face identification to verify candidate."
+msgstr "Scan QR code or use face identification to verify candidate."
+
+msgid "Point the camera at the candidate's QR code on their permit."
+msgstr "Point the camera at the candidate's QR code on their permit."
+
+msgid "Point the camera at the candidate's face to identify them."
+msgstr "Point the camera at the candidate's face to identify them."
+
+msgid "Verification runs automatically when a face is detected."
+msgstr "Verification runs automatically when a face is detected."
+
+msgid "Ready to Verify"
+msgstr "Ready to Verify"
+
+msgid "Click 'Capture & Verify Face' when the candidate is positioned in front of the camera."
+msgstr "Click 'Capture & Verify Face' when the candidate is positioned in front of the camera."
+
+msgid "Visual Comparison"
+msgstr "Visual Comparison"
+
+msgid "Registered Template"
+msgstr "Registered Template"
+
+msgid "Live Capture"
+msgstr "Live Capture"
+
+msgid "Retry Capture"
+msgstr "Retry Capture"
+
+msgid "New QR Scan"
+msgstr "New QR Scan"
+
+msgid "Face ID Live Scanner"
+msgstr "Face ID Live Scanner"
+
+msgid "Candidate Profile"
+msgstr "Candidate Profile"
+
+msgid "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+msgstr "Face matched. Do you officially confirm the candidate's entry to the exam?"
+
+msgid "Tasdiqlash — Imtihonga Kirdi"
+msgstr "Confirm — Candidate Entered Exam"
+
+msgid "Muvaffaqiyatli tasdiqlandi!"
+msgstr "Successfully confirmed!"
+
+msgid "QIDIRILMOQDA..."
+msgstr "SEARCHING..."

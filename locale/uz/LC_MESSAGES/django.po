@@ -1747,3 +1747,63 @@ msgstr "JWT"
 
 msgid "Signed QR Codes"
 msgstr "Imzolangan QR kodlar"
+
+msgid "QR Mode"
+msgstr "QR rejimi"
+
+msgid "Face ID (Face)"
+msgstr "Face ID (Yuz)"
+
+msgid "Switch Camera"
+msgstr "Kamerani almashtirish"
+
+msgid "Scan QR code or use face identification to verify candidate."
+msgstr "Nomzodni tasdiqlash uchun QR kodni skanerlang yoki yuzni aniqlashdan foydalaning."
+
+msgid "Point the camera at the candidate's QR code on their permit."
+msgstr "Kamerani nomzodning ruxsatnomasidagi QR kodiga qarating."
+
+msgid "Point the camera at the candidate's face to identify them."
+msgstr "Nomzodni aniqlash uchun kamerani uning yuziga qarating."
+
+msgid "Verification runs automatically when a face is detected."
+msgstr "Yuz aniqlanganda tekshiruv avtomatik ravishda boshlanadi."
+
+msgid "Ready to Verify"
+msgstr "Tekshirishga tayyor"
+
+msgid "Click 'Capture & Verify Face' when the candidate is positioned in front of the camera."
+msgstr "Nomzod kamera oldida to'g'ri turganda 'Capture & Verify Face' tugmasini bosing."
+
+msgid "Visual Comparison"
+msgstr "Vizual solishtirish"
+
+msgid "Registered Template"
+msgstr "Ro'yxatdan o'tgan shablon"
+
+msgid "Live Capture"
+msgstr "Jonli rasm"
+
+msgid "Retry Capture"
+msgstr "Qayta suratga olish"
+
+msgid "New QR Scan"
+msgstr "Yangi QR skanerlash"
+
+msgid "Face ID Live Scanner"
+msgstr "Face ID jonli skaneri"
+
+msgid "Candidate Profile"
+msgstr "Nomzod profili"
+
+msgid "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+msgstr "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+
+msgid "Tasdiqlash — Imtihonga Kirdi"
+msgstr "Tasdiqlash — Imtihonga Kirdi"
+
+msgid "Muvaffaqiyatli tasdiqlandi!"
+msgstr "Muvaffaqiyatli tasdiqlandi!"
+
+msgid "QIDIRILMOQDA..."
+msgstr "QIDIRILMOQDA..."
