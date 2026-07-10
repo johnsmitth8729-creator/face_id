@@ -1810,3 +1810,66 @@ msgstr "QIDIRILMOQDA..."
 
 msgid "Passport"
 msgstr "Pasport"
+
+msgid "Face Verified — Identification Successful"
+msgstr "Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli"
+
+msgid "Candidate already entered the exam!"
+msgstr "Nomzod allaqachon imtihonga kirgan!"
+
+msgid "Manual review required"
+msgstr "Qo'lda tekshirish talab qilinadi"
+
+msgid "Face matched, but additional review is required."
+msgstr "Yuz mos keldi, lekin qo'shimcha tekshiruv kerak."
+
+msgid "Face mismatch — Rejected"
+msgstr "Yuz mos kelmadi — Rad etildi"
+
+msgid "Redirect candidate to the exam commission."
+msgstr "Talabani imtihon komissiyasiga yo'naltiring."
+
+msgid "matched"
+msgstr "mos"
+
+msgid "No candidate selected. Scan QR code first."
+msgstr "Talaba tanlanmagan. Avval QR kod skaner qiling."
+
+msgid "Camera is not ready. Please wait."
+msgstr "Kamera tayyor emas. Iltimos kuting."
+
+msgid "Verification error"
+msgstr "Tekshirish xatosi"
+
+msgid "Please try again or contact administrator."
+msgstr "Qayta urinib ko'ring yoki administrator bilan bog'laning."
+
+msgid "SCANNING..."
+msgstr "SKANERLANMOQDA..."
+
+msgid "IDENTIFIED"
+msgstr "ANIQLANDI"
+
+msgid "NO FACE DETECTED"
+msgstr "YUZ KO'RINMADI"
+
+msgid "SEARCHING..."
+msgstr "QIDIRILMOQDA..."
+
+msgid "Candidate identified. Do you officially confirm their entry to the exam?"
+msgstr "Nomzod aniqlandi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+
+msgid "Confirm — Candidate Entered Exam"
+msgstr "Tasdiqlash — Imtihonga Kirdi"
+
+msgid "Successfully confirmed!"
+msgstr "Muvaffaqiyatli tasdiqlandi!"
+
+msgid "Face matched. Do you officially confirm their entry to the exam?"
+msgstr "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?"
+
+msgid "Look at the camera"
+msgstr "Kameraga qarang"
+
+msgid "The system will identify the candidate automatically."
+msgstr "Tizim nomzodni avtomatik tarzda aniqlaydi."

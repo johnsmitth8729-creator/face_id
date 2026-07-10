@@ -270,12 +270,12 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 
 <!-- Attendance Confirm (shown only on success) -->
 <div class="akhu-card mt-3 d-none" id="attendanceBox" style="border:1px solid var(--akhu-success);background:rgba(16,185,129,0.05);">
-<p class="text-secondary small mb-2">{% trans "Yuz mos keldi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?" %}</p>
+<p class="text-secondary small mb-2">{% trans "Face matched. Do you officially confirm their entry to the exam?" %}</p>
 <button class="btn btn-success w-100 fw-bold" id="confirmBtn" onclick="confirmAttendance()">
-<i class="bi bi-shield-check me-2"></i>{% trans "Tasdiqlash — Imtihonga Kirdi" %}
+<i class="bi bi-shield-check me-2"></i>{% trans "Confirm — Candidate Entered Exam" %}
 </button>
 <div class="text-success small mt-2 d-none fw-bold" id="confirmSuccess">
-<i class="bi bi-check-circle-fill me-1"></i>{% trans "Muvaffaqiyatli tasdiqlandi!" %}
+<i class="bi bi-check-circle-fill me-1"></i>{% trans "Successfully confirmed!" %}
 </div>
 </div>
 
@@ -306,7 +306,7 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 <div class="camera-container mb-3 position-relative">
 <video id="faceIdVideo" class="camera-video" autoplay muted playsinline style="width: 100%; border-radius: var(--radius-lg);"></video>
 <div class="scan-status-overlay" id="faceIdScanStatus">
-<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> {% trans "QIDIRILMOQDA..." %}</span>
+<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> {% trans "SEARCHING..." %}</span>
 </div>
 </div>
             <div class="camera-toolbar text-center">
@@ -323,8 +323,8 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 <!-- Waiting for candidate -->
 <div class="result-waiting" id="faceIdWaiting">
 <div class="waiting-icon"><i class="bi bi-person-bounding-box"></i></div>
-<h5>{% trans "Kameraga qarang" %}</h5>
-<p class="text-secondary small">{% trans "Tizim nomzodni avtomatik tarzda aniqlaydi." %}</p>
+<h5>{% trans "Look at the camera" %}</h5>
+<p class="text-secondary small">{% trans "The system will identify the candidate automatically." %}</p>
 </div>
 
 <!-- Identified result card -->
@@ -365,12 +365,12 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 
 <!-- Attendance confirm box -->
 <div class="akhu-card mt-3" id="faceIdAttendanceBox" style="border:1px solid var(--akhu-success);background:rgba(16,185,129,0.05);">
-<p class="text-secondary small mb-2">{% trans "Nomzod aniqlandi. Talabaning imtihonga kirganini rasman tasdiqlaysizmi?" %}</p>
+<p class="text-secondary small mb-2">{% trans "Candidate identified. Do you officially confirm their entry to the exam?" %}</p>
 <button class="btn btn-success w-100 fw-bold" id="faceIdConfirmBtn" onclick="confirmFaceIdAttendance()">
-<i class="bi bi-shield-check me-2"></i>{% trans "Tasdiqlash — Imtihonga Kirdi" %}
+<i class="bi bi-shield-check me-2"></i>{% trans "Confirm — Candidate Entered Exam" %}
 </button>
 <div class="text-success small mt-2 d-none fw-bold" id="faceIdConfirmSuccess">
-<i class="bi bi-check-circle-fill me-1"></i>{% trans "Muvaffaqiyatli tasdiqlandi!" %}
+<i class="bi bi-check-circle-fill me-1"></i>{% trans "Successfully confirmed!" %}
 </div>
 </div>
 </div>
@@ -400,6 +400,21 @@ invalidQr: "{% trans 'Invalid QR code' %}",
 networkError: "{% trans 'Network error' %}",
 error: "{% trans 'Error' %}",
 found: "{% trans 'Found' %}",
+faceVerifiedSuccess: "{% trans 'Face Verified — Identification Successful' %}",
+alreadyVerified: "{% trans 'Candidate already entered the exam!' %}",
+manualReviewRequired: "{% trans 'Manual review required' %}",
+reviewDetails: "{% trans 'Face matched, but additional review is required.' %}",
+mismatchRejected: "{% trans 'Face mismatch — Rejected' %}",
+redirectCommission: "{% trans 'Redirect candidate to the exam commission.' %}",
+matched: "{% trans 'matched' %}",
+noCandidateSelected: "{% trans 'No candidate selected. Scan QR code first.' %}",
+cameraNotReady: "{% trans 'Camera is not ready. Please wait.' %}",
+confirmError: "{% trans 'Verification error' %}",
+tryAgainAdmin: "{% trans 'Please try again or contact administrator.' %}",
+scanningBadge: "{% trans 'SCANNING...' %}",
+identifiedBadge: "{% trans 'IDENTIFIED' %}",
+noFaceBadge: "{% trans 'NO FACE DETECTED' %}",
+searchingBadge: "{% trans 'SEARCHING...' %}"
 };
 {% if applicant %}
 const PRELOADED_APPLICANT = {
@@ -792,12 +807,12 @@ return canvas.toDataURL('image/jpeg', 0.9);
 
 async function captureAndVerify() {
 if (!currentProfileId) {
-alert('Talaba tanlanmagan. Avval QR kod skaner qiling.');
+alert(I18N.noCandidateSelected);
 return;
 }
 const video = document.getElementById('examVideo');
 if (!cameraStream || !video.readyState) {
-alert('Kamera tayyor emas. Iltimos kuting.');
+alert(I18N.cameraNotReady);
 return;
 }
 
@@ -821,7 +836,7 @@ document.getElementById('faceLoading').classList.add('d-none');
 showFaceResult(result);
 } catch (err) {
 document.getElementById('faceLoading').classList.add('d-none');
-showFaceResult({ success: false, error: 'Tarmoq xatosi: ' + err.message });
+showFaceResult({ success: false, error: I18N.networkError + ': ' + err.message });
 } finally {
 document.getElementById('captureBtn').disabled = false;
 }
@@ -838,8 +853,8 @@ const attBox = document.getElementById('attendanceBox');
 if (!result.success) {
 inner.className = 'result-banner red';
 iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-danger)"></i>';
-titleEl.textContent = result.error || 'Tekshirish xatosi';
-subEl.textContent = 'Qayta urinib ko\'ring yoki administrator bilan bog\'laning.';
+titleEl.textContent = result.error || I18N.confirmError;
+subEl.textContent = I18N.tryAgainAdmin;
 scoreEl.textContent = '';
 attBox.classList.add('d-none');
 } else {
@@ -849,16 +864,16 @@ const score = result.match_percentage;
 if (ind === 'green') {
 inner.className = 'result-banner green';
 iconEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:var(--akhu-success)"></i>';
-titleEl.textContent = 'Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli';
+titleEl.textContent = I18N.faceVerifiedSuccess;
 subEl.textContent = (result.applicant?.full_name || '') + (result.applicant?.admission_id ? ' — ' + result.applicant.admission_id : '');
 scoreEl.className = 'status-badge verified fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
 
 if (result.already_verified) {
 attBox.classList.remove('d-none');
 document.getElementById('confirmBtn').classList.add('d-none');
 document.getElementById('confirmSuccess').classList.remove('d-none');
-document.getElementById('confirmSuccess').innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Nomzod allaqachon imtihonga kirgan!';
+document.getElementById('confirmSuccess').innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + I18N.alreadyVerified;
 } else {
 attBox.classList.remove('d-none');
 document.getElementById('confirmBtn').disabled = false;
@@ -868,18 +883,18 @@ document.getElementById('confirmSuccess').classList.add('d-none');
 } else if (ind === 'yellow') {
 inner.className = 'result-banner yellow';
 iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-warning)"></i>';
-titleEl.textContent = 'Qo\'lda tekshirish talab qilinadi';
-subEl.textContent = 'Yuz mos keldi, lekin qo\'shimcha tekshiruv kerak.';
+titleEl.textContent = I18N.manualReviewRequired;
+subEl.textContent = I18N.reviewDetails;
 scoreEl.className = 'status-badge review_required fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
 attBox.classList.add('d-none');
 } else {
 inner.className = 'result-banner red';
 iconEl.innerHTML = '<i class="bi bi-x-circle-fill" style="color:var(--akhu-danger)"></i>';
-titleEl.textContent = 'Yuz mos kelmadi — Rad etildi';
-subEl.textContent = 'Talabani imtihon komissiyasiga yo\'naltiring.';
+titleEl.textContent = I18N.mismatchRejected;
+subEl.textContent = I18N.redirectCommission;
 scoreEl.className = 'status-badge rejected fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
 attBox.classList.add('d-none');
 }
 }
@@ -1045,7 +1060,7 @@ if (!videoEl.readyState) return;
 faceIdScanningInProgress = true;
 
 const statusOverlay = document.getElementById('faceIdScanStatus');
-statusOverlay.innerHTML = `<span class="badge bg-primary px-3 py-2"><i class="bi bi-activity me-1"></i> SKANERLANMOQDA...</span>`;
+statusOverlay.innerHTML = `<span class="badge bg-primary px-3 py-2"><i class="bi bi-activity me-1"></i> ${I18N.scanningBadge}</span>`;
 
 // Capture frame
 const canvas = document.createElement('canvas');
@@ -1065,7 +1080,7 @@ body: JSON.stringify({ frame: frame }),
 const result = await resp.json();
 
 if (result.success) {
-statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ANIQLANDI</span>`;
+statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ${I18N.identifiedBadge}</span>`;
 showFaceIdResult(result);
 
 faceIdLastMatchProfileId = result.applicant?.id;
@@ -1073,8 +1088,8 @@ faceIdLastMatchTime = Date.now();
 } else {
 const noFace = result.error && result.error.includes('No face');
 statusOverlay.innerHTML = noFace
-? `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> YUZ KO'RINMADI</span>`
-: `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-x-fill me-1"></i> QIDIRILMOQDA...</span>`;
+? `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-eye-slash me-1"></i> ${I18N.noFaceBadge}</span>`
+: `<span class="badge bg-secondary px-3 py-2"><i class="bi bi-person-x-fill me-1"></i> ${I18N.searchingBadge}</span>`;
 
 // If 10-second view is over, clear old result
 if (faceIdLastMatchProfileId && (Date.now() - faceIdLastMatchTime >= 10000)) {
@@ -1118,7 +1133,7 @@ if (result.already_verified) {
 confirmBtn.disabled = true;
 confirmBtn.classList.add('d-none');
 confirmSuccess.classList.remove('d-none');
-confirmSuccess.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Nomzod allaqachon imtihonga kirgan!';
+confirmSuccess.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + I18N.alreadyVerified;
 } else {
 confirmBtn.disabled = false;
 confirmBtn.classList.remove('d-none');
@@ -1128,10 +1143,10 @@ confirmSuccess.classList.add('d-none');
 if (indicator === 'green') {
 inner.className = 'result-banner green';
 iconEl.innerHTML = '<i class="bi bi-check-circle-fill" style="color:var(--akhu-success)"></i>';
-titleEl.textContent = 'Yuz tasdiqlandi — Identifikatsiya muvaffaqiyatli';
+titleEl.textContent = I18N.faceVerifiedSuccess;
 subEl.textContent = ap.full_name;
 scoreEl.className = 'status-badge verified fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
       if (result.already_verified) {
         attBox.classList.remove('d-none');
       } else {
@@ -1140,18 +1155,18 @@ scoreEl.textContent = score + '% mos';
 } else if (indicator === 'yellow') {
 inner.className = 'result-banner yellow';
 iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:var(--akhu-warning)"></i>';
-titleEl.textContent = 'Qo\'lda tekshirish talab qilinadi';
-subEl.textContent = 'Yuz mos keldi, lekin qo\'shimcha tekshiruv kerak.';
+titleEl.textContent = I18N.manualReviewRequired;
+subEl.textContent = I18N.reviewDetails;
 scoreEl.className = 'status-badge review_required fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
 attBox.classList.add('d-none');
 } else {
 inner.className = 'result-banner red';
 iconEl.innerHTML = '<i class="bi bi-x-circle-fill" style="color:var(--akhu-danger)"></i>';
-titleEl.textContent = 'Yuz mos kelmadi — Rad etildi';
-subEl.textContent = 'Talabani imtihon komissiyasiga yo\'naltiring.';
+titleEl.textContent = I18N.mismatchRejected;
+subEl.textContent = I18N.redirectCommission;
 scoreEl.className = 'status-badge rejected fs-6';
-scoreEl.textContent = score + '% mos';
+scoreEl.textContent = score + '% ' + I18N.matched;
 attBox.classList.add('d-none');
 }
 

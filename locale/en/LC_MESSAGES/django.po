@@ -197,3 +197,66 @@ msgstr "SEARCHING..."
 
 msgid "Passport"
 msgstr "Passport"
+
+msgid "Face Verified — Identification Successful"
+msgstr "Face Verified — Identification Successful"
+
+msgid "Candidate already entered the exam!"
+msgstr "Candidate already entered the exam!"
+
+msgid "Manual review required"
+msgstr "Manual review required"
+
+msgid "Face matched, but additional review is required."
+msgstr "Face matched, but additional review is required."
+
+msgid "Face mismatch — Rejected"
+msgstr "Face mismatch — Rejected"
+
+msgid "Redirect candidate to the exam commission."
+msgstr "Redirect candidate to the exam commission."
+
+msgid "matched"
+msgstr "matched"
+
+msgid "No candidate selected. Scan QR code first."
+msgstr "No candidate selected. Scan QR code first."
+
+msgid "Camera is not ready. Please wait."
+msgstr "Camera is not ready. Please wait."
+
+msgid "Verification error"
+msgstr "Verification error"
+
+msgid "Please try again or contact administrator."
+msgstr "Please try again or contact administrator."
+
+msgid "SCANNING..."
+msgstr "SCANNING..."
+
+msgid "IDENTIFIED"
+msgstr "IDENTIFIED"
+
+msgid "NO FACE DETECTED"
+msgstr "NO FACE DETECTED"
+
+msgid "SEARCHING..."
+msgstr "SEARCHING..."
+
+msgid "Candidate identified. Do you officially confirm their entry to the exam?"
+msgstr "Candidate identified. Do you officially confirm their entry to the exam?"
+
+msgid "Confirm — Candidate Entered Exam"
+msgstr "Confirm — Candidate Entered Exam"
+
+msgid "Successfully confirmed!"
+msgstr "Successfully confirmed!"
+
+msgid "Face matched. Do you officially confirm their entry to the exam?"
+msgstr "Face matched. Do you officially confirm their entry to the exam?"
+
+msgid "Look at the camera"
+msgstr "Look at the camera"
+
+msgid "The system will identify the candidate automatically."
+msgstr "The system will identify the candidate automatically."
