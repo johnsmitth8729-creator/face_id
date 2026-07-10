@@ -1807,3 +1807,6 @@ msgstr "Muvaffaqiyatli tasdiqlandi!"
 
 msgid "QIDIRILMOQDA..."
 msgstr "QIDIRILMOQDA..."
+
+msgid "Passport"
+msgstr "Pasport"

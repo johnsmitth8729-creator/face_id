@@ -194,3 +194,6 @@ msgstr "Successfully confirmed!"
 
 msgid "QIDIRILMOQDA..."
 msgstr "SEARCHING..."
+
+msgid "Passport"
+msgstr "Passport"
