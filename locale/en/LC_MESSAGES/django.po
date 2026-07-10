@@ -59,3 +59,21 @@ msgstr "Capture Failed"
 
 msgid "Starting face capture..."
 msgstr "Starting face capture..."
+
+msgid "Look at the camera..."
+msgstr "Look at the camera..."
+
+msgid "Face saved successfully!"
+msgstr "Face saved successfully!"
+
+msgid "Instructions"
+msgstr "Instructions"
+
+msgid "Keep your eyes open and look straight at the camera"
+msgstr "Keep your eyes open and look straight at the camera"
+
+msgid "Maintain a neutral facial expression"
+msgstr "Maintain a neutral facial expression"
+
+msgid "Remove glasses, masks, or hats"
+msgstr "Remove glasses, masks, or hats"

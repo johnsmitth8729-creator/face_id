@@ -108,7 +108,7 @@ async function initCamera() {
 
     await video.play();
     
-    const lang = document.documentElement.lang || 'uz';
+    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
     setTimeout(startNextChallenge, 100);
   } catch (err) {
     console.error('Camera init error:', err);
@@ -216,7 +216,7 @@ function startNextChallenge() {
     else if (i === currentChallengeIdx) el.classList.add('active');
   });
 
-  const lang = document.documentElement.lang || 'uz';
+  const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
   const text = lang === 'uz' ? "Kameraga qarang..." : "Look at the camera...";
   statusEl.querySelector('span').textContent = text;
   if (overlayText) {
@@ -252,7 +252,7 @@ function startAutoChecking() {
     ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
 
     const brightness = checkFrameBrightness(ctx, canvas.width, canvas.height);
-    const lang = document.documentElement.lang || 'uz';
+    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
     if (brightness < 60 || brightness > 230) {
       const text = brightness < 60
         ? (lang === 'uz' ? "⚠️ Xona juda qorong'u!" : "⚠️ Room is too dark!")
@@ -386,7 +386,7 @@ async function finishLiveness() {
     return;
   }
 
-  const lang = document.documentElement.lang || 'uz';
+  const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
   instructionEl.textContent = lang === 'uz' ? 'Yuborilmoqda...' : 'Processing...';
   guide.classList.add('active');
 

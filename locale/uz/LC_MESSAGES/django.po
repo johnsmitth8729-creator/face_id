@@ -1672,3 +1672,21 @@ msgstr "Umumiy ZIP har bir tasdiqlangan foydalanuvchini Applicant ID nomli alohi
 
 msgid "No"
 msgstr "Yo'q"
+
+msgid "Look at the camera..."
+msgstr "Kameraga qarang..."
+
+msgid "Face saved successfully!"
+msgstr "Yuz muvaffaqiyatli saqlandi!"
+
+msgid "Instructions"
+msgstr "Ko'rsatmalar"
+
+msgid "Keep your eyes open and look straight at the camera"
+msgstr "Ko'zlaringizni ochiq holda tuting va kameraga tik qarang"
+
+msgid "Maintain a neutral facial expression"
+msgstr "Tabiiy/neytral yuz ifodasini saqlang"
+
+msgid "Remove glasses, masks, or hats"
+msgstr "Ko'zoynak, niqob yoki bosh kiyimlarni yeching"

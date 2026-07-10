@@ -104,7 +104,7 @@ async function initCamera() {
     }
 
     video.onloadedmetadata = () => {
-      const lang = document.documentElement.lang || 'uz';
+      const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
       setStatus('active', lang === 'uz' ? '🟢 Kamera tayyor. Doira ichiga qarang.' : '🟢 Camera Ready — Center your face.');
       speak(lang === 'uz' ? 'Kameraga to\'g\'ri qarang va ko\'zlaringizni oching' : 'Please look straight at the camera and open your eyes');
       startFaceDetection();
@@ -184,7 +184,7 @@ async function checkFaceInFrame() {
   
   // Fast client-side face check if native FaceDetector is supported
   if (localDetector) {
-    const lang = document.documentElement.lang || 'uz';
+    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
     try {
       const faces = await localDetector.detect(video);
       if (faces.length === 0) {
@@ -223,7 +223,7 @@ async function checkFaceInFrame() {
       body: JSON.stringify({ frame: frameData }),
     });
     const result = await resp.json();
-    const lang = document.documentElement.lang || 'uz';
+    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
 
     if (!result.face_detected) {
       faceGuide.classList.remove('active');
