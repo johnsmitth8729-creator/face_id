@@ -77,3 +77,60 @@ msgstr "Maintain a neutral facial expression"
 
 msgid "Remove glasses, masks, or hats"
 msgstr "Remove glasses, masks, or hats"
+
+msgid "Complete your biometric enrollment using our AI-powered facial recognition system. Your data is encrypted and securely stored."
+msgstr "Complete your biometric enrollment using our AI-powered facial recognition system. Your data is encrypted and securely stored."
+
+msgid "Enter your surname, given name, passport number, and select your exam region."
+msgstr "Enter your surname, given name, passport number, and select your exam region."
+
+msgid "The camera activates automatically. Look straight — the system captures your selfie when your face is centered and well-lit."
+msgstr "The camera activates automatically. Look straight — the system captures your selfie when your face is centered and well-lit."
+
+msgid "Follow voice instructions — turn your head left, right, and up. This confirms you are physically present."
+msgstr "Follow voice instructions — turn your head left, right, and up. This confirms you are physically present."
+
+msgid "Upon successful enrollment, your unique QR code and admission permit are ready to download."
+msgstr "Upon successful enrollment, your unique QR code and admission permit are ready to download."
+
+msgid "Secure & Reliable"
+msgstr "Secure & Reliable"
+
+msgid "Your biometric data is protected with industry-leading encryption and processed entirely on secure servers."
+msgstr "Your biometric data is protected with industry-leading encryption and processed entirely on secure servers."
+
+msgid "End-to-End Encrypted Storage"
+msgstr "End-to-End Encrypted Storage"
+
+msgid "Anti-Spoofing Liveness Detection"
+msgstr "Anti-Spoofing Liveness Detection"
+
+msgid "InsightFace ArcFace AI Engine"
+msgstr "InsightFace ArcFace AI Engine"
+
+msgid "Full Admin Audit Trail"
+msgstr "Full Admin Audit Trail"
+
+msgid "ArcFace"
+msgstr "ArcFace"
+
+msgid "AI Engine"
+msgstr "AI Engine"
+
+msgid "Steps"
+msgstr "Steps"
+
+msgid "Full Enrollment"
+msgstr "Full Enrollment"
+
+msgid "Angles"
+msgstr "Angles"
+
+msgid "Liveness Poses"
+msgstr "Liveness Poses"
+
+msgid "JWT"
+msgstr "JWT"
+
+msgid "Signed QR Codes"
+msgstr "Signed QR Codes"

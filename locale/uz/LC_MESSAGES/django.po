@@ -1690,3 +1690,60 @@ msgstr "Tabiiy/neytral yuz ifodasini saqlang"
 
 msgid "Remove glasses, masks, or hats"
 msgstr "Ko'zoynak, niqob yoki bosh kiyimlarni yeching"
+
+msgid "Complete your biometric enrollment using our AI-powered facial recognition system. Your data is encrypted and securely stored."
+msgstr "AI yordamida ishlaydigan biometrik yuzni tanish tizimimiz orqali ro'yxatdan o'tishni yakunlang. Ma'lumotlaringiz shifrlanadi va xavfsiz saqlanadi."
+
+msgid "Enter your surname, given name, passport number, and select your exam region."
+msgstr "Familiyangizni, ismingizni, pasport raqamingizni kiriting va imtihon hududini tanlang."
+
+msgid "The camera activates automatically. Look straight — the system captures your selfie when your face is centered and well-lit."
+msgstr "Kamera avtomatik ravishda ishga tushadi. To'g'ri qarang — yuzingiz markazda va yaxshi yoritilgan bo'lsa, tizim selfini saqlaydi."
+
+msgid "Follow voice instructions — turn your head left, right, and up. This confirms you are physically present."
+msgstr "Ko'rsatmalarga rioya qiling — boshingizni chapga, o'ngga va yuqoriga buring. Bu sizning haqiqatan ham ishtirok etayotganingizni tasdiqlaydi."
+
+msgid "Upon successful enrollment, your unique QR code and admission permit are ready to download."
+msgstr "Muvaffaqiyatli ro'yxatdan o'tganingizdan so'ng, sizning noyob QR kodingiz va ruxsatnomangiz yuklab olish uchun tayyor bo'ladi."
+
+msgid "Secure & Reliable"
+msgstr "Xavfsiz va ishonchli"
+
+msgid "Your biometric data is protected with industry-leading encryption and processed entirely on secure servers."
+msgstr "Sizning biometrik ma'lumotlaringiz ilg'or shifrlash usullari bilan himoyalangan va to'liq xavfsiz serverlarda qayta ishlanadi."
+
+msgid "End-to-End Encrypted Storage"
+msgstr "To'liq shifrlangan saqlash"
+
+msgid "Anti-Spoofing Liveness Detection"
+msgstr "Tiriklikni tekshirish va soxtalikni aniqlash"
+
+msgid "InsightFace ArcFace AI Engine"
+msgstr "InsightFace ArcFace AI mexanizmi"
+
+msgid "Full Admin Audit Trail"
+msgstr "To'liq ma'murlik auditi"
+
+msgid "ArcFace"
+msgstr "ArcFace"
+
+msgid "AI Engine"
+msgstr "AI mexanizmi"
+
+msgid "Steps"
+msgstr "Qadamlar"
+
+msgid "Full Enrollment"
+msgstr "To'liq ro'yxatdan o'tish"
+
+msgid "Angles"
+msgstr "Burchak"
+
+msgid "Liveness Poses"
+msgstr "Tiriklik holatlari"
+
+msgid "JWT"
+msgstr "JWT"
+
+msgid "Signed QR Codes"
+msgstr "Imzolangan QR kodlar"
