@@ -1422,9 +1422,8 @@ class SystemSettingsView(View):
     template_name = 'admin_panel/settings.html'
 
     UZB_REGIONS = [
-        'Andijon', 'Buxoro', 'Fargʻona', 'Jizzax', 'Xorazm', 'Namangan',
-        'Navoiy', 'Qashqadaryo', 'Samarqand', 'Sirdaryo', 'Surxondaryo',
-        'Toshkent viloyati', 'Toshkent shahri', 'Qoraqalpogʻiston Respublikasi'
+        'Xorazm', 'Qoraqalpogʻiston Respublikasi', 'Toshkent shahri',
+        'Fargʻona', 'Samarqand', 'Surxondaryo'
     ]
 
     def get(self, request):
@@ -1434,11 +1433,11 @@ class SystemSettingsView(View):
         if not setting:
             setting = SystemSetting.objects.create(qr_domain='id.akhu.uz')
         
-        # Ensure all 14 venue configs exist
+        # Ensure all 6 venue configs exist
         for reg in self.UZB_REGIONS:
             ExamVenueConfig.objects.get_or_create(region=reg)
             
-        venues = ExamVenueConfig.objects.all().order_by('region')
+        venues = ExamVenueConfig.objects.filter(region__in=self.UZB_REGIONS).order_by('region')
         
         return render(request, self.template_name, {
             'page_title': _('System Settings'),
@@ -1475,7 +1474,7 @@ class SystemSettingsView(View):
                 setting.save()
                 
                 # 2. Save venue configs
-                venues = ExamVenueConfig.objects.all()
+                venues = ExamVenueConfig.objects.filter(region__in=self.UZB_REGIONS)
                 for venue in venues:
                     venue_name = request.POST.get(f'venue_{venue.id}', '').strip()
                     exam_date_str = request.POST.get(f'date_{venue.id}', '').strip()

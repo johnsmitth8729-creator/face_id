@@ -276,9 +276,9 @@ msgstr ""
 
 msgid ""
 "Configure the specific exam center (venue) and the exam date/time for each "
-"of the 14 regions of Uzbekistan."
+"of the 6 regions of Uzbekistan."
 msgstr ""
-"O`zbekistonning 14 mintaqasining har biri uchun maxsus imtihon markazi va "
+"O`zbekistonning 6 mintaqasining har biri uchun maxsus imtihon markazi va "
 "imtihon sanasi/vaqtini sozlang."
 
 msgid ""

@@ -6,20 +6,12 @@ from django.utils.translation import gettext_lazy as _
 class PersonalInfoForm(forms.Form):
     REGION_CHOICES = [
         ('', _('-- Select Exam Region --')),
-        ('Andijon', 'Andijon'),
-        ('Buxoro', 'Buxoro'),
-        ('Fargʻona', 'Fargʻona'),
-        ('Jizzax', 'Jizzax'),
         ('Xorazm', 'Xorazm'),
-        ('Namangan', 'Namangan'),
-        ('Navoiy', 'Navoiy'),
-        ('Qashqadaryo', 'Qashqadaryo'),
-        ('Samarqand', 'Samarqand'),
-        ('Sirdaryo', 'Sirdaryo'),
-        ('Surxondaryo', 'Surxondaryo'),
-        ('Toshkent viloyati', 'Toshkent viloyati'),
-        ('Toshkent shahri', 'Toshkent shahri'),
         ('Qoraqalpogʻiston Respublikasi', 'Qoraqalpogʻiston Respublikasi'),
+        ('Toshkent shahri', 'Toshkent shahri'),
+        ('Fargʻona', 'Fargʻona'),
+        ('Samarqand', 'Samarqand'),
+        ('Surxondaryo', 'Surxondaryo'),
     ]
 
     surname = forms.CharField(
