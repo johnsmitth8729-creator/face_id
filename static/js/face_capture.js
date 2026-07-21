@@ -204,7 +204,7 @@ async function checkFaceInFrame() {
       const devX = Math.abs(faceCenterX - videoWidth / 2) / videoWidth;
       const devY = Math.abs(faceCenterY - videoHeight / 2) / videoHeight;
       
-      if (devX > 0.08 || devY > 0.10) {
+      if (devX > 0.15 || devY > 0.18) {
         faceGuide.classList.remove('active');
         setStatus('active', lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.');
         stabilityCounter = 0;

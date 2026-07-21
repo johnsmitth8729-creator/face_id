@@ -241,15 +241,15 @@ class MediaPipeLivenessDetector:
             offset_x = abs(center_x - w / 2.0) / w
             offset_y = abs(center_y - h / 2.0) / h
 
-            # Strict centering offset for the oval guide
-            face_centered = offset_x < 0.08 and offset_y < 0.10
+            # Strict centering offset for the oval guide (relaxed for user comfort)
+            face_centered = offset_x < 0.15 and offset_y < 0.18
 
-            # Strict size constraint to match the oval guide (between 25% and 55% of image width)
-            face_size_ok = 0.25 <= (face_width / w) <= 0.55
+            # Strict size constraint to match the oval guide (relaxed range)
+            face_size_ok = 0.20 <= (face_width / w) <= 0.65
 
-            # Facing straight verification (yaw and pitch should be small)
+            # Facing straight verification (yaw and pitch relaxed)
             yaw, pitch = self._head_pose(landmarks, w, h)
-            looking_straight = abs(yaw) < 8.0 and abs(pitch) < 8.0
+            looking_straight = abs(yaw) < 15.0 and abs(pitch) < 15.0
 
             # 2. Eyes Open (EAR)
             left_ear = self._eye_aspect_ratio(landmarks, w, h, (33, 160, 158, 133, 153, 144))
@@ -455,8 +455,8 @@ class OpenCVLivenessDetector:
                     offset_x = abs(cx_face - w / 2.0) / w
                     offset_y = abs(cy_face - h / 2.0) / h
                     
-                    face_centered = offset_x < 0.08 and offset_y < 0.10
-                    face_size_ok = 0.25 <= (w_face / w) <= 0.55
+                    face_centered = offset_x < 0.15 and offset_y < 0.18
+                    face_size_ok = 0.20 <= (w_face / w) <= 0.65
                     
                     looking_straight = True
                     kps = getattr(face, 'kps', None)
@@ -468,7 +468,7 @@ class OpenCVLivenessDetector:
                         if eye_dist > 0:
                             mid_eye = (left_eye + right_eye) / 2.0
                             nose_dev = abs(nose[0] - mid_eye[0]) / eye_dist
-                            looking_straight = nose_dev < 0.18
+                            looking_straight = nose_dev < 0.22
                     
                     return {
                         'face_detected': True,
@@ -491,8 +491,8 @@ class OpenCVLivenessDetector:
                     cy_face = y + h_face / 2.0
                     offset_x = abs(cx_face - w / 2.0) / w
                     offset_y = abs(cy_face - h / 2.0) / h
-                    face_centered = offset_x < 0.08 and offset_y < 0.10
-                    face_size_ok = 0.25 <= (w_face / w) <= 0.55
+                    face_centered = offset_x < 0.15 and offset_y < 0.18
+                    face_size_ok = 0.20 <= (w_face / w) <= 0.65
                     return {
                         'face_detected': True,
                         'face_centered': face_centered,
