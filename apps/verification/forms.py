@@ -4,16 +4,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 class PersonalInfoForm(forms.Form):
-    REGION_CHOICES = [
-        ('', _('-- Select Exam Region --')),
-        ('Xorazm', 'Xorazm'),
-        ('Qoraqalpogʻiston Respublikasi', 'Qoraqalpogʻiston Respublikasi'),
-        ('Toshkent shahri', 'Toshkent shahri'),
-        ('Fargʻona', 'Fargʻona'),
-        ('Samarqand', 'Samarqand'),
-        ('Surxondaryo', 'Surxondaryo'),
-    ]
-
     surname = forms.CharField(
         label=_('Surname'),
         max_length=100,
@@ -31,6 +21,14 @@ class PersonalInfoForm(forms.Form):
     )
     selected_region = forms.ChoiceField(
         label=_('Exam Region'),
-        choices=REGION_CHOICES,
+        choices=[],
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.accounts.models import ExamVenueConfig
+        choices = [('', _('-- Select Exam Region --'))]
+        for config in ExamVenueConfig.objects.all().order_by('region'):
+            choices.append((config.region, config.region))
+        self.fields['selected_region'].choices = choices

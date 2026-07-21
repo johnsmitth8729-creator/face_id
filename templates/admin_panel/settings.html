@@ -66,8 +66,13 @@
         <!-- Regional Venue Settings -->
         <div class="col-lg-12">
           <div class="akhu-card">
-            <h5 class="mb-4 text-gold"><i class="bi bi-geo-alt-fill me-2"></i>{% trans "Regional Exam Locations & Dates" %}</h5>
-            <p class="text-muted small mb-4">{% trans "Configure the specific exam center (venue) and the exam date/time for each of the 6 regions of Uzbekistan." %}</p>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="m-0 text-gold"><i class="bi bi-geo-alt-fill me-2"></i>{% trans "Regional Exam Locations & Dates" %}</h5>
+              <button type="button" class="btn btn-outline-gold btn-sm" data-bs-toggle="modal" data-bs-target="#addRegionModal">
+                <i class="bi bi-plus-circle me-1"></i> {% trans "Add Region" %}
+              </button>
+            </div>
+            <p class="text-muted small mb-4">{% trans "Configure dynamic regions, their specific exam venue/address, and dates. Renaming a region will automatically update all matching candidate profiles." %}</p>
 
             <div class="table-responsive">
               <table class="akhu-table align-middle">
@@ -75,18 +80,32 @@
                   <tr>
                     <th style="width: 25%;">{% trans "Region" %}</th>
                     <th style="width: 45%;">{% trans "Exam Venue / Address" %}</th>
-                    <th style="width: 30%;">{% trans "Exam Date & Time" %}</th>
+                    <th style="width: 20%;">{% trans "Exam Date & Time" %}</th>
+                    <th style="width: 10%; text-align: center;">{% trans "Actions" %}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for venue in venues %}
                     <tr>
-                      <td class="fw-bold"><strong>{{ venue.region }}</strong></td>
+                      <td>
+                        <input type="text" class="form-control form-control-sm fw-bold" name="region_name_{{ venue.id }}" value="{{ venue.region }}" required>
+                      </td>
                       <td>
                         <input type="text" class="form-control form-control-sm" name="venue_{{ venue.id }}" value="{{ venue.venue_name }}" placeholder="{% trans 'Enter specific exam venue address' %}">
                       </td>
                       <td>
                         <input type="datetime-local" class="form-control form-control-sm" name="date_{{ venue.id }}" value="{{ venue.exam_date|date:'Y-m-d\TH:i' }}">
+                      </td>
+                      <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteRegion('{{ venue.id }}', '{{ venue.region|escapejs }}')">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="4" class="text-center text-muted py-4">
+                        <i class="bi bi-geo-alt me-1"></i> {% trans "No regions configured yet. Click 'Add Region' to create one." %}
                       </td>
                     </tr>
                   {% endfor %}
@@ -95,6 +114,7 @@
             </div>
 
             <div class="text-end mt-4">
+              <input type="hidden" name="action" value="save_settings">
               <button type="submit" class="btn btn-gold btn-lg px-5"><i class="bi bi-save me-2"></i>{% trans "Save All Settings" %}</button>
             </div>
           </div>
@@ -103,6 +123,55 @@
     </form>
   </div>
 </div>
+
+<!-- Add Region Modal -->
+<div class="modal fade" id="addRegionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-gold"><i class="bi bi-geo-alt-fill me-2"></i>{% trans "Add New Region" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-white">
+        <form method="post" action="{% url 'admin_panel:settings' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_region">
+          <div class="mb-3">
+            <label class="form-label text-muted">{% trans "Region Name" %} <span class="text-danger">*</span></label>
+            <input type="text" name="region_name" class="form-control text-white bg-dark border-secondary" required placeholder="{% trans 'e.g. Toshkent' %}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">{% trans "Exam Venue / Address" %}</label>
+            <input type="text" name="venue_name" class="form-control text-white bg-dark border-secondary" placeholder="{% trans 'e.g. Room 304, Main Hall' %}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">{% trans "Exam Date & Time" %}</label>
+            <input type="datetime-local" name="exam_date" class="form-control text-white bg-dark border-secondary">
+          </div>
+          <button type="submit" class="btn btn-gold w-100 justify-content-center mt-3">
+            <i class="bi bi-plus-circle-fill me-2"></i>{% trans "Create Region" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden Delete Form -->
+<form id="deleteRegionForm" method="post" action="{% url 'admin_panel:settings' %}">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="delete_region">
+  <input type="hidden" id="deleteVenueId" name="venue_id">
+</form>
+
+<script>
+function confirmDeleteRegion(id, name) {
+    if (confirm('{% trans "Are you sure you want to delete the region" %} "' + name + '"?')) {
+        document.getElementById('deleteVenueId').value = id;
+        document.getElementById('deleteRegionForm').submit();
+    }
+}
+</script>
 
 <style>
 .admin-page-header { display:flex;justify-content:space-between;align-items:flex-start; }
@@ -123,6 +192,17 @@
 .btn-gold:hover {
   background-color: var(--gold-hover);
   border-color: var(--gold-hover);
+  color: var(--dark-bg);
+}
+.btn-outline-gold {
+  color: var(--gold-primary);
+  border-color: var(--gold-primary);
+  background: transparent;
+  font-weight: 600;
+}
+.btn-outline-gold:hover {
+  background-color: var(--gold-primary);
+  border-color: var(--gold-primary);
   color: var(--dark-bg);
 }
 </style>
