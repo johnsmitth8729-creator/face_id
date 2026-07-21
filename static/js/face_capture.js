@@ -25,6 +25,9 @@ const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 
 // Local shape detection API fallback
 let localDetector = null;
+if ('FaceDetector' in window) {
+  localDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+}
 
 // Speech synthesis helpers
 let lastSpokenText = '';
