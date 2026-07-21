@@ -215,7 +215,7 @@ class MediaPipeLivenessDetector:
         """Check face presence and quality in frame."""
         img_array = _decode_base64_image(frame_data)
         if img_array is None:
-            return {'face_detected': False, 'error': 'Failed to decode base64 image frame.'}
+            return {'face_detected': False}
 
         try:
             face_mesh = self._get_face_mesh()
@@ -241,15 +241,11 @@ class MediaPipeLivenessDetector:
             offset_x = abs(center_x - w / 2.0) / w
             offset_y = abs(center_y - h / 2.0) / h
 
-            # Strict centering offset for the oval guide (relaxed for user comfort)
-            face_centered = offset_x < 0.15 and offset_y < 0.18
+            # Centering offset should be < 0.20 width, < 0.25 height
+            face_centered = offset_x < 0.20 and offset_y < 0.25
 
-            # Strict size constraint to match the oval guide (relaxed range)
-            face_size_ok = 0.20 <= (face_width / w) <= 0.65
-
-            # Facing straight verification (yaw and pitch relaxed)
-            yaw, pitch = self._head_pose(landmarks, w, h)
-            looking_straight = abs(yaw) < 15.0 and abs(pitch) < 15.0
+            # Size should be at least 20% of image width
+            face_size_ok = (face_width / w) >= 0.20
 
             # 2. Eyes Open (EAR)
             left_ear = self._eye_aspect_ratio(landmarks, w, h, (33, 160, 158, 133, 153, 144))
@@ -273,7 +269,6 @@ class MediaPipeLivenessDetector:
                 'face_detected': True,
                 'face_centered': face_centered,
                 'face_size_ok': face_size_ok,
-                'looking_straight': looking_straight,
                 'eyes_open': eyes_open,
                 'lighting_ok': lighting_ok,
                 'brightness': brightness_val,
@@ -430,90 +425,42 @@ class OpenCVLivenessDetector:
         """Check face presence in frame using InsightFace or cascade fallback."""
         img_array = _decode_base64_image(frame_data)
         if img_array is None:
-            return {'face_detected': False, 'error': 'Failed to decode base64 image frame.'}
+            return {'face_detected': False}
 
         try:
             import cv2
-            import numpy as np
             from apps.face_engine.engine import get_face_engine, InsightFaceEngine
             engine = get_face_engine()
-            
-            h, w = img_array.shape[:2]
             
             if isinstance(engine, InsightFaceEngine):
                 app = engine._get_app()
                 img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
                 faces = app.get(img_bgr)
-                if len(faces) > 0:
-                    face = faces[0]
-                    bbox = face.bbox
-                    w_face = bbox[2] - bbox[0]
-                    h_face = bbox[3] - bbox[1]
-                    cx_face = (bbox[0] + bbox[2]) / 2.0
-                    cy_face = (bbox[1] + bbox[3]) / 2.0
-                    
-                    offset_x = abs(cx_face - w / 2.0) / w
-                    offset_y = abs(cy_face - h / 2.0) / h
-                    
-                    face_centered = offset_x < 0.15 and offset_y < 0.18
-                    face_size_ok = 0.20 <= (w_face / w) <= 0.65
-                    
-                    looking_straight = True
-                    kps = getattr(face, 'kps', None)
-                    if kps is not None and len(kps) >= 5:
-                        left_eye = kps[0]
-                        right_eye = kps[1]
-                        nose = kps[2]
-                        eye_dist = np.linalg.norm(right_eye - left_eye)
-                        if eye_dist > 0:
-                            mid_eye = (left_eye + right_eye) / 2.0
-                            nose_dev = abs(nose[0] - mid_eye[0]) / eye_dist
-                            looking_straight = nose_dev < 0.22
-                    
-                    return {
-                        'face_detected': True,
-                        'face_centered': face_centered,
-                        'face_size_ok': face_size_ok,
-                        'looking_straight': looking_straight,
-                        'eyes_open': True,
-                        'lighting_ok': True,
-                        'confidence': 0.95,
-                    }
-                else:
-                    return {'face_detected': False, 'face_centered': False, 'looking_straight': False}
+                success = len(faces) > 0
+                return {
+                    'face_detected': success,
+                    'face_centered': success,
+                    'face_size_ok': True,
+                    'eyes_open': success,
+                    'lighting_ok': True,
+                    'confidence': 0.95 if success else 0.0,
+                }
 
             if self.face_cascade:
                 gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
                 faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
-                if len(faces) > 0:
-                    x, y, w_face, h_face = faces[0]
-                    cx_face = x + w_face / 2.0
-                    cy_face = y + h_face / 2.0
-                    offset_x = abs(cx_face - w / 2.0) / w
-                    offset_y = abs(cy_face - h / 2.0) / h
-                    face_centered = offset_x < 0.15 and offset_y < 0.18
-                    face_size_ok = 0.20 <= (w_face / w) <= 0.65
-                    return {
-                        'face_detected': True,
-                        'face_centered': face_centered,
-                        'face_size_ok': face_size_ok,
-                        'looking_straight': True,
-                        'eyes_open': True,
-                        'lighting_ok': True,
-                        'confidence': 0.95,
-                    }
-            
+                success = len(faces) > 0
+            else:
+                success = True
             return {
-                'face_detected': True,
-                'face_centered': True,
+                'face_detected': success,
+                'face_centered': success,
                 'face_size_ok': True,
-                'looking_straight': True,
-                'eyes_open': True,
+                'eyes_open': success,
                 'lighting_ok': True,
-                'confidence': 0.95,
+                'confidence': 0.95 if success else 0.0,
             }
         except Exception as e:
-            logger.error(f'OpenCV fallback face detection error: {e}')
             return {'face_detected': False, 'error': str(e)}
 
 

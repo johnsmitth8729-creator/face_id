@@ -204,7 +204,7 @@ async function checkFaceInFrame() {
       const devX = Math.abs(faceCenterX - videoWidth / 2) / videoWidth;
       const devY = Math.abs(faceCenterY - videoHeight / 2) / videoHeight;
       
-      if (devX > 0.15 || devY > 0.18) {
+      if (devX > 0.22 || devY > 0.22) {
         faceGuide.classList.remove('active');
         setStatus('active', lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.');
         stabilityCounter = 0;
@@ -227,12 +227,7 @@ async function checkFaceInFrame() {
 
     if (!result.face_detected) {
       faceGuide.classList.remove('active');
-      let msg = lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.';
-      if (result.error) {
-        msg = `⚠️ Error: ${result.error}`;
-        console.error("Backend detector error:", result.error);
-      }
-      setStatus('active', msg);
+      setStatus('active', lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.');
       speak(lang === 'uz' ? 'Kameraga qarang' : 'Please look at the camera');
       stabilityCounter = 0;
       return;
@@ -256,14 +251,6 @@ async function checkFaceInFrame() {
       faceGuide.classList.remove('active');
       setStatus('active', lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.');
       speak(lang === 'uz' ? 'Yuzingizni doira ichiga joylashtiring' : 'Center your face in the oval');
-      stabilityCounter = 0;
-      return;
-    }
-
-    if (result.looking_straight === false) {
-      faceGuide.classList.remove('active');
-      setStatus('active', lang === 'uz' ? "👤 Kameraga to'g'ri qarang." : "👤 Please look straight at the camera.");
-      speak(lang === 'uz' ? "Kameraga to'g'ri qarang" : "Please look straight at the camera");
       stabilityCounter = 0;
       return;
     }
@@ -293,7 +280,6 @@ async function checkFaceInFrame() {
     }
   } catch (e) {
     console.error("Face check loop error:", e);
-    setStatus('error', `⚠️ Error: ${e.message || e}`);
   }
 }
 
