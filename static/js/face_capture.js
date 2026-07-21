@@ -328,7 +328,7 @@ async function triggerSelfieSave(imageData) {
         if (stream) {
           stream.getTracks().forEach(t => t.stop());
         }
-        window.location.href = '/step/4/';
+        window.location.href = '/step/3/';
       }, 1500);
     } else {
       speak(result.error || (lang === 'uz' ? 'Xatolik yuz berdi' : 'Error saving image'));

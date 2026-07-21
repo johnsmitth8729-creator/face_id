@@ -205,9 +205,9 @@ class Step1PersonalInfoView(View):
                 role=UserRole.APPLICANT,
             )
             session.user = user
-            session.current_step = VerificationStep.DOCUMENT_UPLOAD
+            session.current_step = VerificationStep.FACE_CAPTURE
             session.step_personal_info_done = True
-            session.step_document_done = False
+            session.step_document_done = True
             session.save()
 
             # Create ApplicantProfile using details from PreRegisteredApplicant and selected region
@@ -237,72 +237,31 @@ class Step1PersonalInfoView(View):
         })
 
 
-class Step2DocumentUploadView(View):
-    """Step 2/5 — Passport/ID upload."""
-    template_name = 'public/step2_document_upload.html'
-
-    def get(self, request):
-        session = _get_or_create_session(request)
-        if not session.step_personal_info_done:
-            return redirect('verification:step1')
-        return render(request, self.template_name, {
-            'session': session,
-            'step': 2,
-            'page_title': _('Upload Identity Document'),
-        })
-
-    def post(self, request):
-        session = _get_or_create_session(request)
-        if not session.step_personal_info_done:
-            return redirect('verification:step1')
-
-        document_file = request.FILES.get('document')
-        if not document_file:
-            messages.error(request, _('Please select a document file to upload.'))
-            return render(request, self.template_name, {
-                'session': session,
-                'step': 2,
-                'page_title': _('Upload Identity Document'),
-            })
-
-        # Save document file to the ApplicantProfile
-        if session.user and hasattr(session.user, 'applicant_profile'):
-            profile = session.user.applicant_profile
-            profile.passport_image = document_file
-            profile.save(update_fields=['passport_image'])
-
-        session.current_step = VerificationStep.FACE_CAPTURE
-        session.step_document_done = True
-        session.save()
-
-        return redirect('verification:step3')
-
-
 class Step3FaceCaptureView(TemplateView):
-    """Step 3/5 — Live selfie capture via webcam."""
+    """Step 2/4 — Live selfie capture via webcam."""
     template_name = 'public/step3_face_capture.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         session = _get_or_create_session(self.request)
-        ctx.update({'session': session, 'step': 3, 'page_title': _('Face Capture')})
+        ctx.update({'session': session, 'step': 2, 'page_title': _('Face Capture')})
         return ctx
 
     def get(self, request, *args, **kwargs):
         session = _get_or_create_session(request)
-        if not session.step_document_done:
-            return redirect('verification:step2')
+        if not session.step_personal_info_done:
+            return redirect('verification:step1')
         return super().get(request, *args, **kwargs)
 
 
 class Step4LivenessView(TemplateView):
-    """Step 4/5 — Liveness detection challenges."""
+    """Step 3/4 — Liveness detection challenges."""
     template_name = 'public/step4_liveness.html'
 
     def get(self, request, *args, **kwargs):
         session = _get_or_create_session(request)
         if not session.step_face_capture_done:
-            return redirect('verification:step3')
+            return redirect('verification:step2')
 
         # Generate challenges for this session
         challenges = generate_challenge_sequence()
@@ -320,7 +279,7 @@ class Step4LivenessView(TemplateView):
 
         return render(request, self.template_name, {
             'session': session,
-            'step': 4,
+            'step': 3,
             'challenges': challenge_data,
             'challenges_json': json.dumps(challenge_data),
             'page_title': _('Multi-Angle Face Capture'),
@@ -352,7 +311,7 @@ class Step5ResultView(TemplateView):
         context = {
             'session': session,
             'face_profile': face_profile,
-            'step': 5,
+            'step': 4,
             'page_title': _('Verification Result'),
         }
 
