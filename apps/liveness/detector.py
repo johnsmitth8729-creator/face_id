@@ -215,7 +215,7 @@ class MediaPipeLivenessDetector:
         """Check face presence and quality in frame."""
         img_array = _decode_base64_image(frame_data)
         if img_array is None:
-            return {'face_detected': False}
+            return {'face_detected': False, 'error': 'Failed to decode base64 image frame.'}
 
         try:
             face_mesh = self._get_face_mesh()
@@ -430,7 +430,7 @@ class OpenCVLivenessDetector:
         """Check face presence in frame using InsightFace or cascade fallback."""
         img_array = _decode_base64_image(frame_data)
         if img_array is None:
-            return {'face_detected': False}
+            return {'face_detected': False, 'error': 'Failed to decode base64 image frame.'}
 
         try:
             import cv2

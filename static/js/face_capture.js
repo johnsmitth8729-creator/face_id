@@ -25,9 +25,6 @@ const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 
 // Local shape detection API fallback
 let localDetector = null;
-if ('FaceDetector' in window) {
-  localDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-}
 
 // Speech synthesis helpers
 let lastSpokenText = '';
@@ -227,7 +224,12 @@ async function checkFaceInFrame() {
 
     if (!result.face_detected) {
       faceGuide.classList.remove('active');
-      setStatus('active', lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.');
+      let msg = lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.';
+      if (result.error) {
+        msg = `⚠️ Error: ${result.error}`;
+        console.error("Backend detector error:", result.error);
+      }
+      setStatus('active', msg);
       speak(lang === 'uz' ? 'Kameraga qarang' : 'Please look at the camera');
       stabilityCounter = 0;
       return;
@@ -288,6 +290,7 @@ async function checkFaceInFrame() {
     }
   } catch (e) {
     console.error("Face check loop error:", e);
+    setStatus('error', `⚠️ Error: ${e.message || e}`);
   }
 }
 
