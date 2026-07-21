@@ -322,6 +322,58 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
     ]))
     elements.append(instructions_table)
 
+    # 6.5. Bottom center Google Maps location QR code
+    location_qr_table = None
+    if applicant.selected_region:
+        try:
+            from apps.accounts.models import ExamVenueConfig
+            venue_conf = ExamVenueConfig.objects.filter(region=applicant.selected_region).first()
+            if venue_conf and venue_conf.location_link:
+                import qrcode
+                from reportlab.platypus import Image as RLImage
+                import io
+                
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=1,
+                )
+                qr.add_data(venue_conf.location_link)
+                qr.make(fit=True)
+                qr_img_pil = qr.make_image(fill_color='black', back_color='white')
+                
+                qr_io = io.BytesIO()
+                qr_img_pil.save(qr_io, format='PNG')
+                qr_io.seek(0)
+                
+                location_qr_img = RLImage(qr_io, width=1.8*cm, height=1.8*cm)
+                
+                location_text_style = ParagraphStyle(
+                    'LocText', parent=styles['Normal'],
+                    fontName='Helvetica-Bold', fontSize=8, textColor=AKHU_NAVY,
+                    alignment=TA_CENTER, spaceBefore=4
+                )
+                
+                location_flowables = [
+                    location_qr_img,
+                    Paragraph("Scan to view exam location", location_text_style)
+                ]
+                
+                location_qr_table = Table([[f] for f in location_flowables], colWidths=[200])
+                location_qr_table.setStyle(TableStyle([
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                ]))
+        except Exception as e:
+            logger.warning(f"Failed to generate location QR: {e}")
+
+    if location_qr_table:
+        elements.append(Spacer(1, 0.4 * cm))
+        elements.append(location_qr_table)
+
     # 7. Build Document
     doc.build(elements)
     return True

@@ -205,9 +205,9 @@ class Step1PersonalInfoView(View):
                 role=UserRole.APPLICANT,
             )
             session.user = user
-            session.current_step = VerificationStep.FACE_CAPTURE
+            session.current_step = VerificationStep.DOCUMENT_UPLOAD
             session.step_personal_info_done = True
-            session.step_document_done = True  # document upload is bypassed
+            session.step_document_done = False
             session.save()
 
             # Create ApplicantProfile using details from PreRegisteredApplicant and selected region
@@ -227,7 +227,7 @@ class Step1PersonalInfoView(View):
                 session=session,
             )
 
-            return redirect('verification:step3')
+            return redirect('verification:step2')
 
         return render(request, self.template_name, {
             'form': form,
@@ -242,9 +242,39 @@ class Step2DocumentUploadView(View):
     template_name = 'public/step2_document_upload.html'
 
     def get(self, request):
-        return redirect('verification:step3')
+        session = _get_or_create_session(request)
+        if not session.step_personal_info_done:
+            return redirect('verification:step1')
+        return render(request, self.template_name, {
+            'session': session,
+            'step': 2,
+            'page_title': _('Upload Identity Document'),
+        })
 
     def post(self, request):
+        session = _get_or_create_session(request)
+        if not session.step_personal_info_done:
+            return redirect('verification:step1')
+
+        document_file = request.FILES.get('document')
+        if not document_file:
+            messages.error(request, _('Please select a document file to upload.'))
+            return render(request, self.template_name, {
+                'session': session,
+                'step': 2,
+                'page_title': _('Upload Identity Document'),
+            })
+
+        # Save document file to the ApplicantProfile
+        if session.user and hasattr(session.user, 'applicant_profile'):
+            profile = session.user.applicant_profile
+            profile.passport_image = document_file
+            profile.save(update_fields=['passport_image'])
+
+        session.current_step = VerificationStep.FACE_CAPTURE
+        session.step_document_done = True
+        session.save()
+
         return redirect('verification:step3')
 
 

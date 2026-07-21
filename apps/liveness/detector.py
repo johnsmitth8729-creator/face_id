@@ -241,11 +241,15 @@ class MediaPipeLivenessDetector:
             offset_x = abs(center_x - w / 2.0) / w
             offset_y = abs(center_y - h / 2.0) / h
 
-            # Centering offset should be < 0.20 width, < 0.25 height
-            face_centered = offset_x < 0.20 and offset_y < 0.25
+            # Strict centering offset for the oval guide
+            face_centered = offset_x < 0.08 and offset_y < 0.10
 
-            # Size should be at least 20% of image width
-            face_size_ok = (face_width / w) >= 0.20
+            # Strict size constraint to match the oval guide (between 25% and 55% of image width)
+            face_size_ok = 0.25 <= (face_width / w) <= 0.55
+
+            # Facing straight verification (yaw and pitch should be small)
+            yaw, pitch = self._head_pose(landmarks, w, h)
+            looking_straight = abs(yaw) < 8.0 and abs(pitch) < 8.0
 
             # 2. Eyes Open (EAR)
             left_ear = self._eye_aspect_ratio(landmarks, w, h, (33, 160, 158, 133, 153, 144))
@@ -269,6 +273,7 @@ class MediaPipeLivenessDetector:
                 'face_detected': True,
                 'face_centered': face_centered,
                 'face_size_ok': face_size_ok,
+                'looking_straight': looking_straight,
                 'eyes_open': eyes_open,
                 'lighting_ok': lighting_ok,
                 'brightness': brightness_val,
@@ -429,38 +434,86 @@ class OpenCVLivenessDetector:
 
         try:
             import cv2
+            import numpy as np
             from apps.face_engine.engine import get_face_engine, InsightFaceEngine
             engine = get_face_engine()
+            
+            h, w = img_array.shape[:2]
             
             if isinstance(engine, InsightFaceEngine):
                 app = engine._get_app()
                 img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
                 faces = app.get(img_bgr)
-                success = len(faces) > 0
-                return {
-                    'face_detected': success,
-                    'face_centered': success,
-                    'face_size_ok': True,
-                    'eyes_open': success,
-                    'lighting_ok': True,
-                    'confidence': 0.95 if success else 0.0,
-                }
+                if len(faces) > 0:
+                    face = faces[0]
+                    bbox = face.bbox
+                    w_face = bbox[2] - bbox[0]
+                    h_face = bbox[3] - bbox[1]
+                    cx_face = (bbox[0] + bbox[2]) / 2.0
+                    cy_face = (bbox[1] + bbox[3]) / 2.0
+                    
+                    offset_x = abs(cx_face - w / 2.0) / w
+                    offset_y = abs(cy_face - h / 2.0) / h
+                    
+                    face_centered = offset_x < 0.08 and offset_y < 0.10
+                    face_size_ok = 0.25 <= (w_face / w) <= 0.55
+                    
+                    looking_straight = True
+                    kps = getattr(face, 'kps', None)
+                    if kps is not None and len(kps) >= 5:
+                        left_eye = kps[0]
+                        right_eye = kps[1]
+                        nose = kps[2]
+                        eye_dist = np.linalg.norm(right_eye - left_eye)
+                        if eye_dist > 0:
+                            mid_eye = (left_eye + right_eye) / 2.0
+                            nose_dev = abs(nose[0] - mid_eye[0]) / eye_dist
+                            looking_straight = nose_dev < 0.18
+                    
+                    return {
+                        'face_detected': True,
+                        'face_centered': face_centered,
+                        'face_size_ok': face_size_ok,
+                        'looking_straight': looking_straight,
+                        'eyes_open': True,
+                        'lighting_ok': True,
+                        'confidence': 0.95,
+                    }
+                else:
+                    return {'face_detected': False, 'face_centered': False, 'looking_straight': False}
 
             if self.face_cascade:
                 gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
                 faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
-                success = len(faces) > 0
-            else:
-                success = True
+                if len(faces) > 0:
+                    x, y, w_face, h_face = faces[0]
+                    cx_face = x + w_face / 2.0
+                    cy_face = y + h_face / 2.0
+                    offset_x = abs(cx_face - w / 2.0) / w
+                    offset_y = abs(cy_face - h / 2.0) / h
+                    face_centered = offset_x < 0.08 and offset_y < 0.10
+                    face_size_ok = 0.25 <= (w_face / w) <= 0.55
+                    return {
+                        'face_detected': True,
+                        'face_centered': face_centered,
+                        'face_size_ok': face_size_ok,
+                        'looking_straight': True,
+                        'eyes_open': True,
+                        'lighting_ok': True,
+                        'confidence': 0.95,
+                    }
+            
             return {
-                'face_detected': success,
-                'face_centered': success,
+                'face_detected': True,
+                'face_centered': True,
                 'face_size_ok': True,
-                'eyes_open': success,
+                'looking_straight': True,
+                'eyes_open': True,
                 'lighting_ok': True,
-                'confidence': 0.95 if success else 0.0,
+                'confidence': 0.95,
             }
         except Exception as e:
+            logger.error(f'OpenCV fallback face detection error: {e}')
             return {'face_detected': False, 'error': str(e)}
 
 

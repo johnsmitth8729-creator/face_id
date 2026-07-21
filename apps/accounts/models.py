@@ -118,6 +118,7 @@ class ApplicantProfile(models.Model):
     selected_region = models.CharField(_('Selected Region'), max_length=100, blank=True)
     exam_venue = models.CharField(_('Exam Venue'), max_length=500, blank=True)
     exam_date = models.DateTimeField(_('Exam Date & Time'), null=True, blank=True)
+    passport_image = models.ImageField(_('Passport / ID Image'), upload_to='passports/%Y/%m/', null=True, blank=True)
 
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
@@ -286,6 +287,7 @@ class ExamVenueConfig(models.Model):
     region = models.CharField(_('Region'), max_length=100, unique=True)
     venue_name = models.CharField(_('Venue Name'), max_length=500, blank=True)
     exam_date = models.DateTimeField(_('Exam Date & Time'), null=True, blank=True)
+    location_link = models.CharField(_('Location Link'), max_length=1000, blank=True)
 
     class Meta:
         verbose_name = _('Exam Venue Config')

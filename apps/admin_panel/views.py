@@ -1449,6 +1449,7 @@ class SystemSettingsView(View):
             region_name = request.POST.get('region_name', '').strip()
             venue_name = request.POST.get('venue_name', '').strip()
             exam_date_str = request.POST.get('exam_date', '').strip()
+            location_link = request.POST.get('location_link', '').strip()
 
             if not region_name:
                 messages.error(request, _('Region name is required.'))
@@ -1470,7 +1471,8 @@ class SystemSettingsView(View):
                 ExamVenueConfig.objects.create(
                     region=region_name,
                     venue_name=venue_name,
-                    exam_date=exam_date
+                    exam_date=exam_date,
+                    location_link=location_link
                 )
                 messages.success(request, _('Region "{name}" created successfully.').format(name=region_name))
             except Exception as e:
@@ -1521,6 +1523,7 @@ class SystemSettingsView(View):
                         new_region = request.POST.get(f'region_name_{venue.id}', '').strip()
                         venue_name = request.POST.get(f'venue_{venue.id}', '').strip()
                         exam_date_str = request.POST.get(f'date_{venue.id}', '').strip()
+                        location_link = request.POST.get(f'location_link_{venue.id}', '').strip()
                         
                         if new_region and new_region != old_region:
                             if ExamVenueConfig.objects.exclude(id=venue.id).filter(region=new_region).exists():
@@ -1531,6 +1534,7 @@ class SystemSettingsView(View):
                             ApplicantProfile.objects.filter(selected_region=old_region).update(selected_region=new_region)
 
                         venue.venue_name = venue_name
+                        venue.location_link = location_link
                         if exam_date_str:
                             try:
                                 from django.utils.dateparse import parse_datetime
