@@ -300,7 +300,7 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
                 Paragraph("<b>IMPORTANT INSTRUCTIONS FOR CANDIDATES</b>", instructions_title),
                 Paragraph(
                     "1. <b>Identity Documents:</b> Candidates must present this Admission Permit along with their original Passport or ID Card at the entrance.<br/>"
-                    "2. <b>Arrival Time:</b> Arrive at the examination venue at least 30 minutes before the scheduled exam start time. Late arrivals will not be admitted.<br/>"
+                    "2. <b>Recommended Arrival Time:</b> Arrive at the examination venue at least 45 minutes before the scheduled exam start time. Late arrivals will not be admitted.<br/>"
                     "3. <b>Biometric Verification:</b> Your identity will be verified at the entrance using the printed QR code and the live Face ID verification system. Ensure your face is fully visible.<br/>"
                     "4. <b>Prohibited Items:</b> Mobile phones, smartwatches, calculators, bags, and any written/printed materials are strictly prohibited inside the exam hall.<br/>"
                     "5. <b>Exam Venue:</b> Confirm your venue address carefully. This permit is valid only for the specific venue, date, and time printed above.",
