@@ -227,7 +227,7 @@ class Step1PersonalInfoView(View):
                 session=session,
             )
 
-            return redirect('verification:step2')
+            return redirect('verification:consent')
 
         return render(request, self.template_name, {
             'form': form,
@@ -235,6 +235,30 @@ class Step1PersonalInfoView(View):
             'step': 1,
             'page_title': _('Personal Information'),
         })
+
+
+class StepConsentView(View):
+    """Transitional step for Biometric Consent & Instructions."""
+    template_name = 'public/step_consent.html'
+
+    def get(self, request, *args, **kwargs):
+        session = _get_or_create_session(request)
+        if not session.step_personal_info_done:
+            return redirect('verification:step1')
+        return render(request, self.template_name, {
+            'session': session,
+            'step': 1,
+            'page_title': _('Biometric Consent'),
+        })
+
+    def post(self, request, *args, **kwargs):
+        session = _get_or_create_session(request)
+        if not session.step_personal_info_done:
+            return redirect('verification:step1')
+        
+        # Store biometric consent confirmation in session
+        request.session['biometric_consent_given'] = True
+        return redirect('verification:step2')
 
 
 class Step3FaceCaptureView(TemplateView):
@@ -251,6 +275,8 @@ class Step3FaceCaptureView(TemplateView):
         session = _get_or_create_session(request)
         if not session.step_personal_info_done:
             return redirect('verification:step1')
+        if not request.session.get('biometric_consent_given'):
+            return redirect('verification:consent')
         return super().get(request, *args, **kwargs)
 
 

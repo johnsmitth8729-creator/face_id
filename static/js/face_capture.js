@@ -336,32 +336,8 @@ async function triggerSelfieSave(imageData) {
   }
 }
 
-// Consent and Camera Init Listener
-document.addEventListener('DOMContentLoaded', () => {
-  const checkbox = document.getElementById('consentCheckbox');
-  const startBtn = document.getElementById('consentStartBtn');
-  const consentSec = document.getElementById('consentSection');
-  const cameraSec = document.getElementById('cameraSection');
-  const instSec = document.getElementById('instructionsSection');
-
-  if (checkbox && startBtn && consentSec && cameraSec) {
-    checkbox.addEventListener('change', () => {
-      startBtn.disabled = !checkbox.checked;
-    });
-
-    startBtn.addEventListener('click', () => {
-      consentSec.style.display = 'none';
-      cameraSec.style.display = 'block';
-      if (instSec) {
-        instSec.style.display = 'block';
-      }
-      initCamera();
-    });
-  } else {
-    // Fallback if elements are missing
-    initCamera();
-  }
-});
+// Auto-start on load
+document.addEventListener('DOMContentLoaded', initCamera);
 
 window.addEventListener('beforeunload', () => {
   if (stream) stream.getTracks().forEach(t => t.stop());

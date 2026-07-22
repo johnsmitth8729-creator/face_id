@@ -204,87 +204,8 @@
   <div class="container">
 
     <div class="row justify-content-center g-4">
-      <!-- Consent Section -->
-      <div class="col-lg-6" id="consentSection">
-        <div class="akhu-card animate-slide-up">
-          <div class="form-icon mx-auto mb-3" style="width:60px;height:60px;background:rgba(245,158,11,0.12);border:2px solid rgba(245,158,11,0.3);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--akhu-gold);"><i class="bi bi-shield-check"></i></div>
-          <h2 class="form-title text-center mb-3">
-            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-              Biometrik ma'lumotlarga rozilik
-            {% else %}
-              Biometric Consent & Instructions
-            {% endif %}
-          </h2>
-          
-          <div class="mb-4 text-start" style="font-size:0.92rem; line-height:1.6; color:var(--text-secondary);">
-            <p class="mb-3">
-              {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-                Yuz ma'lumotlarini tasdiqlashni boshlashdan oldin, iltimos, quyidagi ko'rsatmalar bilan diqqat bilan tanishib chiqing:
-              {% else %}
-                Before you proceed to face capture, please read the following instructions carefully:
-              {% endif %}
-            </p>
-            
-            <ul class="instructions-list mb-4" style="gap:16px;">
-              <li>
-                <i class="bi bi-sun-fill text-gold" style="color: var(--akhu-gold); font-size: 1.15rem; min-width: 20px;"></i>
-                <span>
-                  {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-                    <strong>Yaxshi yoritilgan joy:</strong> Yaxshi va tekis yoritilgan xonada turing. Yuzingizga qorong'u soyalar tushmasligini va orqangizda yorug'lik manbasi (masalan, oyna) yo'qligini tekshiring.
-                  {% else %}
-                    <strong>Good Lighting:</strong> Stand in a well-lit area. Ensure there are no strong light sources behind you (backlighting) or dark shadows on your face.
-                  {% endif %}
-                </span>
-              </li>
-              <li>
-                <i class="bi bi-person-bounding-box text-gold" style="color: var(--akhu-gold); font-size: 1.15rem; min-width: 20px;"></i>
-                <span>
-                  {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-                    <strong>Yuzni to'g'ri joylashtirish:</strong> Kameraga to'g'ri qarang, boshingizni tekis tuting va yuzingizni to'liq ekrandagi ko'k oval shakli ichiga joylashtiring.
-                  {% else %}
-                    <strong>Face Positioning:</strong> Look straight into the camera, keep your head straight, and position your face fully inside the blue oval guide.
-                  {% endif %}
-                </span>
-              </li>
-              <li>
-                <i class="bi bi-shield-fill-x text-gold" style="color: var(--akhu-gold); font-size: 1.15rem; min-width: 20px;"></i>
-                <span>
-                  {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-                    <strong>Tayyorgarlik:</strong> Ko'zoynak, bosh kiyim, tibbiy niqob yoki yuzingizni to'sadigan har qanday boshqa narsalarni yechib qo'ying.
-                  {% else %}
-                    <strong>Preparation:</strong> Remove any items covering your face, including sunglasses, eyeglasses, masks, or hats.
-                  {% endif %}
-                </span>
-              </li>
-            </ul>
-
-            <div class="consent-checkbox-wrapper p-3 border rounded mb-4" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08) !important;">
-              <div class="form-check d-flex align-items-start">
-                <input class="form-check-input" type="checkbox" id="consentCheckbox" style="margin-top:4px;">
-                <label class="form-check-label ms-2" for="consentCheckbox" style="font-size:0.86rem; cursor:pointer; color: var(--text-primary);">
-                  {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-                    Shaxsimni tasdiqlash maqsadida biometrik yuz ma'lumotlarimni to'plash, qayta ishlash va saqlashga rozilik beraman.
-                  {% else %}
-                    I consent to the collection, processing, and storage of my biometric face templates for identity verification purposes.
-                  {% endif %}
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <button id="consentStartBtn" class="btn-akhu w-100 py-3" disabled>
-            <i class="bi bi-camera-video-fill me-2"></i>
-            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
-              Rozilik bildirib boshlash
-            {% else %}
-              Agree and Start Capture
-            {% endif %}
-          </button>
-        </div>
-      </div>
-
-      <!-- Camera Panel (Hidden initially) -->
-      <div class="col-lg-5" id="cameraSection" style="display:none;">
+      <!-- Camera Panel -->
+      <div class="col-lg-5" id="cameraSection">
         <div class="akhu-card animate-slide-up text-center">
           <div class="form-icon mx-auto mb-3"><i class="bi bi-camera-fill"></i></div>
           <h2 class="form-title mb-1">{% trans "Face Capture" %}</h2>
@@ -321,8 +242,8 @@
         </div>
       </div>
 
-      <!-- Instructions Panel (Hidden initially) -->
-      <div class="col-lg-4" id="instructionsSection" style="display:none;">
+      <!-- Instructions Panel -->
+      <div class="col-lg-4" id="instructionsSection">
         <div class="akhu-card animate-slide-up">
           <h5 class="mb-3"><i class="bi bi-lightbulb-fill text-gold me-2"></i>{% trans "Instructions" %}</h5>
           <ul class="instructions-list mb-4">
