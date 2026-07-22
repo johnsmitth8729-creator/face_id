@@ -330,24 +330,25 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
             venue_conf = ExamVenueConfig.objects.filter(region=applicant.selected_region).first()
             if venue_conf and venue_conf.location_link:
                 import qrcode
-                from reportlab.platypus import Image as RLImage
                 import io
+                from reportlab.platypus import Image as RLImage
                 
                 qr = qrcode.QRCode(
-                    version=1,
-                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    version=3,
+                    error_correction=qrcode.constants.ERROR_CORRECT_M,
                     box_size=10,
-                    border=1,
+                    border=4,
                 )
                 qr.add_data(venue_conf.location_link)
                 qr.make(fit=True)
-                qr_img_pil = qr.make_image(fill_color='black', back_color='white')
+                qr_img_pil = qr.make_image(fill_color='#0A1628', back_color='white')
                 
                 qr_io = io.BytesIO()
                 qr_img_pil.save(qr_io, format='PNG')
                 qr_io.seek(0)
                 
-                location_qr_img = RLImage(qr_io, width=1.8*cm, height=1.8*cm)
+                # Match check-in QR code size exactly (96x96 points)
+                location_qr_img = RLImage(qr_io, width=96, height=96)
                 
                 location_text_style = ParagraphStyle(
                     'LocText', parent=styles['Normal'],
