@@ -6,10 +6,13 @@
   <div class="admin-content">
     <div class="admin-page-header mb-4">
       <div>
-        <h2 class="page-title">{% trans "Supervisor Management" %}</h2>
-        <p class="page-sub">{% trans "Create and manage supervisor accounts" %}</p>
+        <h2 class="page-title">{% trans "Supervisor & Staff Management" %}</h2>
+        <p class="page-sub">{% trans "Create and manage supervisor accounts and Exam Staff portal users" %}</p>
       </div>
       <div class="d-flex gap-2">
+        <button class="btn-akhu-outline" data-bs-toggle="modal" data-bs-target="#createExamStaffModal" style="border-color:var(--akhu-gold) !important; color:var(--akhu-gold) !important;">
+          <i class="bi bi-person-badge-fill me-2"></i>{% trans "Add Exam Staff" %}
+        </button>
         <button class="btn-akhu-outline" data-bs-toggle="modal" data-bs-target="#importSupervisorsModal">
           <i class="bi bi-file-earmark-excel-fill me-2"></i>{% trans "Import Supervisors" %}
         </button>
@@ -73,6 +76,53 @@
             </tr>
             {% empty %}
             <tr><td colspan="8" class="text-center py-4 text-muted">{% trans "No supervisors yet" %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Exam Staff Accounts -->
+    <div class="akhu-card mt-4">
+      <h5 class="mb-3"><i class="bi bi-person-lock me-2 text-gold"></i>{% trans "Exam Staff Accounts" %}</h5>
+      <div class="table-responsive">
+        <table class="akhu-table">
+          <thead>
+            <tr>
+              <th>{% trans "Username" %}</th>
+              <th>{% trans "Role" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Date Joined" %}</th>
+              <th style="width: 15%; text-align: center;">{% trans "Actions" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in exam_staff_users %}
+            <tr>
+              <td><strong>{{ staff.username }}</strong></td>
+              <td><span class="badge bg-secondary">{% trans "Exam Staff" %}</span></td>
+              <td>
+                {% if staff.is_active %}
+                  <span class="status-badge verified">{% trans "Active" %}</span>
+                {% else %}
+                  <span class="status-badge rejected">{% trans "Inactive" %}</span>
+                {% endif %}
+              </td>
+              <td>{{ staff.date_joined|date:"Y-m-d H:i" }}</td>
+              <td class="text-center">
+                <form method="post" class="d-inline" onsubmit="return confirm('Delete this exam staff user?')">
+                  {% csrf_token %}
+                  <input type="hidden" name="user_id" value="{{ staff.id }}">
+                  <input type="hidden" name="action" value="delete_exam_staff">
+                  <button type="submit" class="btn-sm text-danger"
+                    style="background:rgba(239,68,68,0.1);border:1px solid var(--akhu-danger);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">{% trans "No exam staff users created yet" %}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -221,6 +271,35 @@
           </div>
           <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
             <i class="bi bi-cloud-arrow-up-fill me-2"></i>{% trans "Upload and Parse" %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Exam Staff Modal -->
+<div class="modal fade" id="createExamStaffModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-xl);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">{% trans "Create Exam Staff User" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_exam_staff">
+          <div class="mb-3">
+            <label class="form-label">{% trans "Username" %}</label>
+            <input type="text" name="username" class="form-control" required placeholder="{% trans 'Username' %}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{% trans "Password" %}</label>
+            <input type="password" name="password" class="form-control" required minlength="8" placeholder="{% trans 'Password' %}">
+          </div>
+          <button type="submit" class="btn-akhu-primary w-100 justify-content-center">
+            <i class="bi bi-person-check-fill me-2"></i>{% trans "Create Exam Staff" %}
           </button>
         </form>
       </div>

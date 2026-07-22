@@ -252,9 +252,8 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
     ]))
 
     # Right column details table
-    exam_date_str = "—"
-    if applicant.exam_date:
-        exam_date_str = applicant.exam_date.strftime('%Y-%m-%d %H:%M')
+    arrival_time_str = applicant.arrival_time or "—"
+    exam_date_str = applicant.exam_date or "—"
 
     details_data = [
         [Paragraph("Applicant ID", label_style), Paragraph(applicant.applicant_id or "—", value_style)],
@@ -265,6 +264,7 @@ def generate_confirmation_pdf_stream(session, stream) -> bool:
         [Paragraph("Academic Program", label_style), Paragraph(applicant.program or "—", value_style)],
         [Paragraph("Exam Region", label_style), Paragraph(applicant.selected_region or "—", value_style)],
         [Paragraph("Exam Venue", label_style), Paragraph(applicant.exam_venue or "—", value_style)],
+        [Paragraph("Arrival Time", label_style), Paragraph(arrival_time_str, value_style)],
         [Paragraph("Exam Date & Time", label_style), Paragraph(exam_date_str, value_style)],
         [Paragraph("Biometric Match Score", label_style), Paragraph(f"{face_profile.match_percentage:.1f}% Verified" if face_profile.match_percentage else "Verified", value_style)],
     ]

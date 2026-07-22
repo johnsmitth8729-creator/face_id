@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block contact_banner %}{% endblock %}
+
+{% block content %}
+<div class="verification-layout" style="padding: 60px 0 100px;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5">
+        <div class="akhu-card animate-slide-up">
+          <div class="form-icon mx-auto mb-3" style="width:60px;height:60px;background:rgba(37,99,235,0.12);border:2px solid rgba(37,99,235,0.3);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--akhu-blue-light);"><i class="bi bi-person-badge-fill"></i></div>
+          
+          <h2 class="form-title text-center mb-2">
+            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+              Imtihon xodimlari portali
+            {% else %}
+              Exam Staff Portal
+            {% endif %}
+          </h2>
+          <p class="text-center text-muted small mb-4">
+            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+              Davomat va ruxsatnomalar bo'limiga kirish uchun hisobingizga kiring.
+            {% else %}
+              Sign in to access attendance and candidate permits modules.
+            {% endif %}
+          </p>
+
+          <!-- Messages -->
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-3" role="alert" style="font-size: 0.85rem;">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label text-muted small">{% trans "Username" %}</label>
+              <input type="text" name="username" class="form-control" required placeholder="{% trans 'Enter username' %}" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08); color:white;">
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label text-muted small">{% trans "Password" %}</label>
+              <input type="password" name="password" class="form-control" required placeholder="{% trans 'Enter password' %}" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08); color:white;">
+            </div>
+
+            <button type="submit" class="btn-akhu w-100 py-3" style="font-weight:700;">
+              <i class="bi bi-box-arrow-in-right me-2"></i>
+              {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                Tizimga kirish
+              {% else %}
+                Login
+              {% endif %}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-icon { width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-lg); }
+.form-title { font-size:1.5rem;font-weight:800; }
+</style>
+{% endblock %}

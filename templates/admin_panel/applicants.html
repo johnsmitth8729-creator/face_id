@@ -143,7 +143,8 @@
                               data-program="{{ applicant.program }}"
                               data-region="{{ applicant.selected_region }}"
                               data-exam-venue="{{ applicant.exam_venue }}"
-                              data-exam-date="{{ applicant.exam_date|date:'Y-m-d\TH:i' }}"
+                              data-exam-date="{{ applicant.exam_date|default:'' }}"
+                              data-arrival-time="{{ applicant.arrival_time|default:'' }}"
                               data-locked="{% if applicant.is_locked %}1{% else %}0{% endif %}"
                               data-active="{% if applicant.user.is_active %}1{% else %}0{% endif %}"
                               data-bs-toggle="modal"
@@ -669,8 +670,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="text" name="exam_venue" id="editExamVenue" class="form-control">
               </div>
               <div class="col-md-4">
+                <label class="form-label">{% trans "Arrival Time" %}</label>
+                <input type="text" name="arrival_time" id="editArrivalTime" class="form-control">
+              </div>
+              <div class="col-md-4">
                 <label class="form-label">{% trans "Exam Date & Time" %}</label>
-                <input type="datetime-local" name="exam_date" id="editExamDate" class="form-control">
+                <input type="text" name="exam_date" id="editExamDate" class="form-control">
               </div>
             </div>
           </div>
@@ -829,6 +834,7 @@ document.addEventListener('DOMContentLoaded', function () {
       setValue('editRegion', 'data-region');
       setValue('editExamVenue', 'data-exam-venue');
       setValue('editExamDate', 'data-exam-date');
+      setValue('editArrivalTime', 'data-arrival-time');
 
       document.getElementById('editIsLocked').checked = button.getAttribute('data-locked') === '1';
       document.getElementById('editUserIsActive').checked = button.getAttribute('data-active') === '1';

@@ -13,6 +13,7 @@ class UserRole(models.TextChoices):
     APPLICANT = 'applicant', _('Applicant')
     SUPERVISOR = 'supervisor', _('Supervisor')
     ADMIN = 'admin', _('Administrator')
+    EXAM_STAFF = 'exam_staff', _('Exam Staff')
 
 
 class CustomUserManager(BaseUserManager):
@@ -79,6 +80,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.role == UserRole.SUPERVISOR
 
     @property
+    def is_exam_staff(self):
+        return self.role == UserRole.EXAM_STAFF
+
+    @property
     def is_admin_user(self):
         return self.role == UserRole.ADMIN
 
@@ -117,7 +122,8 @@ class ApplicantProfile(models.Model):
     program = models.CharField(_('Program'), max_length=200, blank=True)
     selected_region = models.CharField(_('Selected Region'), max_length=100, blank=True)
     exam_venue = models.CharField(_('Exam Venue'), max_length=500, blank=True)
-    exam_date = models.DateTimeField(_('Exam Date & Time'), null=True, blank=True)
+    arrival_time = models.CharField(_('Arrival Time'), max_length=150, blank=True, default='')
+    exam_date = models.CharField(_('Exam Date & Time'), max_length=150, blank=True, default='')
     passport_image = models.ImageField(_('Passport / ID Image'), upload_to='passports/%Y/%m/', null=True, blank=True)
 
     # Metadata
@@ -249,11 +255,13 @@ def finalize_verification_success(profile):
                     venue_conf = ExamVenueConfig.objects.get(region=profile.selected_region)
                     profile.exam_venue = venue_conf.venue_name
                     profile.exam_date = venue_conf.exam_date
+                    profile.arrival_time = venue_conf.arrival_time
                 except ExamVenueConfig.DoesNotExist:
                     pass
         else:
             profile.exam_venue = ""
-            profile.exam_date = None
+            profile.exam_date = ""
+            profile.arrival_time = ""
 
         profile.admission_id = next_id
         profile.is_locked = True
@@ -286,7 +294,8 @@ class ExamVenueConfig(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     region = models.CharField(_('Region'), max_length=100, unique=True)
     venue_name = models.CharField(_('Venue Name'), max_length=500, blank=True)
-    exam_date = models.DateTimeField(_('Exam Date & Time'), null=True, blank=True)
+    arrival_time = models.CharField(_('Arrival Time'), max_length=150, blank=True, default='')
+    exam_date = models.CharField(_('Exam Date & Time'), max_length=150, blank=True, default='')
     location_link = models.CharField(_('Location Link'), max_length=1000, blank=True)
 
     class Meta:

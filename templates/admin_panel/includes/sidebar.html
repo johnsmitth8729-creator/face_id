@@ -9,32 +9,39 @@
     </div>
   </div>
 
+  {% if not request.user.role == 'exam_staff' %}
   <div class="sidebar-section">
     <div class="sidebar-section-title">{% trans "Overview" %}</div>
     <a href="{% url 'admin_panel:dashboard' %}" class="sidebar-link {% if active == 'dashboard' %}active{% endif %}">
       <i class="bi bi-grid-1x2-fill"></i>{% trans "Dashboard" %}
     </a>
   </div>
+  {% endif %}
 
   <div class="sidebar-section">
     <div class="sidebar-section-title">{% trans "Verification" %}</div>
+    {% if not request.user.role == 'exam_staff' %}
     <a href="{% url 'admin_panel:applicants' %}" class="sidebar-link {% if active == 'applicants' %}active{% endif %}">
       <i class="bi bi-people-fill"></i>{% trans "Applicants" %}
     </a>
     <a href="{% url 'admin_panel:qr-management' %}" class="sidebar-link {% if active == 'qr' %}active{% endif %}">
       <i class="bi bi-qr-code"></i>{% trans "QR Codes" %}
     </a>
+    {% endif %}
     <a href="{% url 'admin_panel:permits' %}" class="sidebar-link {% if active == 'permits' %}active{% endif %}">
       <i class="bi bi-file-earmark-pdf-fill"></i>{% trans "Permits" %}
     </a>
+    {% if not request.user.role == 'exam_staff' %}
     <a href="{% url 'admin_panel:liveness-biometrics' %}" class="sidebar-link {% if active == 'liveness' %}active{% endif %}">
       <i class="bi bi-person-bounding-box"></i>{% trans "Liveness Biometrics" %}
     </a>
+    {% endif %}
     <a href="{% url 'admin_panel:attendance' %}" class="sidebar-link {% if active == 'attendance' %}active{% endif %}">
       <i class="bi bi-clipboard-check-fill"></i>{% trans "Attendance" %}
     </a>
   </div>
 
+  {% if not request.user.role == 'exam_staff' %}
   <div class="sidebar-section">
     <div class="sidebar-section-title">{% trans "Administration" %}</div>
     <a href="{% url 'admin_panel:supervisors' %}" class="sidebar-link {% if active == 'supervisors' %}active{% endif %}">
@@ -54,6 +61,7 @@
       <i class="bi bi-gear-fill"></i>{% trans "System Settings" %}
     </a>
   </div>
+  {% endif %}
 
   <div class="sidebar-section mt-auto">
     <a href="{% url 'admin_panel:logout' %}" class="sidebar-link" style="color:var(--akhu-danger)">

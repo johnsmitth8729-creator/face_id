@@ -126,11 +126,25 @@ def _admin_required(view_func):
 
 
 def admin_required_class(cls):
-    """Class-based decorator for admin auth."""
+    """Class-based decorator for admin auth. Also allows exam_staff role for allowed views."""
     original_dispatch = cls.dispatch
 
     def new_dispatch(self, request, *args, **kwargs):
-        if not request.session.get(ADMIN_SESSION_KEY):
+        allowed_classes = [
+            'PermitsManagementView', 
+            'DownloadAllPermitsZipView', 
+            'AttendanceManagementView', 
+            'AttendanceExportExcelView'
+        ]
+        class_name = self.__class__.__name__
+        
+        is_exam_staff_authorized = (
+            request.user.is_authenticated 
+            and request.user.role == 'exam_staff' 
+            and class_name in allowed_classes
+        )
+        
+        if not request.session.get(ADMIN_SESSION_KEY) and not is_exam_staff_authorized:
             return redirect(settings.ADMIN_PANEL_LOGIN_URL)
         return original_dispatch(self, request, *args, **kwargs)
 
@@ -320,10 +334,8 @@ class ApplicantListView(View):
             from django.utils.timezone import make_aware, is_naive
 
             date_of_birth = parse_date(request.POST.get('date_of_birth', '').strip()) if request.POST.get('date_of_birth') else None
-            exam_date_raw = request.POST.get('exam_date', '').strip()
-            exam_date = parse_datetime(exam_date_raw) if exam_date_raw else None
-            if exam_date and settings.USE_TZ and is_naive(exam_date):
-                exam_date = make_aware(exam_date)
+            exam_date = request.POST.get('exam_date', '').strip()
+            arrival_time = request.POST.get('arrival_time', '').strip()
 
             profile.first_name = first_name
             profile.last_name = last_name
@@ -339,6 +351,7 @@ class ApplicantListView(View):
             profile.selected_region = request.POST.get('selected_region', '').strip()
             profile.exam_venue = request.POST.get('exam_venue', '').strip()
             profile.exam_date = exam_date
+            profile.arrival_time = arrival_time
             profile.is_locked = bool(request.POST.get('is_locked'))
             profile.save()
 
@@ -970,14 +983,19 @@ class SupervisorManagementView(View):
         else:
             activity_logs = activity_logs[:50]
 
+        from apps.accounts.models import UserRole
+        exam_staff_users = CustomUser.objects.filter(role=UserRole.EXAM_STAFF).order_by('-date_joined')
+
         return render(request, self.template_name, {
-            'page_title': _('Supervisor Management'),
+            'page_title': _('Supervisor & Staff Management'),
             'supervisors': supervisors,
+            'exam_staff_users': exam_staff_users,
             'activity_logs': activity_logs,
             'log_q': log_q,
         })
 
     def post(self, request):
+        from apps.accounts.models import UserRole
         action = request.POST.get('action')
 
         if action == 'create':
@@ -1009,6 +1027,44 @@ class SupervisorManagementView(View):
                 ip_address=request.META.get('REMOTE_ADDR'),
             )
             messages.success(request, _(f'Supervisor {username} created'))
+
+        elif action == 'create_exam_staff':
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '').strip()
+
+            if not username or not password:
+                messages.error(request, _('Username and password are required'))
+                return redirect('admin_panel:supervisors')
+
+            if CustomUser.objects.filter(username=username).exists():
+                messages.error(request, _('Username already exists'))
+                return redirect('admin_panel:supervisors')
+
+            user = CustomUser.objects.create_user(
+                username=username,
+                password=password,
+                role=UserRole.EXAM_STAFF,
+                is_staff=False,
+                is_superuser=False
+            )
+            AuditLog.objects.create(
+                username_snapshot=request.session.get('admin_username', 'admin'),
+                user_role_snapshot='admin',
+                category='admin',
+                action=f'Created exam staff user: {username}',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+            messages.success(request, _(f'Exam Staff user "{username}" created successfully.'))
+
+        elif action == 'delete_exam_staff':
+            user_id = request.POST.get('user_id')
+            try:
+                user = CustomUser.objects.get(id=user_id, role=UserRole.EXAM_STAFF)
+                username = user.username
+                user.delete()
+                messages.success(request, _(f'Exam Staff user "{username}" deleted successfully.'))
+            except CustomUser.DoesNotExist:
+                messages.error(request, _('Exam Staff user not found.'))
 
         elif action == 'deactivate':
             sup_id = request.POST.get('supervisor_id')
@@ -1449,6 +1505,7 @@ class SystemSettingsView(View):
             region_name = request.POST.get('region_name', '').strip()
             venue_name = request.POST.get('venue_name', '').strip()
             exam_date_str = request.POST.get('exam_date', '').strip()
+            arrival_time_str = request.POST.get('arrival_time', '').strip()
             location_link = request.POST.get('location_link', '').strip()
 
             if not region_name:
@@ -1460,18 +1517,11 @@ class SystemSettingsView(View):
                 return redirect('admin_panel:settings')
 
             try:
-                from django.utils.dateparse import parse_datetime
-                from django.utils.timezone import make_aware
-                exam_date = None
-                if exam_date_str:
-                    dt = parse_datetime(exam_date_str)
-                    if dt:
-                        exam_date = make_aware(dt) if settings.USE_TZ else dt
-
                 ExamVenueConfig.objects.create(
                     region=region_name,
                     venue_name=venue_name,
-                    exam_date=exam_date,
+                    exam_date=exam_date_str,
+                    arrival_time=arrival_time_str,
                     location_link=location_link
                 )
                 messages.success(request, _('Region "{name}" created successfully.').format(name=region_name))
@@ -1523,6 +1573,7 @@ class SystemSettingsView(View):
                         new_region = request.POST.get(f'region_name_{venue.id}', '').strip()
                         venue_name = request.POST.get(f'venue_{venue.id}', '').strip()
                         exam_date_str = request.POST.get(f'date_{venue.id}', '').strip()
+                        arrival_time_str = request.POST.get(f'arrival_{venue.id}', '').strip()
                         location_link = request.POST.get(f'location_link_{venue.id}', '').strip()
                         
                         if new_region and new_region != old_region:
@@ -1535,19 +1586,8 @@ class SystemSettingsView(View):
 
                         venue.venue_name = venue_name
                         venue.location_link = location_link
-                        if exam_date_str:
-                            try:
-                                from django.utils.dateparse import parse_datetime
-                                from django.utils.timezone import make_aware
-                                dt = parse_datetime(exam_date_str)
-                                if dt:
-                                    venue.exam_date = make_aware(dt) if settings.USE_TZ else dt
-                                else:
-                                    venue.exam_date = None
-                            except Exception:
-                                venue.exam_date = None
-                        else:
-                            venue.exam_date = None
+                        venue.exam_date = exam_date_str
+                        venue.arrival_time = arrival_time_str
                         venue.save()
                     
                     # 3. Synchronize verified candidates
@@ -1574,19 +1614,25 @@ class SystemSettingsView(View):
                                 if profile.exam_date != conf.exam_date:
                                     profile.exam_date = conf.exam_date
                                     changed = True
+                                if profile.arrival_time != conf.arrival_time:
+                                    profile.arrival_time = conf.arrival_time
+                                    changed = True
                         else:
                             if profile.exam_venue != "":
                                 profile.exam_venue = ""
                                 changed = True
-                            if profile.exam_date is not None:
-                                profile.exam_date = None
+                            if profile.exam_date != "":
+                                profile.exam_date = ""
+                                changed = True
+                            if profile.arrival_time != "":
+                                profile.arrival_time = ""
                                 changed = True
                                 
                         if changed:
                             updated_profiles.append(profile)
 
                     if updated_profiles:
-                        ApplicantProfile.objects.bulk_update(updated_profiles, ['exam_venue', 'exam_date'])
+                        ApplicantProfile.objects.bulk_update(updated_profiles, ['exam_venue', 'exam_date', 'arrival_time'])
                         
                     logger.info(f"Permit Release: synchronized {len(updated_profiles)} candidate profiles in database.")
 

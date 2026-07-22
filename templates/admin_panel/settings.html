@@ -78,9 +78,10 @@
               <table class="akhu-table align-middle">
                 <thead>
                   <tr>
-                    <th style="width: 20%;">{% trans "Region" %}</th>
-                    <th style="width: 30%;">{% trans "Exam Venue / Address" %}</th>
-                    <th style="width: 25%;">{% trans "Location Link (Google Maps)" %}</th>
+                    <th style="width: 15%;">{% trans "Region" %}</th>
+                    <th style="width: 25%;">{% trans "Exam Venue / Address" %}</th>
+                    <th style="width: 20%;">{% trans "Location Link (Google Maps)" %}</th>
+                    <th style="width: 15%;">{% trans "Arrival Time" %}</th>
                     <th style="width: 15%;">{% trans "Exam Date & Time" %}</th>
                     <th style="width: 10%; text-align: center;">{% trans "Actions" %}</th>
                   </tr>
@@ -98,7 +99,10 @@
                         <input type="url" class="form-control form-control-sm" name="location_link_{{ venue.id }}" value="{{ venue.location_link|default:'' }}" placeholder="{% trans 'Google Maps URL' %}">
                       </td>
                       <td>
-                        <input type="datetime-local" class="form-control form-control-sm" name="date_{{ venue.id }}" value="{{ venue.exam_date|date:'Y-m-d\TH:i' }}">
+                        <input type="text" class="form-control form-control-sm" name="arrival_{{ venue.id }}" value="{{ venue.arrival_time|default:'' }}" placeholder="{% trans 'e.g. 08:30' %}">
+                      </td>
+                      <td>
+                        <input type="text" class="form-control form-control-sm" name="date_{{ venue.id }}" value="{{ venue.exam_date|default:'' }}" placeholder="{% trans 'e.g. 09:00' %}">
                       </td>
                       <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteRegion('{{ venue.id }}', '{{ venue.region|escapejs }}')">
@@ -153,8 +157,12 @@
             <input type="url" name="location_link" class="form-control text-white bg-dark border-secondary" placeholder="https://maps.google.com/...">
           </div>
           <div class="mb-3">
+            <label class="form-label text-muted">{% trans "Arrival Time" %}</label>
+            <input type="text" name="arrival_time" class="form-control text-white bg-dark border-secondary" placeholder="{% trans 'e.g. 08:30' %}">
+          </div>
+          <div class="mb-3">
             <label class="form-label text-muted">{% trans "Exam Date & Time" %}</label>
-            <input type="datetime-local" name="exam_date" class="form-control text-white bg-dark border-secondary">
+            <input type="text" name="exam_date" class="form-control text-white bg-dark border-secondary" placeholder="{% trans 'e.g. 09:00' %}">
           </div>
           <button type="submit" class="btn btn-gold w-100 justify-content-center mt-3">
             <i class="bi bi-plus-circle-fill me-2"></i>{% trans "Create Region" %}

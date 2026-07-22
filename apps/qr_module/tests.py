@@ -20,7 +20,8 @@ class QRAndPermitReleaseTestCase(TransactionTestCase):
         self.venue_config = ExamVenueConfig.objects.create(
             region='Tashkent',
             venue_name='AKHU Main Campus Building A',
-            exam_date=timezone.now() + timezone.timedelta(days=10)
+            arrival_time='2026-07-24 08:30',
+            exam_date='2026-07-24 09:00'
         )
 
         # 3. Create a CustomUser and ApplicantProfile
@@ -73,7 +74,8 @@ class QRAndPermitReleaseTestCase(TransactionTestCase):
         
         # But exam info & QR code must remain empty
         self.assertEqual(self.profile.exam_venue, "")
-        self.assertIsNone(self.profile.exam_date)
+        self.assertEqual(self.profile.exam_date, "")
+        self.assertEqual(self.profile.arrival_time, "")
         self.assertFalse(QRCode.objects.filter(applicant_profile=self.profile).exists())
 
     def test_permit_release_on_flow(self):
@@ -86,7 +88,8 @@ class QRAndPermitReleaseTestCase(TransactionTestCase):
         # Profile must be updated with regional venue/date & QR generated
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.exam_venue, self.venue_config.venue_name)
-        self.assertIsNotNone(self.profile.exam_date)
+        self.assertEqual(self.profile.exam_date, self.venue_config.exam_date)
+        self.assertEqual(self.profile.arrival_time, self.venue_config.arrival_time)
         self.assertTrue(QRCode.objects.filter(applicant_profile=self.profile).exists())
 
     def test_pdf_generation_without_qr_raises_error(self):
@@ -101,7 +104,8 @@ class QRAndPermitReleaseTestCase(TransactionTestCase):
         finalize_verification_success(self.profile)
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.exam_venue, "")
-        self.assertIsNone(self.profile.exam_date)
+        self.assertEqual(self.profile.exam_date, "")
+        self.assertEqual(self.profile.arrival_time, "")
         self.assertFalse(QRCode.objects.filter(applicant_profile=self.profile).exists())
 
         # 2. Simulate logged-in admin session
@@ -116,13 +120,16 @@ class QRAndPermitReleaseTestCase(TransactionTestCase):
         response = self.client.post(url, {
             'qr_domain': 'id.akhu.uz',
             'permits_released': 'on',
+            f'region_name_{self.venue_config.id}': self.venue_config.region,
             f'venue_{self.venue_config.id}': self.venue_config.venue_name,
-            f'date_{self.venue_config.id}': self.venue_config.exam_date.strftime('%Y-%m-%dT%H:%M'),
+            f'arrival_{self.venue_config.id}': self.venue_config.arrival_time,
+            f'date_{self.venue_config.id}': self.venue_config.exam_date,
         })
         self.assertEqual(response.status_code, 302)  # redirects to settings page
         
         # 4. Check that candidate profile was synchronized and QR generated
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.exam_venue, self.venue_config.venue_name)
-        self.assertIsNotNone(self.profile.exam_date)
+        self.assertEqual(self.profile.exam_date, self.venue_config.exam_date)
+        self.assertEqual(self.profile.arrival_time, self.venue_config.arrival_time)
         self.assertTrue(QRCode.objects.filter(applicant_profile=self.profile).exists())

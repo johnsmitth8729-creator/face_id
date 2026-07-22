@@ -13,4 +13,7 @@ urlpatterns = [
     path('step/3/', views.Step4LivenessView.as_view(), name='step3'),
     path('result/', views.Step5ResultView.as_view(), name='result'),
     path('download/<uuid:session_id>/', views.DownloadConfirmationView.as_view(), name='download'),
+    path('exam/', views.ExamPortalView.as_view(), name='exam-portal'),
+    path('exam/login/', views.ExamLoginView.as_view(), name='exam-login'),
+    path('exam/logout/', views.ExamLogoutView.as_view(), name='exam-logout'),
 ]

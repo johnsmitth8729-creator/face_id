@@ -410,3 +410,57 @@ def custom_handler404(request, exception=None):
 
 def custom_handler500(request):
     return render(request, '500.html', status=500)
+
+
+from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
+from apps.accounts.models import UserRole
+
+class ExamPortalView(View):
+    """Dashboard view for Exam Staff."""
+    template_name = 'public/exam_portal.html'
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.role != UserRole.EXAM_STAFF:
+            return redirect('verification:exam-login')
+        return render(request, self.template_name, {
+            'page_title': _('Exam Portal Dashboard'),
+        })
+
+
+class ExamLoginView(View):
+    """Login view for Exam Staff."""
+    template_name = 'public/exam_login.html'
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.role == UserRole.EXAM_STAFF:
+            return redirect('verification:exam-portal')
+        return render(request, self.template_name, {
+            'page_title': _('Exam Staff Login'),
+        })
+
+    def post(self, request, *args, **kwargs):
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        if not username or not password:
+            messages.error(request, _('Please enter both username and password.'))
+            return render(request, self.template_name, {'page_title': _('Exam Staff Login')})
+
+        user = authenticate(username=username, password=password)
+        if user is not None and user.role == UserRole.EXAM_STAFF:
+            if user.is_active:
+                auth_login(request, user)
+                return redirect('verification:exam-portal')
+            else:
+                messages.error(request, _('Your account is currently inactive.'))
+        else:
+            messages.error(request, _('Invalid username or password.'))
+
+        return render(request, self.template_name, {'page_title': _('Exam Staff Login')})
+
+
+class ExamLogoutView(View):
+    """Logout view for Exam Staff."""
+    def get(self, request, *args, **kwargs):
+        auth_logout(request)
+        return redirect('verification:exam-login')

@@ -1,0 +1,102 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+
+{% block contact_banner %}{% endblock %}
+
+{% block content %}
+<div class="verification-layout" style="padding: 60px 0 100px;">
+  <div class="container">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-8">
+        <div class="akhu-card animate-slide-up p-5">
+          <div class="form-icon mx-auto mb-4" style="width:70px;height:70px;background:rgba(245,158,11,0.12);border:2px solid rgba(245,158,11,0.3);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--akhu-gold);"><i class="bi bi-shield-lock-fill"></i></div>
+          
+          <h2 class="form-title mb-2">
+            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+              Imtihon xodimlari boshqaruv paneli
+            {% else %}
+              Exam Staff Dashboard
+            {% endif %}
+          </h2>
+          <p class="text-muted small mb-5">
+            {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+              Xush kelibsiz, {{ request.user.username }}. Davom etish uchun bo'limlardan birini tanlang.
+            {% else %}
+              Welcome, {{ request.user.username }}. Choose one of the modules below to proceed.
+            {% endif %}
+          </p>
+
+          <div class="row g-4 justify-content-center">
+            <!-- Attendance Card -->
+            <div class="col-md-6">
+              <a href="{% url 'admin_panel:attendance' %}" class="card-link-wrapper" style="text-decoration: none;">
+                <div class="portal-module-card p-4 border rounded text-center" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08); transition: all 0.25s ease-in-out; cursor:pointer;">
+                  <div class="mb-3 text-success" style="font-size: 2.2rem;"><i class="bi bi-clipboard-check-fill"></i></div>
+                  <h4 class="text-white fw-bold mb-2">
+                    {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                      Imtihon davomati
+                    {% else %}
+                      Exam Attendance
+                    {% endif %}
+                  </h4>
+                  <p class="text-muted small mb-0">
+                    {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                      Imtihonga kirgan nomzodlar davomatini ko'rish va hisobotlarni yuklab olish.
+                    {% else %}
+                      View applicant entry logs, supervisor actions, and download Excel attendance reports.
+                    {% endif %}
+                  </p>
+                </div>
+              </a>
+            </div>
+
+            <!-- Permits Card -->
+            <div class="col-md-6">
+              <a href="{% url 'admin_panel:permits' %}" class="card-link-wrapper" style="text-decoration: none;">
+                <div class="portal-module-card p-4 border rounded text-center" style="background:rgba(255,255,255,0.02); border-color:rgba(255,255,255,0.08); transition: all 0.25s ease-in-out; cursor:pointer;">
+                  <div class="mb-3 text-warning" style="font-size: 2.2rem; color: var(--akhu-gold) !important;"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+                  <h4 class="text-white fw-bold mb-2">
+                    {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                      Ruxsatnomalar boshqaruvi
+                    {% else %}
+                      Permits Management
+                    {% endif %}
+                  </h4>
+                  <p class="text-muted small mb-0">
+                    {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                      Tasdiqlangan nomzodlarning ruxsatnomalarini ko'rish va ommaviy yuklab olish.
+                    {% else %}
+                      Manage, view, and bulk-download generated PDF admission permits for verified candidates.
+                    {% endif %}
+                  </p>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <div class="mt-5 border-top pt-4" style="border-color: rgba(255,255,255,0.08) !important;">
+            <a href="{% url 'verification:exam-logout' %}" class="btn btn-outline-danger px-4 py-2" style="font-size: 0.9rem; font-weight: 600;">
+              <i class="bi bi-box-arrow-left me-2"></i>
+              {% if request.LANGUAGE_CODE|slice:":2" == "uz" %}
+                Tizimdan chiqish
+              {% else %}
+                Logout
+              {% endif %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-icon { width:70px;height:70px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-lg); }
+.form-title { font-size:1.8rem;font-weight:800; }
+.portal-module-card:hover {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: var(--akhu-gold) !important;
+  transform: translateY(-4px);
+}
+</style>
+{% endblock %}
