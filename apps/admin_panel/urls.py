@@ -23,4 +23,6 @@ urlpatterns = [
     path('audit/export-excel/', views.AuditLogsExportExcelView.as_view(), name='audit-logs-export-excel'),
     path('settings/', views.SystemSettingsView.as_view(), name='settings'),
     path('reports/', views.ReportsView.as_view(), name='reports'),
+    path('statistics/', views.StatisticsView.as_view(), name='statistics'),
+    path('statistics/export-excel/', views.StatisticsExportExcelView.as_view(), name='statistics-export-excel'),
 ]

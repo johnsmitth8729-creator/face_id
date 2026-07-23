@@ -11,6 +11,8 @@ urlpatterns = [
     path('logout/', views.SupervisorLogoutView.as_view(), name='logout'),
     path('verify/', views.ExamVerifyView.as_view(), name='exam-verify-auto'),
     path('verify/<uuid:profile_id>/', views.ExamVerifyView.as_view(), name='exam-verify'),
+    path('permits/', views.SupervisorPermitsView.as_view(), name='permits'),
+    path('permits/download/<uuid:profile_id>/', views.SupervisorPermitDownloadView.as_view(), name='permit-download'),
     path('history/<uuid:profile_id>/', views.ApplicantHistoryView.as_view(), name='history'),
     # API endpoints (also accessible here for cleaner routing)
     path('api/qr-lookup/', api.SupervisorQRLookupAPI.as_view(), name='api-qr-lookup'),

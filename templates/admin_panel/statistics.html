@@ -1,0 +1,393 @@
+{% extends "base/base.html" %}
+{% load i18n static %}
+{% block content %}
+<div class="admin-layout">
+  {% include "admin_panel/includes/sidebar.html" with active="statistics" %}
+  <div class="admin-content">
+    
+    <!-- Top Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <h2 class="page-title d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-line-fill text-gold"></i>
+          {% trans "Verification Statistics" %}
+        </h2>
+        <p class="page-sub">{% trans "Real-time analytics and regional breakdown of Face ID verifications" %}</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="live-status-pill">
+          <span class="live-pulse"></span>
+          <span class="small fw-bold">REAL-TIME LIVE</span>
+        </div>
+        <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="window.location.reload()">
+          <i class="bi bi-arrow-clockwise me-1"></i>{% trans "Refresh" %}
+        </button>
+        <a href="{% url 'admin_panel:statistics-export-excel' %}" class="btn btn-gold btn-sm rounded-pill px-3 fw-bold">
+          <i class="bi bi-file-earmark-excel-fill me-1"></i>{% trans "Export Excel" %}
+        </a>
+      </div>
+    </div>
+
+    <!-- 4 KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="akhu-card stat-kpi-card">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-label">{% trans "Total Candidates" %}</span>
+            <div class="kpi-icon blue"><i class="bi bi-people-fill"></i></div>
+          </div>
+          <div class="kpi-value">{{ total_applicants }}</div>
+          <div class="kpi-foot text-muted"><i class="bi bi-person-lines-fill me-1"></i>{% trans "Registered Profiles" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="akhu-card stat-kpi-card">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-label">{% trans "Face ID Verified" %}</span>
+            <div class="kpi-icon success"><i class="bi bi-shield-check"></i></div>
+          </div>
+          <div class="kpi-value text-success">{{ verified_count }}</div>
+          <div class="kpi-foot text-success"><i class="bi bi-check-circle-fill me-1"></i>{% trans "Passed Face ID" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="akhu-card stat-kpi-card">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-label">{% trans "Pending Verification" %}</span>
+            <div class="kpi-icon warning"><i class="bi bi-hourglass-split"></i></div>
+          </div>
+          <div class="kpi-value text-warning">{{ pending_count }}</div>
+          <div class="kpi-foot text-warning"><i class="bi bi-clock-history me-1"></i>{% trans "Awaiting Face ID" %}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="akhu-card stat-kpi-card">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="kpi-label">{% trans "Overall Pass Rate" %}</span>
+            <div class="kpi-icon purple"><i class="bi bi-pie-chart-fill"></i></div>
+          </div>
+          <div class="kpi-value text-purple">{{ pass_rate }}%</div>
+          <div class="kpi-foot text-purple"><i class="bi bi-graph-up-arrow me-1"></i>{% trans "Completion Rate" %}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8">
+        <div class="akhu-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-section-title mb-0">
+              <i class="bi bi-bar-chart-fill me-2 text-gold"></i>{% trans "Regional Comparison (Verified vs Pending)" %}
+            </h5>
+          </div>
+          <div style="height: 280px; position: relative;">
+            <canvas id="regionalBarChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="akhu-card h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-section-title mb-0">
+              <i class="bi bi-pie-chart-fill me-2 text-gold"></i>{% trans "Overall Distribution" %}
+            </h5>
+          </div>
+          <div style="height: 240px; position: relative;" class="d-flex align-items-center justify-content-center">
+            <canvas id="statusDonutChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Regional Statistics Table -->
+    <div class="akhu-card mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h5 class="card-section-title mb-1">
+            <i class="bi bi-geo-alt-fill me-2 text-gold"></i>{% trans "Statistics by Regions (Xududlar kesimida)" %}
+          </h5>
+          <p class="text-muted small mb-0">{% trans "Detailed verification progress breakdown across all examination regions" %}</p>
+        </div>
+        <div class="d-flex gap-2">
+          <input type="text" id="regionTableSearch" class="form-control form-control-sm text-white bg-dark border-secondary" style="width: 220px;" placeholder="{% trans 'Search region...' %}" onkeyup="filterRegionTable()">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="akhu-table align-middle" id="regionStatsTable">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>{% trans "Region / Location" %}</th>
+              <th class="text-center">{% trans "Total Candidates" %}</th>
+              <th class="text-center">{% trans "Face ID Verified" %}</th>
+              <th class="text-center">{% trans "Pending Verification" %}</th>
+              <th style="width: 220px;" class="text-center">{% trans "Pass Rate (%)" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in region_stats %}
+              <tr>
+                <td class="text-muted">{{ forloop.counter }}</td>
+                <td class="fw-bold text-white">
+                  <i class="bi bi-geo-alt me-2 text-gold"></i>{{ item.region }}
+                </td>
+                <td class="text-center font-monospace fw-bold fs-6">{{ item.total }}</td>
+                <td class="text-center">
+                  <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 border border-success border-opacity-25 rounded-pill font-monospace">
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ item.verified }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-warning bg-opacity-25 text-warning px-3 py-2 border border-warning border-opacity-25 rounded-pill font-monospace">
+                    <i class="bi bi-hourglass-split me-1"></i>{{ item.pending }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 10px;">
+                      <div class="progress-bar bg-gold" role="progressbar" style="width: {{ item.pass_rate }}%; border-radius: 10px;" aria-valuenow="{{ item.pass_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span class="fw-bold font-monospace text-gold small" style="min-width: 48px;">{{ item.pass_rate }}%</span>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">
+                  <i class="bi bi-inbox fs-3 d-block mb-2"></i>{% trans "No regional statistics recorded yet." %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="border-top border-secondary">
+            <tr class="fw-bold bg-dark bg-opacity-50 text-gold">
+              <td></td>
+              <td>{% trans "TOTAL / JAMI" %}</td>
+              <td class="text-center font-monospace fs-6">{{ total_applicants }}</td>
+              <td class="text-center text-success font-monospace fs-6">{{ verified_count }}</td>
+              <td class="text-center text-warning font-monospace fs-6">{{ pending_count }}</td>
+              <td class="text-center font-monospace fs-6">{{ pass_rate }}%</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Program Breakdown Table -->
+    {% if program_stats %}
+    <div class="akhu-card">
+      <div class="mb-3">
+        <h5 class="card-section-title mb-1">
+          <i class="bi bi-journal-bookmark-fill me-2 text-gold"></i>{% trans "Statistics by Programs / Specialties" %}
+        </h5>
+        <p class="text-muted small mb-0">{% trans "Verification breakdown grouped by study program" %}</p>
+      </div>
+
+      <div class="table-responsive">
+        <table class="akhu-table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>{% trans "Program / Specialty" %}</th>
+              <th class="text-center">{% trans "Total Candidates" %}</th>
+              <th class="text-center">{% trans "Verified" %}</th>
+              <th class="text-center">{% trans "Pending" %}</th>
+              <th style="width: 200px;" class="text-center">{% trans "Pass Rate (%)" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prog in program_stats %}
+              <tr>
+                <td class="text-muted">{{ forloop.counter }}</td>
+                <td class="fw-bold text-white"><i class="bi bi-mortarboard me-2 text-secondary"></i>{{ prog.program }}</td>
+                <td class="text-center font-monospace">{{ prog.total }}</td>
+                <td class="text-center text-success font-monospace fw-bold">{{ prog.verified }}</td>
+                <td class="text-center text-warning font-monospace">{{ prog.pending }}</td>
+                <td class="text-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height: 6px; background: rgba(255,255,255,0.08);">
+                      <div class="progress-bar bg-success" style="width: {{ prog.pass_rate }}%;"></div>
+                    </div>
+                    <span class="small font-monospace text-gold">{{ prog.pass_rate }}%</span>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Filter region table
+function filterRegionTable() {
+  const input = document.getElementById('regionTableSearch');
+  const filter = input.value.toLowerCase();
+  const table = document.getElementById('regionStatsTable');
+  const trs = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+  for (let i = 0; i < trs.length; i++) {
+    const td = trs[i].getElementsByTagName('td')[1];
+    if (td) {
+      const txtValue = td.textContent || td.innerText;
+      if (txtValue.toLowerCase().indexOf(filter) > -1) {
+        trs[i].style.display = "";
+      } else {
+        trs[i].style.display = "none";
+      }
+    }
+  }
+}
+
+// Chart.js initialization
+document.addEventListener("DOMContentLoaded", function () {
+  // Region Data JSON from Django Context
+  const regionLabels = [{% for r in region_stats %}"{{ r.region|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+  const regionVerified = [{% for r in region_stats %}{{ r.verified }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+  const regionPending = [{% for r in region_stats %}{{ r.pending }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+  // 1. Bar Chart (Regional Breakdown)
+  const ctxBar = document.getElementById('regionalBarChart');
+  if (ctxBar) {
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: regionLabels,
+        datasets: [
+          {
+            label: '{% trans "Verified" %}',
+            data: regionVerified,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: '#10B981',
+            borderWidth: 1,
+            borderRadius: 6,
+          },
+          {
+            label: '{% trans "Pending" %}',
+            data: regionPending,
+            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+            borderColor: '#F59E0B',
+            borderWidth: 1,
+            borderRadius: 6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#94A3B8', font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#94A3B8', precision: 0 }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#E2E8F0', font: { weight: 'bold' } }
+          }
+        }
+      }
+    });
+  }
+
+  // 2. Donut Chart (Status Distribution)
+  const ctxDonut = document.getElementById('statusDonutChart');
+  if (ctxDonut) {
+    new Chart(ctxDonut, {
+      type: 'doughnut',
+      data: {
+        labels: ['{% trans "Verified" %}', '{% trans "Pending" %}'],
+        datasets: [{
+          data: [{{ verified_count }}, {{ pending_count }}],
+          backgroundColor: ['#10B981', '#F59E0B'],
+          borderColor: '#0F172A',
+          borderWidth: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#E2E8F0', font: { size: 12 } }
+          }
+        },
+        cutout: '70%',
+      }
+    });
+  }
+});
+</script>
+
+<style>
+.page-title { font-size:1.6rem;font-weight:800;margin-bottom:4px; }
+.page-sub { color:var(--text-secondary);font-size:0.9rem;margin:0; }
+
+.live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10B981;
+  padding: 5px 14px;
+  border-radius: 30px;
+}
+.live-pulse {
+  width: 9px;
+  height: 9px;
+  background: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-ring 1.8s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.stat-kpi-card {
+  padding: 18px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+}
+.kpi-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
+.kpi-foot { font-size: 0.75rem; font-weight: 500; }
+
+.kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+.kpi-icon.blue { background: rgba(37,99,235,0.15); color: #3B82F6; }
+.kpi-icon.success { background: rgba(16,185,129,0.15); color: #10B981; }
+.kpi-icon.warning { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.kpi-icon.purple { background: rgba(139,92,246,0.15); color: #A78BFA; }
+
+.text-purple { color: #A78BFA; }
+.bg-gold { background: var(--akhu-gold, #EAB308) !important; }
+.card-section-title { font-size: 1.05rem; font-weight: 700; color: #FFFFFF; }
+</style>
+{% endblock %}

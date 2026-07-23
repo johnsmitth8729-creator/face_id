@@ -19,7 +19,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
 from django.db.models.functions import TruncDate
 
-from apps.accounts.models import CustomUser, ApplicantProfile, SupervisorAccount, PreRegisteredApplicant
+from apps.accounts.models import CustomUser, ApplicantProfile, SupervisorAccount, PreRegisteredApplicant, ExamVenueConfig
 from apps.verification.models import (
     VerificationSession, FaceProfile, VerificationLog, VerificationStatus
 )
@@ -134,7 +134,9 @@ def admin_required_class(cls):
             'PermitsManagementView', 
             'DownloadAllPermitsZipView', 
             'AttendanceManagementView', 
-            'AttendanceExportExcelView'
+            'AttendanceExportExcelView',
+            'StatisticsView',
+            'StatisticsExportExcelView'
         ]
         class_name = self.__class__.__name__
         
@@ -1680,6 +1682,258 @@ class ReportsView(TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx['page_title'] = _('Reports')
         return ctx
+
+
+# ─── STATISTICS ──────────────────────────────────────────────────────────────
+
+@admin_required_class
+class StatisticsView(TemplateView):
+    template_name = 'admin_panel/statistics.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        # Total registered applicants
+        total_applicants = ApplicantProfile.objects.count()
+
+        # Verified applicants (locked profile or verified status)
+        verified_profiles = ApplicantProfile.objects.filter(
+            Q(is_locked=True) | Q(user__verification_sessions__face_profile__status='verified')
+        ).distinct()
+        verified_count = verified_profiles.count()
+
+        pending_count = total_applicants - verified_count
+        if pending_count < 0:
+            pending_count = 0
+
+        pass_rate = round((verified_count / total_applicants * 100), 1) if total_applicants > 0 else 0.0
+
+        # Regional Breakdown aggregation
+        raw_regions = ApplicantProfile.objects.values('selected_region').annotate(
+            total=Count('id', distinct=True),
+            verified=Count('id', filter=Q(is_locked=True) | Q(user__verification_sessions__face_profile__status='verified'), distinct=True)
+        ).order_by('-total')
+
+        configured_venues = list(ExamVenueConfig.objects.values_list('region', flat=True))
+        
+        region_map = {}
+        for item in raw_regions:
+            reg_raw = (item['selected_region'] or '').strip()
+            reg = reg_raw if reg_raw else _('Unassigned').strip()
+            if reg not in region_map:
+                region_map[reg] = {'total': 0, 'verified': 0}
+            region_map[reg]['total'] += item['total']
+            region_map[reg]['verified'] += item['verified']
+
+        for conf_region in configured_venues:
+            if conf_region:
+                cr = conf_region.strip()
+                if cr and cr not in region_map:
+                    region_map[cr] = {'total': 0, 'verified': 0}
+
+        region_stats = []
+        for reg_name, counts in region_map.items():
+            tot = counts['total']
+            ver = counts['verified']
+            pend = tot - ver if tot >= ver else 0
+            pct = round((ver / tot * 100), 1) if tot > 0 else 0.0
+            region_stats.append({
+                'region': reg_name,
+                'total': tot,
+                'verified': ver,
+                'pending': pend,
+                'pass_rate': pct,
+            })
+
+        region_stats.sort(key=lambda x: (x['total'], x['verified']), reverse=True)
+
+        # Program Breakdown
+        raw_programs = ApplicantProfile.objects.values('program').annotate(
+            total=Count('id', distinct=True),
+            verified=Count('id', filter=Q(is_locked=True) | Q(user__verification_sessions__face_profile__status='verified'), distinct=True)
+        ).order_by('-total')
+
+        program_stats = []
+        for item in raw_programs:
+            prog_raw = (item['program'] or '').strip()
+            prog = prog_raw if prog_raw else _('General')
+            tot = item['total']
+            ver = item['verified']
+            pend = tot - ver if tot >= ver else 0
+            pct = round((ver / tot * 100), 1) if tot > 0 else 0.0
+            program_stats.append({
+                'program': prog,
+                'total': tot,
+                'verified': ver,
+                'pending': pend,
+                'pass_rate': pct,
+            })
+
+        # Daily Trends for Chart (Last 7 Days)
+        from datetime import timedelta
+        today = timezone.now().date()
+        daily_trends = []
+        for i in range(6, -1, -1):
+            d = today - timedelta(days=i)
+            cnt = VerificationLog.objects.filter(verified_at__date=d, result='verified').count()
+            daily_trends.append({
+                'date': d.strftime('%d.%m'),
+                'full_date': str(d),
+                'count': cnt,
+            })
+
+        ctx.update({
+            'page_title': _('Verification Statistics'),
+            'active': 'statistics',
+            'total_applicants': total_applicants,
+            'verified_count': verified_count,
+            'pending_count': pending_count,
+            'pass_rate': pass_rate,
+            'region_stats': region_stats,
+            'program_stats': program_stats,
+            'daily_trends': daily_trends,
+        })
+        return ctx
+
+
+@admin_required_class
+class StatisticsExportExcelView(View):
+    def get(self, request):
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from django.http import HttpResponse
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Regional Statistics"
+        ws.views.sheetView[0].showGridLines = True
+
+        header_fill = PatternFill(start_color="0A1628", end_color="0A1628", fill_type="solid")
+        header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        title_font = Font(name="Calibri", size=16, bold=True, color="0A1628")
+
+        ws.merge_cells("A1:F1")
+        ws["A1"] = "AKHU Verification Platform — Regional Statistics"
+        ws["A1"].font = title_font
+        ws["A1"].alignment = Alignment(vertical="center")
+        ws.row_dimensions[1].height = 35
+
+        ws.merge_cells("A2:F2")
+        ws["A2"] = f"Export Date: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        ws["A2"].font = Font(size=10, italic=True, color="555555")
+
+        headers = ["#", "Region / Location", "Total Applicants", "Face ID Verified", "Pending Verification", "Pass Rate (%)"]
+        ws.append([])
+        ws.append(headers)
+
+        ws.row_dimensions[4].height = 26
+        for col_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=4, column=col_idx)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        raw_regions = ApplicantProfile.objects.values('selected_region').annotate(
+            total=Count('id', distinct=True),
+            verified=Count('id', filter=Q(is_locked=True) | Q(user__verification_sessions__face_profile__status='verified'), distinct=True)
+        ).order_by('-total')
+
+        configured_venues = list(ExamVenueConfig.objects.values_list('region', flat=True))
+        region_map = {}
+        for item in raw_regions:
+            reg_raw = (item['selected_region'] or '').strip()
+            reg = reg_raw if reg_raw else "Unassigned"
+            if reg not in region_map:
+                region_map[reg] = {'total': 0, 'verified': 0}
+            region_map[reg]['total'] += item['total']
+            region_map[reg]['verified'] += item['verified']
+
+        for conf_region in configured_venues:
+            if conf_region:
+                cr = conf_region.strip()
+                if cr and cr not in region_map:
+                    region_map[cr] = {'total': 0, 'verified': 0}
+
+        region_stats = []
+        for reg_name, counts in region_map.items():
+            tot = counts['total']
+            ver = counts['verified']
+            pend = tot - ver if tot >= ver else 0
+            pct = round((ver / tot * 100), 1) if tot > 0 else 0.0
+            region_stats.append({
+                'region': reg_name,
+                'total': tot,
+                'verified': ver,
+                'pending': pend,
+                'pass_rate': pct,
+            })
+        region_stats.sort(key=lambda x: (x['total'], x['verified']), reverse=True)
+
+        row_idx = 5
+        sum_total = 0
+        sum_verified = 0
+        sum_pending = 0
+
+        thin_border = Border(
+            left=Side(style='thin', color='DDDDDD'),
+            right=Side(style='thin', color='DDDDDD'),
+            top=Side(style='thin', color='DDDDDD'),
+            bottom=Side(style='thin', color='DDDDDD')
+        )
+
+        for idx, item in enumerate(region_stats, 1):
+            sum_total += item['total']
+            sum_verified += item['verified']
+            sum_pending += item['pending']
+
+            ws.append([
+                idx,
+                item['region'],
+                item['total'],
+                item['verified'],
+                item['pending'],
+                f"{item['pass_rate']}%"
+            ])
+            ws.row_dimensions[row_idx].height = 20
+            for col_idx in range(1, 7):
+                c = ws.cell(row=row_idx, column=col_idx)
+                c.border = thin_border
+                c.alignment = Alignment(horizontal="center" if col_idx in [1, 3, 4, 5, 6] else "left", vertical="center")
+            row_idx += 1
+
+        # Summary Total Row
+        total_pct = round((sum_verified / sum_total * 100), 1) if sum_total > 0 else 0.0
+        ws.append([
+            "",
+            "TOTAL / JAMI",
+            sum_total,
+            sum_verified,
+            sum_pending,
+            f"{total_pct}%"
+        ])
+        ws.row_dimensions[row_idx].height = 24
+        total_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+        total_font = Font(name="Calibri", size=11, bold=True, color="0A1628")
+        for col_idx in range(1, 7):
+            c = ws.cell(row=row_idx, column=col_idx)
+            c.fill = total_fill
+            c.font = total_font
+            c.border = Border(top=Side(style='medium', color='0A1628'), bottom=Side(style='double', color='0A1628'))
+            c.alignment = Alignment(horizontal="center" if col_idx in [1, 3, 4, 5, 6] else "left", vertical="center")
+
+        ws.column_dimensions['A'].width = 8
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 20
+        ws.column_dimensions['D'].width = 20
+        ws.column_dimensions['E'].width = 22
+        ws.column_dimensions['F'].width = 18
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="AKHU_Regional_Statistics_{timezone.now().strftime("%Y%m%d_%H%M")}.xlsx"'
+        wb.save(response)
+        return response
 
 
 # ─── LIVENESS BIOMETRICS AUDIT ───────────────────────────────────────────────

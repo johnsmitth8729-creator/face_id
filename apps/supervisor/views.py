@@ -180,3 +180,69 @@ class ApplicantHistoryView(View):
             'logs': page,
             'face_profiles': face_profiles,
         })
+
+
+@supervisor_required_class
+class SupervisorPermitsView(View):
+    """Supervisor Permits page — search verified candidates and download their permit PDFs."""
+    template_name = 'supervisor/permits.html'
+
+    def get(self, request):
+        query = request.GET.get('q', '').strip()
+
+        applicants = ApplicantProfile.objects.filter(
+            Q(is_locked=True) | Q(user__verification_sessions__face_profile__status='verified')
+        ).select_related('user').prefetch_related(
+            'user__verification_sessions__face_profile', 'qr_code'
+        ).distinct().order_by('-created_at')
+
+        if query:
+            applicants = applicants.filter(
+                Q(admission_id__icontains=query) |
+                Q(applicant_id__icontains=query) |
+                Q(passport_number__icontains=query) |
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(middle_name__icontains=query) |
+                Q(program__icontains=query) |
+                Q(selected_region__icontains=query)
+            )
+
+        paginator = Paginator(applicants, 20)
+        page = paginator.get_page(request.GET.get('page'))
+
+        return render(request, self.template_name, {
+            'page_title': _('Candidate Permits'),
+            'applicants': page,
+            'query': query,
+            'active': 'permits',
+        })
+
+
+@supervisor_required_class
+class SupervisorPermitDownloadView(View):
+    """Download single candidate admission permit PDF."""
+    def get(self, request, profile_id):
+        profile = get_object_or_404(ApplicantProfile.objects.select_related('user'), id=profile_id)
+
+        # Ensure candidate has QR generated
+        try:
+            from apps.qr_module.services import generate_applicant_qr
+            generate_applicant_qr(profile)
+            profile.refresh_from_db()
+        except Exception as e:
+            logger.warning(f"Supervisor permit QR generation check: {e}")
+
+        session = profile.user.verification_sessions.filter(
+            face_profile__status='verified'
+        ).first()
+
+        if not session:
+            session = profile.user.verification_sessions.order_by('-started_at').first()
+
+        if not session:
+            messages.error(request, _('No verification session found for this candidate.'))
+            return redirect('supervisor:permits')
+
+        from apps.reports.views import generate_confirmation_pdf
+        return generate_confirmation_pdf(session)
