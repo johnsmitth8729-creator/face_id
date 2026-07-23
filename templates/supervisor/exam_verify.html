@@ -153,12 +153,21 @@ placeholder="{% trans 'e.g. AKHU2026-000001' %}" autocomplete="off">
 </div>
 </div>
 <div class="mt-4" id="proceedFaceBox">
-<button class="btn-akhu-gold w-100 fw-bold" onclick="proceedToFaceVerify()">
+<button class="btn-akhu-gold w-100 fw-bold" id="proceedFaceBtn" onclick="proceedToFaceVerify()">
 <i class="bi bi-camera-fill me-2"></i>{% trans "Proceed to Face Verification" %}
 </button>
-<p class="text-muted small mt-2 mb-0 text-center">
+<p class="text-muted small mt-2 mb-3 text-center" id="proceedFaceSubtext">
 <i class="bi bi-shield-lock me-1"></i>{% trans "Face verification ensures the QR holder is the real candidate." %}
 </p>
+
+<div class="pt-2 border-top border-secondary border-opacity-25 mt-2" id="manualConfirmWrapper">
+<button class="btn btn-success w-100 fw-bold py-2" id="manualConfirmBtn" onclick="confirmManualAttendance()">
+<i class="bi bi-shield-check me-2"></i>{% trans "Confirm — Candidate Entered Exam" %}
+</button>
+<div class="text-success small mt-2 d-none fw-bold text-center" id="manualConfirmSuccess">
+<i class="bi bi-check-circle-fill me-1"></i>{% trans "Successfully confirmed!" %}
+</div>
+</div>
 </div>
 <div class="mt-3 d-none text-warning" id="noTemplateWarning">
 <i class="bi bi-exclamation-triangle-fill me-1"></i>
@@ -411,6 +420,7 @@ noCandidateSelected: "{% trans 'No candidate selected. Scan QR code first.' %}",
 cameraNotReady: "{% trans 'Camera is not ready. Please wait.' %}",
 confirmError: "{% trans 'Verification error' %}",
 tryAgainAdmin: "{% trans 'Please try again or contact administrator.' %}",
+successfullyConfirmed: "{% trans 'Successfully confirmed!' %}",
 scanningBadge: "{% trans 'SCANNING...' %}",
 identifiedBadge: "{% trans 'IDENTIFIED' %}",
 noFaceBadge: "{% trans 'NO FACE DETECTED' %}",
@@ -612,12 +622,36 @@ currentProfileId = data.profile_id;
 
 const noTpl = document.getElementById('noTemplateWarning');
 const proceedBox = document.getElementById('proceedFaceBox');
+const proceedFaceBtn = document.getElementById('proceedFaceBtn');
+const proceedFaceSubtext = document.getElementById('proceedFaceSubtext');
+
 if (!data.has_face_template) {
-noTpl.classList.remove('d-none');
-proceedBox.classList.add('d-none');
+  noTpl.classList.remove('d-none');
+  if (proceedFaceBtn) proceedFaceBtn.classList.add('d-none');
+  if (proceedFaceSubtext) proceedFaceSubtext.classList.add('d-none');
 } else {
-noTpl.classList.add('d-none');
+  noTpl.classList.add('d-none');
+  if (proceedFaceBtn) proceedFaceBtn.classList.remove('d-none');
+  if (proceedFaceSubtext) proceedFaceSubtext.classList.remove('d-none');
+}
+
 proceedBox.classList.remove('d-none');
+
+const manualBtn = document.getElementById('manualConfirmBtn');
+const manualSuccess = document.getElementById('manualConfirmSuccess');
+
+if (data.already_verified) {
+  if (manualBtn) manualBtn.classList.add('d-none');
+  if (manualSuccess) {
+    manualSuccess.classList.remove('d-none');
+    manualSuccess.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + I18N.alreadyVerified;
+  }
+} else {
+  if (manualBtn) {
+    manualBtn.classList.remove('d-none');
+    manualBtn.disabled = false;
+  }
+  if (manualSuccess) manualSuccess.classList.add('d-none');
 }
 
 document.getElementById('qrErrorCard').classList.add('d-none');
@@ -645,6 +679,34 @@ document.getElementById('fv_photo').src = '/static/images/avatar.png';
 currentProfileId = profileId;
 }
 
+async function confirmManualAttendance() {
+  if (!currentProfileId) return;
+  const btn = document.getElementById('manualConfirmBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const resp = await fetch(API_CONFIRM, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+      body: JSON.stringify({ profile_id: currentProfileId }),
+    });
+    const res = await resp.json();
+    if (res.success) {
+      const succ = document.getElementById('manualConfirmSuccess');
+      if (succ) {
+        succ.classList.remove('d-none');
+        succ.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + (I18N.successfullyConfirmed || 'Successfully confirmed!');
+      }
+      if (btn) btn.classList.add('d-none');
+    } else {
+      alert(res.error || 'Tasdiqlashda xato yuz berdi');
+      if (btn) btn.disabled = false;
+    }
+  } catch (err) {
+    alert(I18N.networkError + ': ' + err.message);
+    if (btn) btn.disabled = false;
+  }
+}
+
 function proceedToFaceVerify() {
 stopQRScanner();
 document.getElementById('phase1QR').style.display = 'none';
@@ -657,6 +719,13 @@ function resetQRPhase() {
 document.getElementById('qrWaiting').classList.remove('d-none');
 document.getElementById('qrErrorCard').classList.add('d-none');
 document.getElementById('qrSuccessCard').classList.add('d-none');
+const manualBtn = document.getElementById('manualConfirmBtn');
+const manualSuccess = document.getElementById('manualConfirmSuccess');
+if (manualBtn) {
+  manualBtn.classList.remove('d-none');
+  manualBtn.disabled = false;
+}
+if (manualSuccess) manualSuccess.classList.add('d-none');
 qrProcessing = false;
 initQRScanner();
 }
