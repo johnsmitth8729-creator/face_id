@@ -42,9 +42,14 @@
         </h2>
         <p class="page-sub">{% trans "Search verified candidates and download official exam permits (PDF)" %}</p>
       </div>
+      <div>
+        <span class="badge bg-gold bg-opacity-25 text-gold border border-warning border-opacity-25 rounded-pill px-3 py-2 fw-bold">
+          <i class="bi bi-magic me-1"></i>{% trans "Smart Search Active" %}
+        </span>
+      </div>
     </div>
 
-    <!-- Search Card -->
+    <!-- Smart Search Card -->
     <div class="akhu-card mb-4">
       <form method="get" action="{% url 'supervisor:permits' %}" class="row g-2 align-items-center">
         <div class="col-md-9 col-sm-8">
@@ -52,15 +57,19 @@
             <span class="input-group-text bg-dark border-secondary text-gold">
               <i class="bi bi-search"></i>
             </span>
-            <input type="text" name="q" value="{{ query }}" class="form-control text-white bg-dark border-secondary" placeholder="{% trans 'Search by Name, Admission ID, Passport Number, or Region...' %}">
+            <input type="text" name="q" id="smartPermitSearchInput" value="{{ query }}" class="form-control text-white bg-dark border-secondary" placeholder="{% trans 'Smart search by Name, Admission ID, Passport Number, or Region...' %}" onkeyup="liveTableFilter()">
+          </div>
+          <div class="form-text text-muted small mt-1">
+            <i class="bi bi-info-circle me-1 text-gold"></i>
+            {% trans "Smart Search automatically normalizes spaces, passport formats (e.g. AA 1234567), and multi-word names." %}
           </div>
         </div>
-        <div class="col-md-3 col-sm-4 d-flex gap-2">
-          <button type="submit" class="btn btn-gold w-100 fw-bold">
+        <div class="col-md-3 col-sm-4 d-flex gap-2 align-self-start">
+          <button type="submit" class="btn btn-gold w-100 fw-bold py-2">
             <i class="bi bi-search me-1"></i>{% trans "Search" %}
           </button>
           {% if query %}
-            <a href="{% url 'supervisor:permits' %}" class="btn btn-outline-light">
+            <a href="{% url 'supervisor:permits' %}" class="btn btn-outline-light py-2" title="{% trans 'Reset' %}">
               <i class="bi bi-x-circle"></i>
             </a>
           {% endif %}
@@ -78,7 +87,7 @@
       </div>
 
       <div class="table-responsive">
-        <table class="akhu-table align-middle">
+        <table class="akhu-table align-middle" id="supervisorPermitsTable">
           <thead>
             <tr>
               <th style="width: 50px;">#</th>
@@ -86,7 +95,7 @@
               <th>{% trans "Passport Number" %}</th>
               <th>{% trans "Region & Exam Venue" %}</th>
               <th>{% trans "Arrival / Exam Date" %}</th>
-              <th class="text-end" style="width: 200px;">{% trans "Action" %}</th>
+              <th class="text-end" style="width: 220px;">{% trans "Action" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -99,21 +108,21 @@
                       <img src="{{ profile.user.verification_sessions.last.face_profile.selfie_image.url|default:'/static/images/avatar.png' }}" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
                     </div>
                     <div>
-                      <div class="fw-bold text-white fs-6">{{ profile.full_name }}</div>
-                      <span class="badge bg-gold bg-opacity-25 text-gold border border-warning border-opacity-25 font-monospace">
+                      <div class="fw-bold text-white fs-6 match-target">{{ profile.full_name }}</div>
+                      <span class="badge bg-gold bg-opacity-25 text-gold border border-warning border-opacity-25 font-monospace match-target">
                         {{ profile.admission_id }}
                       </span>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <span class="font-monospace text-white fw-bold">{{ profile.passport_number }}</span>
+                  <span class="font-monospace text-white fw-bold match-target">{{ profile.passport_number }}</span>
                 </td>
                 <td>
-                  <div class="fw-bold text-white small">
+                  <div class="fw-bold text-white small match-target">
                     <i class="bi bi-geo-alt-fill text-gold me-1"></i>{{ profile.selected_region|default:"—" }}
                   </div>
-                  <div class="text-muted small text-truncate" style="max-width: 220px;" title="{{ profile.exam_venue }}">
+                  <div class="text-muted small text-truncate match-target" style="max-width: 220px;" title="{{ profile.exam_venue }}">
                     {{ profile.exam_venue|default:"—" }}
                   </div>
                 </td>
@@ -128,8 +137,8 @@
                   </div>
                 </td>
                 <td class="text-end">
-                  <a href="{% url 'supervisor:permit-download' profile.id %}" class="btn btn-gold btn-sm px-3 fw-bold rounded-pill" title="{% trans 'Download Permit PDF' %}">
-                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>{% trans "Download Permit" %}
+                  <a href="{% url 'supervisor:permit-download' profile.id %}" class="btn btn-gold btn-sm px-3 fw-bold rounded-pill shadow-sm" title="{% trans 'Download Permit PDF' %}">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i><span class="btn-permit-text">{% trans "Download Permit" %}</span>
                   </a>
                 </td>
               </tr>
@@ -185,7 +194,61 @@
   </div>
 </div>
 
+<script>
+// Live client-side filter for instant responsiveness on keyup
+function liveTableFilter() {
+  const input = document.getElementById('smartPermitSearchInput');
+  if (!input) return;
+  const filter = input.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const rawFilter = input.value.toLowerCase().trim();
+  const table = document.getElementById('supervisorPermitsTable');
+  if (!table) return;
+  const trs = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+  for (let i = 0; i < trs.length; i++) {
+    const tr = trs[i];
+    if (tr.getElementsByTagName('td').length < 2) continue; // Skip empty message row
+
+    const text = tr.innerText.toLowerCase();
+    const cleanText = text.replace(/[^a-z0-9]/g, '');
+
+    if (!rawFilter || text.includes(rawFilter) || (filter.length >= 2 && cleanText.includes(filter))) {
+      tr.style.display = "";
+    } else {
+      tr.style.display = "none";
+    }
+  }
+}
+</script>
+
 <style>
+/* High-Contrast Gold Button with 100% visible text in Dark Mode */
+.btn-gold {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+}
+.btn-gold i, .btn-gold .btn-permit-text, .btn-gold * {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+.btn-gold:hover, .btn-gold:focus, .btn-gold:active {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  color: #020617 !important;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4) !important;
+  transform: translateY(-1px);
+}
+.btn-gold:hover i, .btn-gold:hover .btn-permit-text {
+  color: #020617 !important;
+}
+
 .supervisor-layout { display:flex; min-height:calc(100vh - 70px); }
 .supervisor-sidebar { width:240px; background:var(--bg-secondary); border-right:1px solid var(--border-color); display:flex; flex-direction:column; flex-shrink:0; }
 .supervisor-main { flex:1; padding:32px; overflow-y:auto; }

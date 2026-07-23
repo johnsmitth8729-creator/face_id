@@ -197,7 +197,15 @@ class SupervisorPermitsView(View):
         ).distinct().order_by('-created_at')
 
         if query:
-            applicants = applicants.filter(
+            import re
+            words = query.split()
+            clean_alnum = re.sub(r'[^A-Za-z0-9]', '', query)
+            clean_digits = re.sub(r'\D', '', query)
+
+            q_objects = Q()
+
+            # 1. Direct field match for raw query
+            raw_q = (
                 Q(admission_id__icontains=query) |
                 Q(applicant_id__icontains=query) |
                 Q(passport_number__icontains=query) |
@@ -205,8 +213,41 @@ class SupervisorPermitsView(View):
                 Q(last_name__icontains=query) |
                 Q(middle_name__icontains=query) |
                 Q(program__icontains=query) |
-                Q(selected_region__icontains=query)
+                Q(selected_region__icontains=query) |
+                Q(exam_venue__icontains=query)
             )
+            q_objects |= raw_q
+
+            # 2. Passport clean string match (e.g., "AA 1234567" or "aa1234567")
+            if clean_alnum and len(clean_alnum) >= 3:
+                q_objects |= Q(passport_number__icontains=clean_alnum)
+                q_objects |= Q(admission_id__icontains=clean_alnum)
+
+            # 3. Numeric ID matching (e.g. "0001" or "12")
+            if clean_digits:
+                q_objects |= Q(admission_id__icontains=clean_digits)
+                q_objects |= Q(applicant_id__icontains=clean_digits)
+
+            # 4. Multi-word search (e.g. "John Doe" or "Toshkent Aliyev")
+            if len(words) > 1:
+                word_q = Q()
+                for w in words:
+                    sub_q = (
+                        Q(first_name__icontains=w) |
+                        Q(last_name__icontains=w) |
+                        Q(middle_name__icontains=w) |
+                        Q(passport_number__icontains=w) |
+                        Q(admission_id__icontains=w) |
+                        Q(selected_region__icontains=w) |
+                        Q(program__icontains=w)
+                    )
+                    if not word_q:
+                        word_q = sub_q
+                    else:
+                        word_q &= sub_q
+                q_objects |= word_q
+
+            applicants = applicants.filter(q_objects)
 
         paginator = Paginator(applicants, 20)
         page = paginator.get_page(request.GET.get('page'))
