@@ -235,7 +235,8 @@ class SupervisorExamIdentifyAPI(View):
                 logger.warning("No face detected in live frame, proceeding anyway using fallbacks.")
 
             selfie_url = ""
-            is_mock = settings.AI_ENGINE.get('MODE', 'mock') == 'mock'
+            is_mock = getattr(settings, 'AI_ENGINE', {}).get('MODE', 'mock') == 'mock'
+
 
             if is_mock:
                 # Mock mode: face is confirmed present — now do a simple hash-based

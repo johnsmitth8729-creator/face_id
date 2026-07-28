@@ -365,7 +365,8 @@ def get_face_engine():
     Factory function: returns the configured face engine.
     Reads AI_ENGINE_MODE from settings.
     """
-    mode = settings.AI_ENGINE.get('MODE', 'mock')
+    ai_engine = getattr(settings, 'AI_ENGINE', {})
+    mode = ai_engine.get('MODE', 'insightface')
     if mode == 'insightface':
         try:
             return InsightFaceEngine()
@@ -380,9 +381,9 @@ def determine_verification_status(match_percentage: float) -> str:
     Determine verification status from match percentage.
     Returns: 'verified' | 'review_required' | 'rejected'
     """
-    thresholds = settings.AI_ENGINE
-    verified_threshold = thresholds.get('THRESHOLD_VERIFIED', 0.90) * 100
-    review_threshold = thresholds.get('THRESHOLD_REVIEW', 0.80) * 100
+    thresholds = getattr(settings, 'AI_ENGINE', {})
+    verified_threshold = thresholds.get('THRESHOLD_VERIFIED', 0.85) * 100
+    review_threshold = thresholds.get('THRESHOLD_REVIEW', 0.70) * 100
 
     if match_percentage >= verified_threshold:
         return 'verified'
@@ -390,3 +391,4 @@ def determine_verification_status(match_percentage: float) -> str:
         return 'review_required'
     else:
         return 'rejected'
+

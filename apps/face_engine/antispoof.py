@@ -21,7 +21,8 @@ class MiniFASNetSession:
     def initialize(self):
         if not self._initialized:
             # Skip if mock mode is active
-            if settings.AI_ENGINE.get('MODE', 'mock') == 'mock':
+            ai_engine = getattr(settings, 'AI_ENGINE', {})
+            if ai_engine.get('MODE', 'mock') == 'mock':
                 self._initialized = True
                 return
 
@@ -39,7 +40,7 @@ class MiniFASNetSession:
                     raise FileNotFoundError(err_msg)
 
                 # Load ONNX session
-                providers = settings.AI_ENGINE.get('ONNX_PROVIDERS', ['CPUExecutionProvider'])
+                providers = ai_engine.get('ONNX_PROVIDERS', ['CPUExecutionProvider'])
                 self._session = ort.InferenceSession(model_path, providers=providers)
                 logger.info(f"MiniFASNet ONNX InferenceSession successfully loaded from {model_path}")
                 self._initialized = True
@@ -59,13 +60,15 @@ def check_spoof(image, face_info: dict | None = None, face_count: int | None = N
     Uses MiniFASNet ONNX model locally.
     """
     # 1. Mock mode bypass
-    if settings.AI_ENGINE.get('MODE', 'mock') == 'mock':
+    ai_engine = getattr(settings, 'AI_ENGINE', {})
+    if ai_engine.get('MODE', 'mock') == 'mock':
         return {
             "success": True,
             "is_live": True,
             "score": 0.98,
             "message": ""
         }
+
 
     try:
         img_array = _load_image(image)

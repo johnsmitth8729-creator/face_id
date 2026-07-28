@@ -523,7 +523,8 @@ def get_liveness_detector():
         return _cached_liveness_detector
 
     from django.conf import settings
-    ai_mode = settings.AI_ENGINE.get('MODE', 'mock')
+    ai_mode = getattr(settings, 'AI_ENGINE', {}).get('MODE', 'insightface')
+
 
     # 1. Mock mode
     if ai_mode == 'mock':
