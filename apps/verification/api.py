@@ -483,6 +483,7 @@ class VerificationStatusAPI(View):
             return JsonResponse({'error': 'Session not found'}, status=404)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class DetectFaceInFrameAPI(View):
     """POST /api/verification/detect-face/ — Check if face is visible in frame."""
 
