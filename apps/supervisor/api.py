@@ -29,6 +29,31 @@ def _safe_file_url(obj) -> str:
     return ""
 
 
+def _json_request_body(request):
+    try:
+        return json.loads(request.body or b'{}')
+    except json.JSONDecodeError:
+        return None
+
+
+def _decode_frame(frame: str):
+    import base64
+    import binascii
+    import io
+
+    from PIL import Image, UnidentifiedImageError
+    import numpy as np
+
+    frame_b64 = frame.split(',', 1)[1] if ',' in frame else frame
+    try:
+        frame_bytes = base64.b64decode(frame_b64, validate=True)
+        live_img = Image.open(io.BytesIO(frame_bytes)).convert('RGB')
+    except (binascii.Error, ValueError, UnidentifiedImageError, OSError):
+        return None, None, None
+    live_array = np.ascontiguousarray(np.array(live_img))
+    return live_img, live_array, frame_bytes
+
+
 class SupervisorExamVerifyAPI(View):
 
     """POST /api/supervisor/exam-verify/ — Live face match against stored template."""
@@ -38,7 +63,9 @@ class SupervisorExamVerifyAPI(View):
             return JsonResponse({'error': 'Unauthorized'}, status=403)
 
         try:
-            data = json.loads(request.body)
+            data = _json_request_body(request)
+            if data is None:
+                return JsonResponse({'success': False, 'error': 'Invalid JSON request'}, status=400)
             profile_id = data.get('profile_id')
             frame = data.get('frame')  # base64 frame from supervisor camera
 
@@ -70,24 +97,30 @@ class SupervisorExamVerifyAPI(View):
                 }, status=404)
 
 
-            # Decode live frame
-            import base64, io
-            from PIL import Image
-            import numpy as np
             try:
-                if ',' in frame:
-                    frame = frame.split(',')[1]
-                frame_bytes = base64.b64decode(frame)
-                live_img = Image.open(io.BytesIO(frame_bytes)).convert('RGB')
-                live_array = np.array(live_img)
+                live_img, live_array, _frame_bytes = _decode_frame(frame)
+                if live_img is None:
+                    raise ValueError('invalid frame')
             except Exception:
                 return JsonResponse({'success': False, 'error': 'Invalid base64 frame data'}, status=400)
 
             engine = get_face_engine()
 
+            live_result = engine.extract_face_and_embedding(live_array, require_single=True)
+            if not live_result.get('success'):
+                return JsonResponse({
+                    'success': False,
+                    'error': live_result.get('error') or 'No face detected in live frame',
+                    'indicator': 'red',
+                })
+
             # Anti-Spoofing — reject printed photos, screens, replay attacks
             from apps.face_engine.antispoof import check_spoof
-            spoof_result = check_spoof(live_img)
+            spoof_result = check_spoof(
+                live_array,
+                face_info=live_result.get('face'),
+                face_count=live_result.get('face_count'),
+            )
             if not spoof_result['success']:
                 logger.error("ExamVerifyAPI anti-spoof error: %s", spoof_result['message'])
                 return JsonResponse({
@@ -106,15 +139,6 @@ class SupervisorExamVerifyAPI(View):
                     'indicator': 'red',
                 })
 
-            # Extract live embedding (InsightFace runs once here on exam day)
-            live_embedding = engine.extract_embedding(live_img)
-            if live_embedding is None:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'No face detected in live frame',
-                    'indicator': 'red',
-                })
-
             # Compare with stored embedding
             stored_embedding = stored.selfie_embedding
             if not stored_embedding:
@@ -124,7 +148,7 @@ class SupervisorExamVerifyAPI(View):
                     'indicator': 'warning',
                 })
 
-            cosine_sim, match_pct = engine.compare_faces(stored_embedding, live_embedding.tolist())
+            cosine_sim, match_pct = engine.compare_faces(stored_embedding, live_result['embedding'].tolist())
             status = determine_verification_status(match_pct)
 
             # Determine indicator color
@@ -174,15 +198,14 @@ class SupervisorExamVerifyAPI(View):
                     'full_name': str(profile.full_name or ''),
                     'admission_id': str(profile.admission_id or ''),
                     'passport_number': str(profile.passport_number or ''),
+                    'selfie_url': _safe_file_url(stored),
                 },
             })
 
         except ApplicantProfile.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Applicant not found'}, status=404)
         except Exception as e:
-            logger.error(f'ExamVerifyAPI error: {e}')
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.exception('ExamVerifyAPI error')
             return JsonResponse({'success': False, 'error': str(e)}, status=200)
 
 
@@ -195,7 +218,9 @@ class SupervisorQRScanAPI(View):
             return JsonResponse({'error': 'Unauthorized'}, status=403)
 
         try:
-            data = json.loads(request.body)
+            data = _json_request_body(request)
+            if data is None:
+                return JsonResponse({'valid': False, 'error': 'Invalid JSON request'}, status=400)
             token = data.get('token', '').strip()
             if not token:
                 return JsonResponse({'valid': False, 'error': 'No token provided'}, status=400)
@@ -213,8 +238,8 @@ class SupervisorQRScanAPI(View):
             return JsonResponse(result)
 
         except Exception as e:
-            logger.error(f'QRScanAPI error: {e}')
-            return JsonResponse({'valid': False, 'error': str(e)}, status=500)
+            logger.exception('QRScanAPI error')
+            return JsonResponse({'valid': False, 'error': str(e)}, status=200)
 
 
 class SupervisorExamIdentifyAPI(View):
@@ -225,22 +250,17 @@ class SupervisorExamIdentifyAPI(View):
             return JsonResponse({'error': 'Unauthorized'}, status=403)
 
         try:
-            data = json.loads(request.body)
+            data = _json_request_body(request)
+            if data is None:
+                return JsonResponse({'success': False, 'error': 'Invalid JSON request'}, status=400)
             frame = data.get('frame')
 
             if not frame:
                 return JsonResponse({'success': False, 'error': 'Missing frame'}, status=400)
 
-            # Decode live frame first (used in both mock and real mode)
-            import base64, io
-            from PIL import Image
-            import numpy as np
-            frame_b64 = frame
-            if ',' in frame_b64:
-                frame_b64 = frame_b64.split(',')[1]
-            frame_bytes = base64.b64decode(frame_b64)
-            live_img = Image.open(io.BytesIO(frame_bytes)).convert('RGB')
-            live_array = np.array(live_img)
+            live_img, live_array, frame_bytes = _decode_frame(frame)
+            if live_img is None:
+                return JsonResponse({'success': False, 'error': 'Invalid base64 frame data'}, status=400)
 
             # Check face presence, but proceed anyway for test robustness
             from apps.liveness.detector import get_liveness_detector
@@ -439,8 +459,8 @@ class SupervisorExamIdentifyAPI(View):
             })
 
         except Exception as e:
-            logger.error(f'ExamIdentifyAPI error: {e}')
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            logger.exception('ExamIdentifyAPI error')
+            return JsonResponse({'success': False, 'error': str(e)}, status=200)
 
 
 class ConfirmAttendanceAPI(View):
@@ -451,7 +471,9 @@ class ConfirmAttendanceAPI(View):
         
         try:
             import json
-            data = json.loads(request.body)
+            data = _json_request_body(request)
+            if data is None:
+                return JsonResponse({'success': False, 'error': 'Invalid JSON request'}, status=400)
             profile_id = data.get('profile_id')
             if not profile_id:
                 return JsonResponse({'success': False, 'error': 'Missing profile_id'}, status=400)
@@ -490,8 +512,8 @@ class ConfirmAttendanceAPI(View):
         except ApplicantProfile.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Applicant not found'}, status=404)
         except Exception as e:
-            logger.error(f'ConfirmAttendanceAPI error: {e}')
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            logger.exception('ConfirmAttendanceAPI error')
+            return JsonResponse({'success': False, 'error': str(e)}, status=200)
 
 
 class SupervisorQRLookupAPI(View):
@@ -506,7 +528,9 @@ class SupervisorQRLookupAPI(View):
             return JsonResponse({'error': 'Unauthorized'}, status=403)
 
         try:
-            data = json.loads(request.body)
+            data = _json_request_body(request)
+            if data is None:
+                return JsonResponse({'valid': False, 'error': 'Invalid JSON request'}, status=400)
             raw_text = (data.get('qr_text') or '').strip()
 
             if not raw_text:
@@ -585,5 +609,5 @@ class SupervisorQRLookupAPI(View):
             })
 
         except Exception as e:
-            logger.error(f'SupervisorQRLookupAPI error: {e}')
-            return JsonResponse({'valid': False, 'error': str(e)}, status=500)
+            logger.exception('SupervisorQRLookupAPI error')
+            return JsonResponse({'valid': False, 'error': str(e)}, status=200)

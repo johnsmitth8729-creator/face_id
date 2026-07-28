@@ -5,6 +5,7 @@ import json
 import logging
 from datetime import timedelta
 
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.views.generic import TemplateView
@@ -404,11 +405,20 @@ class DownloadConfirmationView(View):
         return generate_confirmation_pdf(session)
 
 
+def _is_api_request(request):
+    path = getattr(request, 'path', '') or ''
+    return path.startswith('/api/') or '/api/' in path
+
+
 def custom_handler404(request, exception=None):
+    if _is_api_request(request):
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
     return render(request, '404.html', status=404)
 
 
 def custom_handler500(request):
+    if _is_api_request(request):
+        return JsonResponse({'success': False, 'error': 'Internal server error'}, status=500)
     return render(request, '500.html', status=500)
 
 

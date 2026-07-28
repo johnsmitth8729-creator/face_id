@@ -1204,7 +1204,13 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
 body: JSON.stringify({ frame: frame }),
 });
-const result = await resp.json();
+let result = null;
+try {
+result = await resp.json();
+} catch (e) {
+console.warn("API_EXAM_IDENTIFY Non-JSON response, status:", resp.status);
+result = { success: false, error: I18N.networkError + ': HTTP ' + resp.status };
+}
 
 if (result.success) {
 statusOverlay.innerHTML = `<span class="badge bg-success px-3 py-2"><i class="bi bi-person-check-fill me-1"></i> ${I18N.identifiedBadge}</span>`;
