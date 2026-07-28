@@ -245,11 +245,25 @@ function startAutoChecking() {
     if (isChecking || !stream || !video.readyState) return;
 
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
+    const origW = video.videoWidth || 640;
+    const origH = video.videoHeight || 480;
+    const maxDim = 400;
+    let targetW = origW;
+    let targetH = origH;
+    if (origW > maxDim || origH > maxDim) {
+      if (origW > origH) {
+        targetW = maxDim;
+        targetH = Math.round((origH * maxDim) / origW);
+      } else {
+        targetH = maxDim;
+        targetW = Math.round((origW * maxDim) / origH);
+      }
+    }
+    canvas.width = targetW;
+    canvas.height = targetH;
     const ctx = canvas.getContext('2d');
     ctx.scale(-1, 1);
-    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, -targetW, 0, targetW, targetH);
 
     const brightness = checkFrameBrightness(ctx, canvas.width, canvas.height);
     const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
@@ -300,7 +314,7 @@ function startAutoChecking() {
 
     isChecking = true;
     const ch = CHALLENGES[currentChallengeIdx];
-    const frame = canvas.toDataURL('image/jpeg', 0.7);
+    const frame = canvas.toDataURL('image/jpeg', 0.5);
 
     const result = await verifyChallenge(frame, ch.type);
     isChecking = false;

@@ -276,22 +276,40 @@ async function checkFaceInFrame() {
       speak(lang === 'uz' ? 'Rasmga olinmoqda' : 'Capturing photo');
       isSaving = true;
       clearInterval(faceCheckInterval);
-      await triggerSelfieSave(frameData);
+      const highResPhoto = captureFrame(1280, 0.85);
+      await triggerSelfieSave(highResPhoto);
     }
   } catch (e) {
     console.error("Face check loop error:", e);
   }
 }
 
-function captureFrame() {
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
+function captureFrame(maxDim = 400, quality = 0.5) {
+  const origW = video.videoWidth || 640;
+  const origH = video.videoHeight || 480;
+
+  let targetW = origW;
+  let targetH = origH;
+
+  if (maxDim && (origW > maxDim || origH > maxDim)) {
+    if (origW > origH) {
+      targetW = maxDim;
+      targetH = Math.round((origH * maxDim) / origW);
+    } else {
+      targetH = maxDim;
+      targetW = Math.round((origW * maxDim) / origH);
+    }
+  }
+
+  canvas.width = targetW;
+  canvas.height = targetH;
   const ctx = canvas.getContext('2d');
   ctx.scale(-1, 1);
-  ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, -targetW, 0, targetW, targetH);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  return canvas.toDataURL('image/jpeg', 0.9);
+  return canvas.toDataURL('image/jpeg', quality);
 }
+
 
 async function triggerSelfieSave(imageData) {
   const lang = document.documentElement.lang || 'uz';
