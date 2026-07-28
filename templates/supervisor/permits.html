@@ -105,7 +105,7 @@
                 <td>
                   <div class="d-flex align-items-center gap-3">
                     <div class="candidate-avatar border border-secondary rounded overflow-hidden" style="width: 42px; height: 42px; flex-shrink: 0; background: #000;">
-                      <img src="{{ profile.user.verification_sessions.last.face_profile.selfie_image.url|default:'/static/images/avatar.png' }}" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
+                      <img src="{% if profile.user.verification_sessions.last.face_profile.selfie_image and profile.user.verification_sessions.last.face_profile.selfie_image.name %}{{ profile.user.verification_sessions.last.face_profile.selfie_image.url }}{% else %}/static/images/avatar.png{% endif %}" alt="Photo" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/static/images/avatar.png';">
                     </div>
                     <div>
                       <div class="fw-bold text-white fs-6 match-target">{{ profile.full_name }}</div>

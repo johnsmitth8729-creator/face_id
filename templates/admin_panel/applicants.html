@@ -103,7 +103,7 @@
                     <td><strong>{{ applicant.passport_number }}</strong></td>
                     <td>
                       <div class="d-flex align-items-center gap-3">
-                        {% if fp.selfie_image %}
+                        {% if fp.selfie_image and fp.selfie_image.name %}
                           <img src="{{ fp.selfie_image.url }}" alt="Selfie" class="rounded border border-secondary" style="width: 40px; height: 40px; object-fit: cover; cursor: zoom-in;" onclick="window.open('{{ fp.selfie_image.url }}')">
                         {% else %}
                           <div class="rounded bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
