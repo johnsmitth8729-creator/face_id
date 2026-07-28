@@ -48,9 +48,15 @@ def supervisor_required_class(cls):
     return cls
 
 
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
+
+
+@method_decorator(never_cache, name='dispatch')
 class SupervisorLoginView(View):
     """Supervisor login page."""
     template_name = 'supervisor/login.html'
+
 
     def get(self, request):
         if request.session.get(SUPERVISOR_SESSION_KEY):
@@ -132,10 +138,12 @@ class SupervisorDashboardView(TemplateView):
         return ctx
 
 
+@method_decorator(never_cache, name='dispatch')
 @supervisor_required_class
 class ExamVerifyView(View):
     """Exam-day live camera verification page."""
     template_name = 'supervisor/exam_verify.html'
+
 
     def get(self, request, profile_id=None):
         applicant = None
