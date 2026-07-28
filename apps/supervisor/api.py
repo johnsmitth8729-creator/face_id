@@ -364,6 +364,12 @@ class SupervisorExamIdentifyAPI(View):
                 ).select_related(
                     'session__user__applicant_profile'
                 )
+                if not verified_profiles.exists():
+                    verified_profiles = FaceProfile.objects.exclude(
+                        selfie_embedding__isnull=True
+                    ).select_related(
+                        'session__user__applicant_profile'
+                    )
                 best_match_profile = None
                 best_match_pct = 0.0
                 best_cosine_sim = 0.0
