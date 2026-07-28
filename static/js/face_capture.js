@@ -293,16 +293,19 @@ function captureFrame(maxDim = 240, quality = 0.25) {
   const origW = video.videoWidth || 640;
   const origH = video.videoHeight || 480;
 
+  let currentDim = maxDim;
+  let currentQuality = quality;
+
   let targetW = origW;
   let targetH = origH;
 
-  if (maxDim && (origW > maxDim || origH > maxDim)) {
+  if (currentDim && (origW > currentDim || origH > currentDim)) {
     if (origW > origH) {
-      targetW = maxDim;
-      targetH = Math.round((origH * maxDim) / origW);
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
     } else {
-      targetH = maxDim;
-      targetW = Math.round((origW * maxDim) / origH);
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
     }
   }
 
@@ -313,22 +316,34 @@ function captureFrame(maxDim = 240, quality = 0.25) {
   ctx.drawImage(video, -targetW, 0, targetW, targetH);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+  let dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
 
-  // Hard safety limit for ALL requests (detection and selfie save):
-  // Keep payload under 11,000 chars (~11KB) to prevent Nginx proxy 500 error on external proxy
-  if (dataUrl.length > 11000) {
-    canvas.width = 400;
-    canvas.height = Math.round((origH * 400) / origW);
+  // Guaranteed safety loop:
+  // Iteratively reduce quality and dimension until dataUrl.length is strictly <= 10000 chars
+  while (dataUrl.length > 10000 && currentDim > 120) {
+    currentDim = Math.round(currentDim * 0.8);
+    currentQuality = Math.max(0.15, currentQuality * 0.8);
+
+    if (origW > origH) {
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
+    } else {
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
     const ctx2 = canvas.getContext('2d');
     ctx2.scale(-1, 1);
-    ctx2.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx2.drawImage(video, -targetW, 0, targetW, targetH);
     ctx2.setTransform(1, 0, 0, 1, 0, 0);
-    dataUrl = canvas.toDataURL('image/jpeg', 0.40);
+    dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
   }
 
   return dataUrl;
 }
+
 
 async function triggerSelfieSave(imageData) {
   const lang = (document.documentElement.lang || 'uz').toLowerCase();
