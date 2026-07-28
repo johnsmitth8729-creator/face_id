@@ -237,46 +237,71 @@ function startNextChallenge() {
   startAutoChecking();
 }
 
+function captureLivenessFrame(maxDim = 240, quality = 0.25) {
+  const origW = video.videoWidth || 640;
+  const origH = video.videoHeight || 480;
+
+  let currentDim = maxDim;
+  let currentQuality = quality;
+
+  let targetW = origW;
+  let targetH = origH;
+
+  if (currentDim && (origW > currentDim || origH > currentDim)) {
+    if (origW > origH) {
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
+    } else {
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, -targetW, 0, targetW, targetH);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  let dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+
+  // Guaranteed safety loop:
+  // Iteratively reduce quality and dimension until dataUrl.length is strictly <= 10000 chars
+  while (dataUrl.length > 10000 && currentDim > 120) {
+    currentDim = Math.round(currentDim * 0.8);
+    currentQuality = Math.max(0.15, currentQuality * 0.8);
+
+    if (origW > origH) {
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
+    } else {
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx2 = canvas.getContext('2d');
+    ctx2.scale(-1, 1);
+    ctx2.drawImage(video, -targetW, 0, targetW, targetH);
+    ctx2.setTransform(1, 0, 0, 1, 0, 0);
+    dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+  }
+
+  return dataUrl;
+}
+
 function startAutoChecking() {
+
   if (autoCheckInterval) clearInterval(autoCheckInterval);
   challengeStartTime = Date.now();
 
   autoCheckInterval = setInterval(async () => {
     if (isChecking || !stream || !video.readyState) return;
 
-    const canvas = document.createElement('canvas');
-    const origW = video.videoWidth || 640;
-    const origH = video.videoHeight || 480;
-    const maxDim = 480;
-    let targetW = origW;
-    let targetH = origH;
-    if (origW > maxDim || origH > maxDim) {
-      if (origW > origH) {
-        targetW = maxDim;
-        targetH = Math.round((origH * maxDim) / origW);
-      } else {
-        targetH = maxDim;
-        targetW = Math.round((origW * maxDim) / origH);
-      }
-    }
-    canvas.width = targetW;
-    canvas.height = targetH;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -targetW, 0, targetW, targetH);
-
-    const brightness = checkFrameBrightness(ctx, canvas.width, canvas.height);
-    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
-    if (brightness < 60 || brightness > 230) {
-      const text = brightness < 60
-        ? (lang === 'uz' ? "⚠️ Xona juda qorong'u!" : "⚠️ Room is too dark!")
-        : (lang === 'uz' ? "⚠️ Yorug'lik juda kuchli!" : "⚠️ Too much light!");
-      statusEl.querySelector('span').textContent = text;
-      if (overlayText) {
-        overlayText.textContent = text;
-      }
-      return;
-    }
+    const frameData = captureLivenessFrame(240, 0.25);
 
     // Fast client-side face check if native FaceDetector is supported
     if (localDetector) {
@@ -284,6 +309,7 @@ function startAutoChecking() {
         const faces = await localDetector.detect(video);
         if (faces.length === 0) {
           guide.classList.remove('active');
+          const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
           const text = lang === 'uz' ? '👤 Kameraga qarang.' : '👤 Please look at the camera.';
           statusEl.querySelector('span').textContent = text;
           if (overlayText) overlayText.textContent = text;
@@ -302,6 +328,7 @@ function startAutoChecking() {
         
         if (devX > 0.22 || devY > 0.22) {
           guide.classList.remove('active');
+          const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
           const text = lang === 'uz' ? '⚠️ Yuzingizni doira ichiga joylashtiring.' : '⚠️ Center your face in the oval.';
           statusEl.querySelector('span').textContent = text;
           if (overlayText) overlayText.textContent = text;
@@ -314,11 +341,11 @@ function startAutoChecking() {
 
     isChecking = true;
     const ch = CHALLENGES[currentChallengeIdx];
-    const frame = canvas.toDataURL('image/jpeg', 0.45);
+    const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
 
-
-    const result = await verifyChallenge(frame, ch.type);
+    const result = await verifyChallenge(frameData, ch.type);
     isChecking = false;
+
 
 
     if (result && result.success) {
