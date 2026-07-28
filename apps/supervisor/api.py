@@ -55,93 +55,112 @@ def _decode_frame(frame: str):
 
 
 class SupervisorExamVerifyAPI(View):
-
     """POST /api/supervisor/exam-verify/ — Live face match against stored template."""
 
     def post(self, request):
+        logger.info("DIAGNOSTIC STEP 1: Entering SupervisorExamVerifyAPI.post")
         if not _supervisor_auth(request):
+            logger.info("DIAGNOSTIC RETURN: Unauthorized 403")
             return JsonResponse({'error': 'Unauthorized'}, status=403)
 
         try:
+            logger.info("DIAGNOSTIC STEP 2: Parsing request JSON body")
             data = _json_request_body(request)
             if data is None:
+                logger.info("DIAGNOSTIC RETURN: Invalid JSON request 400")
                 return JsonResponse({'success': False, 'error': 'Invalid JSON request'}, status=400)
             profile_id = data.get('profile_id')
             frame = data.get('frame')  # base64 frame from supervisor camera
 
+            logger.info("DIAGNOSTIC STEP 3: Validating profile_id (%s) and frame (len: %s)", profile_id, len(frame) if frame else 0)
             if not profile_id or not frame:
+                logger.info("DIAGNOSTIC RETURN: Missing profile_id or frame 400")
                 return JsonResponse({'success': False, 'error': 'Missing profile_id or frame'}, status=400)
 
+            logger.info("DIAGNOSTIC STEP 4: Fetching ApplicantProfile for id=%s", profile_id)
             try:
                 profile = ApplicantProfile.objects.get(id=profile_id)
+                logger.info("DIAGNOSTIC STEP 4 OK: Found profile %s (%s)", profile.id, profile.full_name)
             except ApplicantProfile.DoesNotExist:
+                logger.info("DIAGNOSTIC RETURN: Applicant profile not found 404")
                 return JsonResponse({'success': False, 'error': 'Applicant profile not found'}, status=404)
 
-            # 1. Prefer officially verified biometric template
+            logger.info("DIAGNOSTIC STEP 5: Searching FaceProfile for user=%s", profile.user.id)
             stored = FaceProfile.objects.filter(
                 session__user=profile.user,
                 status=VerificationStatus.VERIFIED,
             ).exclude(selfie_embedding__isnull=True).order_by('-created_at').first()
 
-            # 2. Fallback: if no status=='verified' template exists yet, use any enrolled selfie embedding for this user
             if not stored:
+                logger.info("DIAGNOSTIC STEP 5 FALLBACK: Searching any enrolled FaceProfile")
                 stored = FaceProfile.objects.filter(
                     session__user=profile.user,
                 ).exclude(selfie_embedding__isnull=True).order_by('-created_at').first()
 
             if not stored:
+                logger.info("DIAGNOSTIC RETURN: No stored biometric template 404")
                 return JsonResponse({
                     'success': False,
                     'error': 'No stored biometric template found for this applicant',
                     'indicator': 'warning',
                 }, status=404)
 
+            logger.info("DIAGNOSTIC STEP 5 OK: Found FaceProfile %s (embedding len: %s)", stored.id, len(stored.selfie_embedding) if stored.selfie_embedding else 0)
 
+            logger.info("DIAGNOSTIC STEP 6: Decoding base64 live frame")
             try:
                 live_img, live_array, _frame_bytes = _decode_frame(frame)
                 if live_img is None:
                     raise ValueError('invalid frame')
-            except Exception:
+                logger.info("DIAGNOSTIC STEP 6 OK: Decoded frame size %s, array shape %s", live_img.size, live_array.shape)
+            except Exception as e_dec:
+                logger.info("DIAGNOSTIC RETURN: Invalid base64 frame data 400 (%s)", e_dec)
                 return JsonResponse({'success': False, 'error': 'Invalid base64 frame data'}, status=400)
 
+            logger.info("DIAGNOSTIC STEP 7: Initializing face engine")
             engine = get_face_engine()
+            logger.info("DIAGNOSTIC STEP 7 OK: Face engine %s", type(engine))
 
+            logger.info("DIAGNOSTIC STEP 8: Extracting live face and embedding")
             live_result = engine.extract_face_and_embedding(live_array, require_single=True)
+            logger.info("DIAGNOSTIC STEP 8 OK: live_result success=%s, face_count=%s", live_result.get('success'), live_result.get('face_count'))
+
             if not live_result.get('success'):
+                logger.info("DIAGNOSTIC RETURN: No face detected 200")
                 return JsonResponse({
                     'success': False,
                     'error': live_result.get('error') or 'No face detected in live frame',
                     'indicator': 'red',
                 })
 
-            # Anti-Spoofing — reject printed photos, screens, replay attacks
+            logger.info("DIAGNOSTIC STEP 9: Anti-spoofing check")
             from apps.face_engine.antispoof import check_spoof
             spoof_result = check_spoof(
                 live_array,
                 face_info=live_result.get('face'),
                 face_count=live_result.get('face_count'),
             )
+            logger.info("DIAGNOSTIC STEP 9 OK: spoof_result success=%s, is_live=%s, score=%s", spoof_result.get('success'), spoof_result.get('is_live'), spoof_result.get('score'))
+
             if not spoof_result['success']:
-                logger.error("ExamVerifyAPI anti-spoof error: %s", spoof_result['message'])
+                logger.info("DIAGNOSTIC RETURN: Anti-spoof failed (%s)", spoof_result.get('message'))
                 return JsonResponse({
                     'success': False,
                     'error': spoof_result['message'],
                     'indicator': 'red',
                 })
             if not spoof_result['is_live']:
-                logger.error(
-                    "ExamVerifyAPI spoof detected (score=%.4f) for profile %s",
-                    spoof_result['score'], profile_id
-                )
+                logger.info("DIAGNOSTIC RETURN: Spoof attack detected")
                 return JsonResponse({
                     'success': False,
                     'error': 'Spoof attack detected. Please present a real face to the camera.',
                     'indicator': 'red',
                 })
 
-            # Compare with stored embedding
+            logger.info("DIAGNOSTIC STEP 10: Comparing embeddings")
             stored_embedding = stored.selfie_embedding
             if not stored_embedding:
+                logger.info("DIAGNOSTIC RETURN: No stored embedding")
                 return JsonResponse({
                     'success': False,
                     'error': 'No stored biometric embedding',
@@ -150,8 +169,8 @@ class SupervisorExamVerifyAPI(View):
 
             cosine_sim, match_pct = engine.compare_faces(stored_embedding, live_result['embedding'].tolist())
             status = determine_verification_status(match_pct)
+            logger.info("DIAGNOSTIC STEP 10 OK: cosine_sim=%.4f, match_pct=%.1f, status=%s", cosine_sim, match_pct, status)
 
-            # Determine indicator color
             if status == 'verified':
                 indicator = 'green'
                 message = str(_('Identity Confirmed'))
@@ -162,7 +181,7 @@ class SupervisorExamVerifyAPI(View):
                 indicator = 'red'
                 message = str(_('Identity Mismatch'))
 
-            # Log the exam-day verification
+            logger.info("DIAGNOSTIC STEP 11: Creating VerificationLog")
             supervisor_id = request.session.get('supervisor_user_id')
             supervisor = None
             if supervisor_id:
@@ -172,7 +191,7 @@ class SupervisorExamVerifyAPI(View):
                 except CustomUser.DoesNotExist:
                     pass
 
-            VerificationLog.objects.create(
+            vlog = VerificationLog.objects.create(
                 applicant_profile=profile,
                 supervisor=supervisor,
                 verification_type='exam_day',
@@ -180,6 +199,7 @@ class SupervisorExamVerifyAPI(View):
                 score=match_pct,
                 ip_address=request.META.get('REMOTE_ADDR'),
             )
+            logger.info("DIAGNOSTIC STEP 11 OK: VerificationLog created id=%s", vlog.id)
 
             already_verified = VerificationLog.objects.filter(
                 applicant_profile=profile,
@@ -187,6 +207,7 @@ class SupervisorExamVerifyAPI(View):
                 notes='Checked-in/Exam Entry Confirmed by Supervisor'
             ).exists()
 
+            logger.info("DIAGNOSTIC STEP 12: Returning final JsonResponse 200 OK")
             return JsonResponse({
                 'success': True,
                 'match_percentage': float(round(match_pct, 1)),
@@ -203,10 +224,12 @@ class SupervisorExamVerifyAPI(View):
             })
 
         except ApplicantProfile.DoesNotExist:
+            logger.info("DIAGNOSTIC EXCEPTION: ApplicantProfile.DoesNotExist")
             return JsonResponse({'success': False, 'error': 'Applicant not found'}, status=404)
         except Exception as e:
-            logger.exception('ExamVerifyAPI error')
+            logger.exception("DIAGNOSTIC EXCEPTION in SupervisorExamVerifyAPI: %s", e)
             return JsonResponse({'success': False, 'error': str(e)}, status=200)
+
 
 
 
