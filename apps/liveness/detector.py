@@ -490,14 +490,15 @@ class OpenCVLivenessDetector:
 
 
             return {
-                'face_detected': face_detected,
-                'face_centered': face_centered,
-                'face_size_ok': face_size_ok,
-                'eyes_open': face_detected,  # Haar cascade doesn't detect eyes separately
-                'lighting_ok': lighting_ok,
-                'brightness': brightness,
-                'confidence': 0.9 if face_detected else 0.0,
+                'face_detected': bool(face_detected),
+                'face_centered': bool(face_centered),
+                'face_size_ok': bool(face_size_ok),
+                'eyes_open': bool(face_detected),
+                'lighting_ok': bool(lighting_ok),
+                'brightness': float(brightness),
+                'confidence': 0.9 if bool(face_detected) else 0.0,
             }
+
         except Exception as e:
             logger.error(f'detect_face_in_frame error: {e}')
             return {'face_detected': False, 'face_centered': False, 'eyes_open': False, 'lighting_ok': True, 'confidence': 0.0}
