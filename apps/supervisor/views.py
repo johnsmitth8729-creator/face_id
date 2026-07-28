@@ -154,14 +154,19 @@ class ExamVerifyView(View):
             face_prof = FaceProfile.objects.filter(session__user=applicant.user, status='verified').first()
             if not face_prof:
                 face_prof = FaceProfile.objects.filter(session__user=applicant.user).first()
-            if face_prof and face_prof.selfie_image:
-                selfie_url = face_prof.selfie_image.url
+            if face_prof and hasattr(face_prof, 'selfie_image') and face_prof.selfie_image:
+                try:
+                    if face_prof.selfie_image.name:
+                        selfie_url = face_prof.selfie_image.url
+                except Exception:
+                    selfie_url = ""
 
         return render(request, self.template_name, {
             'page_title': _('Exam Day Verification'),
             'applicant': applicant,
             'selfie_url': selfie_url,
         })
+
 
 
 @supervisor_required_class

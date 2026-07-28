@@ -20,7 +20,17 @@ def _supervisor_auth(request):
     return request.session.get(SUPERVISOR_SESSION_KEY, False)
 
 
+def _safe_file_url(obj) -> str:
+    try:
+        if obj and hasattr(obj, 'selfie_image') and obj.selfie_image and obj.selfie_image.name:
+            return obj.selfie_image.url
+    except Exception:
+        pass
+    return ""
+
+
 class SupervisorExamVerifyAPI(View):
+
     """POST /api/supervisor/exam-verify/ — Live face match against stored template."""
 
     def post(self, request):
@@ -278,9 +288,10 @@ class SupervisorExamIdentifyAPI(View):
                             'error': 'No applicant profile found',
                             'indicator': 'red'
                         })
-                    selfie_url = stored.selfie_image.url if stored and stored.selfie_image else ""
+                    selfie_url = _safe_file_url(stored)
 
                 match_pct = 92.5
+
                 status = 'verified'
                 indicator = 'green'
                 message = str(_('Identity Confirmed'))
@@ -353,7 +364,7 @@ class SupervisorExamIdentifyAPI(View):
                         indicator = 'green'
                         message = str(_('Identity Confirmed'))
                         match_pct = best_match_pct
-                        selfie_url = best_match_profile.selfie_image.url if best_match_profile.selfie_image else ""
+                        selfie_url = _safe_file_url(best_match_profile)
                     except Exception:
                         return JsonResponse({
                             'success': False,
@@ -367,7 +378,7 @@ class SupervisorExamIdentifyAPI(View):
                         indicator = 'yellow'
                         message = str(_('Manual Review Required'))
                         match_pct = best_match_pct
-                        selfie_url = best_match_profile.selfie_image.url if best_match_profile.selfie_image else ""
+                        selfie_url = _safe_file_url(best_match_profile)
                     except Exception:
                         return JsonResponse({
                             'success': False,
