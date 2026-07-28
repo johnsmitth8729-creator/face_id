@@ -17,6 +17,7 @@ urlpatterns = [
     # API endpoints (also accessible here for cleaner routing)
     path('api/qr-lookup/', api.SupervisorQRLookupAPI.as_view(), name='api-qr-lookup'),
     path('api/exam-verify/', api.SupervisorExamVerifyAPI.as_view(), name='api-exam-verify'),
+    path('api/exam-identify/', api.SupervisorExamIdentifyAPI.as_view(), name='api-exam-identify'),
     path('api/confirm-attendance/', api.ConfirmAttendanceAPI.as_view(), name='api-confirm-attendance'),
 ]
 
