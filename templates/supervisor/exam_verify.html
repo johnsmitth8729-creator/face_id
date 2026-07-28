@@ -950,14 +950,14 @@ async function captureAndVerify() {
       body: JSON.stringify({ profile_id: currentProfileId, frame: frame }),
     });
 
-    if (!resp.ok && resp.status !== 422) {
-      console.warn("API_EXAM_VERIFY HTTP status:", resp.status);
-      document.getElementById('faceLoading').classList.add('d-none');
-      showFaceResult({ success: false, error: I18N.networkError + ': HTTP ' + resp.status });
-      return;
+    let result = null;
+    try {
+      result = await resp.json();
+    } catch (e) {
+      console.warn("API_EXAM_VERIFY Non-JSON response, status:", resp.status);
+      result = { success: false, error: I18N.networkError + ': HTTP ' + resp.status };
     }
 
-    const result = await resp.json();
     document.getElementById('faceLoading').classList.add('d-none');
     showFaceResult(result);
   } catch (err) {
