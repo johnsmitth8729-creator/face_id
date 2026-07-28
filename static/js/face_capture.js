@@ -283,8 +283,8 @@ async function checkFaceInFrame() {
       speak(lang === 'uz' ? 'Rasmga olinmoqda' : 'Capturing photo');
       isSaving = true;
       clearInterval(faceCheckInterval);
-      const highResPhoto = captureFrame(1024, 0.85);
-      await triggerSelfieSave(highResPhoto);
+      const selfiePhoto = captureFrame(480, 0.45);
+      await triggerSelfieSave(selfiePhoto);
     }
   } catch (e) {
     console.error("Face check loop error:", e);
@@ -317,15 +317,17 @@ function captureFrame(maxDim = 240, quality = 0.25) {
 
   let dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-  // Hard safety limit: Keep payload under 10KB (10000 chars) to prevent Nginx proxy 500 error
-  if (dataUrl.length > 10000 && maxDim < 1000) {
-    canvas.width = 180;
-    canvas.height = Math.round((origH * 180) / origW);
+  // Hard safety limit for ALL requests (detection and selfie save):
+  // Keep payload under 11,000 chars (~11KB) to prevent Nginx proxy 500 error on external proxy
+
+  if (dataUrl.length > 11000) {
+    canvas.width = 360;
+    canvas.height = Math.round((origH * 360) / origW);
     const ctx2 = canvas.getContext('2d');
     ctx2.scale(-1, 1);
     ctx2.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
     ctx2.setTransform(1, 0, 0, 1, 0, 0);
-    dataUrl = canvas.toDataURL('image/jpeg', 0.2);
+    dataUrl = canvas.toDataURL('image/jpeg', 0.35);
   }
 
   return dataUrl;
@@ -339,7 +341,17 @@ async function triggerSelfieSave(imageData) {
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify({ image: imageData }),
     });
+
+    if (!resp.ok) {
+      console.warn("Save selfie HTTP status:", resp.status);
+      setStatus('error', lang === 'uz' ? '❌ Qayta urinib ko\'ring' : '❌ Please try again');
+      isSaving = false;
+      startFaceDetection();
+      return;
+    }
+
     const result = await resp.json();
+
     if (result.success) {
       if (capturedPreview) {
         capturedPreview.src = imageData;
