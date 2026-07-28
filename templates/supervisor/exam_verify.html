@@ -871,8 +871,8 @@ function captureFrame() {
   const origW = video.videoWidth || 640;
   const origH = video.videoHeight || 480;
 
-  let currentDim = 480;
-  let currentQuality = 0.50;
+  let currentDim = 320;
+  let currentQuality = 0.40;
 
   let targetW = origW;
   let targetH = origH;
@@ -891,17 +891,21 @@ function captureFrame() {
   canvas.width = targetW;
   canvas.height = targetH;
   const ctx = canvas.getContext('2d');
-  ctx.scale(-1, 1);
-  ctx.drawImage(video, -targetW, 0, targetW, targetH);
+  if (currentFaceFacingMode === 'user') {
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -targetW, 0, targetW, targetH);
+  } else {
+    ctx.drawImage(video, 0, 0, targetW, targetH);
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   let dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
 
   // Guaranteed safety loop:
-  // Iteratively reduce quality and dimension until dataUrl.length is strictly <= 11000 chars
-  while (dataUrl.length > 11000 && currentDim > 120) {
-    currentDim = Math.round(currentDim * 0.8);
-    currentQuality = Math.max(0.20, currentQuality * 0.8);
+  // Iteratively reduce quality and dimension until dataUrl.length is strictly <= 9500 chars
+  while (dataUrl.length > 9500 && currentDim > 120) {
+    currentDim = Math.round(currentDim * 0.85);
+    currentQuality = Math.max(0.20, currentQuality * 0.85);
 
     if (origW > origH) {
       targetW = currentDim;
@@ -914,8 +918,12 @@ function captureFrame() {
     canvas.width = targetW;
     canvas.height = targetH;
     const ctx2 = canvas.getContext('2d');
-    ctx2.scale(-1, 1);
-    ctx2.drawImage(video, -targetW, 0, targetW, targetH);
+    if (currentFaceFacingMode === 'user') {
+      ctx2.scale(-1, 1);
+      ctx2.drawImage(video, -targetW, 0, targetW, targetH);
+    } else {
+      ctx2.drawImage(video, 0, 0, targetW, targetH);
+    }
     ctx2.setTransform(1, 0, 0, 1, 0, 0);
     dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
   }

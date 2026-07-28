@@ -40,6 +40,7 @@ def _decode_frame(frame: str):
     import base64
     import binascii
     import io
+    import cv2
 
     from PIL import Image, UnidentifiedImageError
     import numpy as np
@@ -50,7 +51,15 @@ def _decode_frame(frame: str):
         live_img = Image.open(io.BytesIO(frame_bytes)).convert('RGB')
     except (binascii.Error, ValueError, UnidentifiedImageError, OSError):
         return None, None, None
+
     live_array = np.ascontiguousarray(np.array(live_img))
+
+    # Auto-upscale low-resolution frames to 640x480 for InsightFace detection
+    h, w = live_array.shape[:2]
+    if h < 400 or w < 400:
+        live_array = cv2.resize(live_array, (640, 480), interpolation=cv2.INTER_CUBIC)
+        live_img = Image.fromarray(live_array)
+
     return live_img, live_array, frame_bytes
 
 
