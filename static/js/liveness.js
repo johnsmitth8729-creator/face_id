@@ -247,7 +247,7 @@ function startAutoChecking() {
     const canvas = document.createElement('canvas');
     const origW = video.videoWidth || 640;
     const origH = video.videoHeight || 480;
-    const maxDim = 400;
+    const maxDim = 240;
     let targetW = origW;
     let targetH = origH;
     if (origW > maxDim || origH > maxDim) {
@@ -314,10 +314,11 @@ function startAutoChecking() {
 
     isChecking = true;
     const ch = CHALLENGES[currentChallengeIdx];
-    const frame = canvas.toDataURL('image/jpeg', 0.5);
+    const frame = canvas.toDataURL('image/jpeg', 0.3);
 
     const result = await verifyChallenge(frame, ch.type);
     isChecking = false;
+
 
     if (result && result.success) {
       clearInterval(autoCheckInterval);
@@ -365,12 +366,17 @@ async function verifyChallenge(frame, challengeType) {
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN || CSRF },
       body: JSON.stringify({ frame, challenge_type: challengeType }),
     });
+    if (!resp.ok) {
+      console.warn("liveness verify HTTP status:", resp.status);
+      return null;
+    }
     return await resp.json();
   } catch (err) {
     console.error('Challenge verify error:', err);
     return null;
   }
 }
+
 
 function passChallenge(idx) {
   const item = document.getElementById(`challenge-item-${idx}`);

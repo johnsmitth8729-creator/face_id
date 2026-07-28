@@ -216,12 +216,18 @@ async function checkFaceInFrame() {
   }
 
   try {
-    const frameData = captureFrame();
+    const frameData = captureFrame(240, 0.3);
     const resp = await fetch('/api/verification/detect-face/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify({ frame: frameData }),
     });
+
+    if (!resp.ok) {
+      console.warn("detect-face HTTP status:", resp.status);
+      return;
+    }
+
     const result = await resp.json();
     const lang = (document.documentElement.lang || 'uz').toLowerCase().startsWith('uz') ? 'uz' : 'en';
 
@@ -276,7 +282,7 @@ async function checkFaceInFrame() {
       speak(lang === 'uz' ? 'Rasmga olinmoqda' : 'Capturing photo');
       isSaving = true;
       clearInterval(faceCheckInterval);
-      const highResPhoto = captureFrame(1280, 0.85);
+      const highResPhoto = captureFrame(1024, 0.85);
       await triggerSelfieSave(highResPhoto);
     }
   } catch (e) {
@@ -284,7 +290,7 @@ async function checkFaceInFrame() {
   }
 }
 
-function captureFrame(maxDim = 400, quality = 0.5) {
+function captureFrame(maxDim = 240, quality = 0.3) {
   const origW = video.videoWidth || 640;
   const origH = video.videoHeight || 480;
 
@@ -309,6 +315,7 @@ function captureFrame(maxDim = 400, quality = 0.5) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   return canvas.toDataURL('image/jpeg', quality);
 }
+
 
 
 async function triggerSelfieSave(imageData) {
