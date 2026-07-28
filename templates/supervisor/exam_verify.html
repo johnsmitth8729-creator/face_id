@@ -944,23 +944,30 @@ async function captureAndVerify() {
   document.getElementById('comp_registered').src = lastScannedSelfieUrl || '/static/images/avatar.png';
 
   try {
+    console.log("[EXAM_VERIFY] Before fetch:", API_EXAM_VERIFY);
     const resp = await fetch(API_EXAM_VERIFY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
       body: JSON.stringify({ profile_id: currentProfileId, frame: frame }),
     });
 
+    console.log("[EXAM_VERIFY] HTTP Status:", resp.status);
+    console.log("[EXAM_VERIFY] Content-Type:", resp.headers.get("content-type"));
+    const rawText = await resp.clone().text();
+    console.log("[EXAM_VERIFY] Response Body:", rawText);
+
     let result = null;
     try {
-      result = await resp.json();
+      result = JSON.parse(rawText);
     } catch (e) {
-      console.warn("API_EXAM_VERIFY Non-JSON response, status:", resp.status);
+      console.error("[EXAM_VERIFY] Non-JSON response, status:", resp.status, "body:", rawText);
       result = { success: false, error: I18N.networkError + ': HTTP ' + resp.status };
     }
 
     document.getElementById('faceLoading').classList.add('d-none');
     showFaceResult(result);
   } catch (err) {
+    console.error("[EXAM_VERIFY] Network exception:", err);
     document.getElementById('faceLoading').classList.add('d-none');
     showFaceResult({ success: false, error: I18N.networkError + ': ' + err.message });
   } finally {
