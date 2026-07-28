@@ -216,13 +216,13 @@ async function checkFaceInFrame() {
   }
 
   try {
-    const frameData = captureFrame(480, 0.45);
+    const frameData = captureFrame(240, 0.25);
     const resp = await fetch('/api/verification/detect-face/', {
+
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify({ frame: frameData }),
     });
-
 
     if (!resp.ok) {
       console.warn("detect-face HTTP status:", resp.status);
@@ -291,7 +291,7 @@ async function checkFaceInFrame() {
   }
 }
 
-function captureFrame(maxDim = 480, quality = 0.45) {
+function captureFrame(maxDim = 240, quality = 0.25) {
   const origW = video.videoWidth || 640;
   const origH = video.videoHeight || 480;
 
@@ -314,10 +314,22 @@ function captureFrame(maxDim = 480, quality = 0.45) {
   ctx.scale(-1, 1);
   ctx.drawImage(video, -targetW, 0, targetW, targetH);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  return canvas.toDataURL('image/jpeg', quality);
+
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+  // Hard safety limit: Keep payload under 10KB (10000 chars) to prevent Nginx proxy 500 error
+  if (dataUrl.length > 10000 && maxDim < 1000) {
+    canvas.width = 180;
+    canvas.height = Math.round((origH * 180) / origW);
+    const ctx2 = canvas.getContext('2d');
+    ctx2.scale(-1, 1);
+    ctx2.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx2.setTransform(1, 0, 0, 1, 0, 0);
+    dataUrl = canvas.toDataURL('image/jpeg', 0.2);
+  }
+
+  return dataUrl;
 }
-
-
 
 async function triggerSelfieSave(imageData) {
   const lang = document.documentElement.lang || 'uz';
