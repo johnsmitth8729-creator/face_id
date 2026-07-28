@@ -98,6 +98,14 @@ class MediaPipeLivenessDetector:
         if self._face_mesh is None:
             try:
                 import mediapipe as mp
+                # mediapipe >= 0.10 removed mp.solutions — use the new Tasks API.
+                # mediapipe < 0.10 still uses mp.solutions.face_mesh.
+                if not hasattr(mp, 'solutions'):
+                    raise AttributeError(
+                        f'mediapipe version {mp.__version__} does not expose '
+                        'mp.solutions (requires mediapipe<0.10). '
+                        'Upgrade to mediapipe-tasks or downgrade mediapipe.'
+                    )
                 self._mp_face_mesh = mp.solutions.face_mesh
                 self._face_mesh = self._mp_face_mesh.FaceMesh(
                     static_image_mode=True,
@@ -106,7 +114,7 @@ class MediaPipeLivenessDetector:
                     min_detection_confidence=0.5,
                     min_tracking_confidence=0.5,
                 )
-                logger.info('MediaPipe Face Mesh initialized')
+                logger.info('MediaPipe Face Mesh initialized (mediapipe %s)', mp.__version__)
             except Exception as e:
                 logger.error(f'MediaPipe initialization failed: {e}')
                 raise

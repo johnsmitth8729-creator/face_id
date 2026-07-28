@@ -231,7 +231,9 @@ class SaveSelfieAPI(View):
             return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
         except Exception as e:
             logger.error('SaveSelfieAPI error: %s', e)
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            import traceback
+            logger.error(traceback.format_exc())
+            return JsonResponse({'success': False, 'error': str(e)}, status=200)
 
 
 class LivenessChallengeAPI(View):
