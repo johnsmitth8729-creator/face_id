@@ -277,13 +277,11 @@ async function checkFaceInFrame() {
     
     if (remaining > 0) {
       setStatus('active', lang === 'uz' ? `🟢 Yuz holati mos. Qimirlamang...` : `🟢 Face position OK. Hold still...`);
-      speak(lang === 'uz' ? 'Qimirlamang' : 'Hold still');
-    } else {
-      setStatus('active', lang === 'uz' ? '⏳ Rasmga olinmoqda...' : '⏳ Capturing...');
+        setStatus('active', lang === 'uz' ? '⏳ Rasmga olinmoqda...' : '⏳ Capturing...');
       speak(lang === 'uz' ? 'Rasmga olinmoqda' : 'Capturing photo');
       isSaving = true;
       clearInterval(faceCheckInterval);
-      const selfiePhoto = captureFrame(480, 0.45);
+      const selfiePhoto = captureFrame(640, 0.70);
       await triggerSelfieSave(selfiePhoto);
     }
   } catch (e) {
@@ -319,22 +317,21 @@ function captureFrame(maxDim = 240, quality = 0.25) {
 
   // Hard safety limit for ALL requests (detection and selfie save):
   // Keep payload under 11,000 chars (~11KB) to prevent Nginx proxy 500 error on external proxy
-
   if (dataUrl.length > 11000) {
-    canvas.width = 360;
-    canvas.height = Math.round((origH * 360) / origW);
+    canvas.width = 400;
+    canvas.height = Math.round((origH * 400) / origW);
     const ctx2 = canvas.getContext('2d');
     ctx2.scale(-1, 1);
     ctx2.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
     ctx2.setTransform(1, 0, 0, 1, 0, 0);
-    dataUrl = canvas.toDataURL('image/jpeg', 0.35);
+    dataUrl = canvas.toDataURL('image/jpeg', 0.40);
   }
 
   return dataUrl;
 }
 
 async function triggerSelfieSave(imageData) {
-  const lang = document.documentElement.lang || 'uz';
+  const lang = (document.documentElement.lang || 'uz').toLowerCase();
   try {
     const resp = await fetch('/api/verification/save-selfie/', {
       method: 'POST',
@@ -342,11 +339,11 @@ async function triggerSelfieSave(imageData) {
       body: JSON.stringify({ image: imageData }),
     });
 
-    if (!resp.ok) {
+    if (!resp.ok && resp.status !== 422) {
       console.warn("Save selfie HTTP status:", resp.status);
-      setStatus('error', lang === 'uz' ? '❌ Qayta urinib ko\'ring' : '❌ Please try again');
+      setStatus('error', lang.startsWith('uz') ? '❌ Qayta urinib ko\'ring' : '❌ Please try again');
       isSaving = false;
-      startFaceDetection();
+      setTimeout(() => { startFaceDetection(); }, 2000);
       return;
     }
 
@@ -363,8 +360,8 @@ async function triggerSelfieSave(imageData) {
         captureSuccess.classList.remove('d-none');
       }
 
-      setStatus('captured', lang === 'uz' ? '📸 Rasm saqlandi!' : '📸 Photo saved!');
-      speak(lang === 'uz' ? 'Rasm muvaffaqiyatli saqlandi' : 'Photo saved successfully');
+      setStatus('captured', lang.startsWith('uz') ? '📸 Rasm saqlandi!' : '📸 Photo saved!');
+      speak(lang.startsWith('uz') ? 'Rasm muvaffaqiyatli saqlandi' : 'Photo saved successfully');
 
       setTimeout(() => {
         if (stream) {
@@ -373,18 +370,36 @@ async function triggerSelfieSave(imageData) {
         window.location.href = '/step/3/';
       }, 1500);
     } else {
-      speak(result.error || (lang === 'uz' ? 'Xatolik yuz berdi' : 'Error saving image'));
-      setStatus('error', '❌ ' + (result.error || 'Error'));
+      let rawErr = result.error || '';
+      let displayErr = rawErr;
+      if (lang.startsWith('uz')) {
+        if (rawErr.includes('closer') || rawErr.includes('size') || rawErr.includes('ratio')) {
+          displayErr = "Kameraga yaqinroq turing";
+        } else if (rawErr.includes('blurry') || rawErr.includes('blur')) {
+          displayErr = "Rasm xira. Qimirlamay turing";
+        } else if (rawErr.includes('one face') || rawErr.includes('Multiple faces')) {
+          displayErr = "Kamerada faqat bir kishi bo'lsin";
+        } else if (rawErr.includes('Spoof') || rawErr.includes('live')) {
+          displayErr = "Kameraga jonli yuzingiz bilan qarang";
+        } else if (rawErr.includes('dark')) {
+          displayErr = "Yorug'lik yetarli emas";
+        } else if (rawErr.includes('bright')) {
+          displayErr = "Yorug'lik juda kuchli";
+        }
+      }
+      speak(displayErr);
+      setStatus('error', '❌ ' + displayErr);
       isSaving = false;
-      startFaceDetection();
+      setTimeout(() => { startFaceDetection(); }, 2500);
     }
   } catch (err) {
     console.error('Selfie save error:', err);
-    setStatus('error', '❌ Server error');
+    setStatus('error', '❌ ' + (lang.startsWith('uz') ? 'Qayta urinib ko\'ring' : 'Please try again'));
     isSaving = false;
-    startFaceDetection();
+    setTimeout(() => { startFaceDetection(); }, 2500);
   }
 }
+
 
 // Auto-start on load
 document.addEventListener('DOMContentLoaded', initCamera);
