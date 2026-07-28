@@ -216,12 +216,13 @@ async function checkFaceInFrame() {
   }
 
   try {
-    const frameData = captureFrame(240, 0.3);
+    const frameData = captureFrame(480, 0.45);
     const resp = await fetch('/api/verification/detect-face/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
       body: JSON.stringify({ frame: frameData }),
     });
+
 
     if (!resp.ok) {
       console.warn("detect-face HTTP status:", resp.status);
@@ -290,7 +291,7 @@ async function checkFaceInFrame() {
   }
 }
 
-function captureFrame(maxDim = 240, quality = 0.3) {
+function captureFrame(maxDim = 480, quality = 0.45) {
   const origW = video.videoWidth || 640;
   const origH = video.videoHeight || 480;
 

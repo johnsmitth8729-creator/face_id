@@ -247,7 +247,7 @@ function startAutoChecking() {
     const canvas = document.createElement('canvas');
     const origW = video.videoWidth || 640;
     const origH = video.videoHeight || 480;
-    const maxDim = 240;
+    const maxDim = 480;
     let targetW = origW;
     let targetH = origH;
     if (origW > maxDim || origH > maxDim) {
@@ -314,7 +314,8 @@ function startAutoChecking() {
 
     isChecking = true;
     const ch = CHALLENGES[currentChallengeIdx];
-    const frame = canvas.toDataURL('image/jpeg', 0.3);
+    const frame = canvas.toDataURL('image/jpeg', 0.45);
+
 
     const result = await verifyChallenge(frame, ch.type);
     isChecking = false;

@@ -460,20 +460,25 @@ class OpenCVLivenessDetector:
 
             # Face detection via Haar Cascade (fast, no model download needed)
             if self.face_cascade:
-                faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(80, 80))
-                face_detected = len(faces) == 1  # exactly one face required
+                img_h, img_w = gray.shape[:2]
+                min_dim = max(20, int(min(img_h, img_w) * 0.12))
+                faces = self.face_cascade.detectMultiScale(
+                    gray, scaleFactor=1.1, minNeighbors=3, minSize=(min_dim, min_dim)
+                )
+                face_detected = len(faces) >= 1
 
                 if face_detected:
-                    (x, y, w, h) = faces[0]
-                    img_h, img_w = gray.shape[:2]
+                    # Select largest face
+                    faces_sorted = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
+                    (x, y, w, h) = faces_sorted[0]
                     cx = x + w / 2
                     cy = y + h / 2
-                    # Check centering: face center must be within middle 40% of frame
+                    # Check centering: face center must be within middle 60% of frame
                     face_centered = (
-                        0.25 * img_w < cx < 0.75 * img_w and
-                        0.20 * img_h < cy < 0.80 * img_h
+                        0.18 * img_w < cx < 0.82 * img_w and
+                        0.15 * img_h < cy < 0.85 * img_h
                     )
-                    face_size_ok = (w * h) > (img_w * img_h * 0.04)
+                    face_size_ok = (w * h) > (img_w * img_h * 0.02)
                 else:
                     face_centered = False
                     face_size_ok = False
@@ -482,6 +487,7 @@ class OpenCVLivenessDetector:
                 face_detected = True
                 face_centered = True
                 face_size_ok = True
+
 
             return {
                 'face_detected': face_detected,
