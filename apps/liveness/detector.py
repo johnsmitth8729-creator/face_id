@@ -430,72 +430,123 @@ class OpenCVLivenessDetector:
             return {'success': False, 'error': str(e), 'confidence': 0.0}
 
     def detect_face_in_frame(self, frame_data: str) -> dict:
-        """Check face presence in frame using InsightFace or cascade fallback."""
+        """
+        Check face presence in frame using OpenCV Haar Cascade.
+
+        IMPORTANT: InsightFace (ONNX) is intentionally NOT used here.
+        Loading InsightFace models takes 10-15 seconds on first call and blocks
+        the Gunicorn worker, causing HTTP 500 timeouts.
+        Haar Cascade is fast (<50ms) and sufficient for live camera face detection.
+        InsightFace is only needed for save-selfie (enrollment embedding).
+        """
         img_array = _decode_base64_image(frame_data)
         if img_array is None:
-            return {'face_detected': False}
+            return {
+                'face_detected': False,
+                'face_centered': False,
+                'face_size_ok': False,
+                'eyes_open': False,
+                'lighting_ok': True,
+                'confidence': 0.0,
+            }
 
         try:
             import cv2
-            from apps.face_engine.engine import get_face_engine, InsightFaceEngine
-            engine = get_face_engine()
-            
-            if isinstance(engine, InsightFaceEngine):
-                app = engine._get_app()
-                img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                faces = app.get(img_bgr)
-                success = len(faces) > 0
-                return {
-                    'face_detected': success,
-                    'face_centered': success,
-                    'face_size_ok': True,
-                    'eyes_open': success,
-                    'lighting_ok': True,
-                    'confidence': 0.95 if success else 0.0,
-                }
 
+            # Lighting check
+            gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+            brightness = float(gray.mean())
+            lighting_ok = 30 < brightness < 220
+
+            # Face detection via Haar Cascade (fast, no model download needed)
             if self.face_cascade:
-                gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-                faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
-                success = len(faces) > 0
+                faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(80, 80))
+                face_detected = len(faces) == 1  # exactly one face required
+
+                if face_detected:
+                    (x, y, w, h) = faces[0]
+                    img_h, img_w = gray.shape[:2]
+                    cx = x + w / 2
+                    cy = y + h / 2
+                    # Check centering: face center must be within middle 40% of frame
+                    face_centered = (
+                        0.25 * img_w < cx < 0.75 * img_w and
+                        0.20 * img_h < cy < 0.80 * img_h
+                    )
+                    face_size_ok = (w * h) > (img_w * img_h * 0.04)
+                else:
+                    face_centered = False
+                    face_size_ok = False
             else:
-                success = True
+                # No cascade available — assume face present to not block user
+                face_detected = True
+                face_centered = True
+                face_size_ok = True
+
             return {
-                'face_detected': success,
-                'face_centered': success,
-                'face_size_ok': True,
-                'eyes_open': success,
-                'lighting_ok': True,
-                'confidence': 0.95 if success else 0.0,
+                'face_detected': face_detected,
+                'face_centered': face_centered,
+                'face_size_ok': face_size_ok,
+                'eyes_open': face_detected,  # Haar cascade doesn't detect eyes separately
+                'lighting_ok': lighting_ok,
+                'brightness': brightness,
+                'confidence': 0.9 if face_detected else 0.0,
             }
         except Exception as e:
-            return {'face_detected': False, 'error': str(e)}
+            logger.error(f'detect_face_in_frame error: {e}')
+            return {'face_detected': False, 'face_centered': False, 'eyes_open': False, 'lighting_ok': True, 'confidence': 0.0}
+
+
+# Module-level singleton cache: detector is resolved once per worker process,
+# not on every HTTP request. This prevents InsightFace ONNX model from being
+# re-loaded on every call to detect_face_in_frame(), which was the root cause
+# of Gunicorn worker timeouts and HTTP 500 responses.
+_cached_liveness_detector = None
 
 
 def get_liveness_detector():
-    """Factory: returns configured liveness detector with fallback options."""
-    # 1. If mock mode is active, use MockLivenessDetector directly
+    """
+    Factory: returns configured liveness detector with fallback options.
+
+    IMPORTANT: Result is cached at module level (per Gunicorn worker process).
+    Model loading happens exactly ONCE per worker, not on every HTTP request.
+    """
+    global _cached_liveness_detector
+    if _cached_liveness_detector is not None:
+        return _cached_liveness_detector
+
     from django.conf import settings
     ai_mode = settings.AI_ENGINE.get('MODE', 'mock')
+
+    # 1. Mock mode
     if ai_mode == 'mock':
         logger.info("Using MockLivenessDetector (AI_ENGINE_MODE is mock)")
-        return MockLivenessDetector()
+        _cached_liveness_detector = MockLivenessDetector()
+        return _cached_liveness_detector
 
-    # 2. Try MediaPipe Liveness Detector
+    # 2. Try MediaPipe — only works with mediapipe < 0.10 (mp.solutions API)
     try:
+        import mediapipe as mp
+        if not hasattr(mp, 'solutions'):
+            raise AttributeError(
+                f'mediapipe {mp.__version__} removed mp.solutions. '
+                'Skipping MediaPipe — using OpenCV fallback.'
+            )
         detector = MediaPipeLivenessDetector()
-        # Dry-run: verify we can actually load the face mesh without raising AttributeError/ModuleNotFoundError
-        detector._get_face_mesh()
-        logger.info("Using MediaPipeLivenessDetector")
-        return detector
+        detector._get_face_mesh()  # warm-up: raises immediately if broken
+        logger.info("Using MediaPipeLivenessDetector (mediapipe %s)", mp.__version__)
+        _cached_liveness_detector = detector
+        return _cached_liveness_detector
     except Exception as e:
-        logger.warning(f'MediaPipe Face Mesh initialization failed, trying OpenCV fallback: {e}')
+        logger.warning(f'MediaPipe unavailable, falling back to OpenCV: {e}')
 
-    # 3. Fallback to OpenCV Haar Cascade Detector
+    # 3. OpenCV Haar Cascade fallback
     try:
-        return OpenCVLivenessDetector()
+        _cached_liveness_detector = OpenCVLivenessDetector()
+        logger.info("Using OpenCVLivenessDetector (cached)")
+        return _cached_liveness_detector
     except Exception as e:
-        logger.warning(f'OpenCV Liveness Detector initialization failed, falling back to mock: {e}')
+        logger.warning(f'OpenCV detector failed, falling back to mock: {e}')
 
     # 4. Final safety net: Mock
     return MockLivenessDetector()
