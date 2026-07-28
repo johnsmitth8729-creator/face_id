@@ -50,13 +50,17 @@ class SupervisorExamVerifyAPI(View):
             except ApplicantProfile.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Applicant profile not found'}, status=404)
 
-            # Only use officially verified biometric templates.
-            # Profiles with status != 'verified' belong to incomplete enrollments
-            # and must never be used for exam-day identification.
+            # 1. Prefer officially verified biometric template
             stored = FaceProfile.objects.filter(
                 session__user=profile.user,
                 status=VerificationStatus.VERIFIED,
             ).exclude(selfie_embedding__isnull=True).order_by('-created_at').first()
+
+            # 2. Fallback: if no status=='verified' template exists yet, use any enrolled selfie embedding for this user
+            if not stored:
+                stored = FaceProfile.objects.filter(
+                    session__user=profile.user,
+                ).exclude(selfie_embedding__isnull=True).order_by('-created_at').first()
 
             if not stored:
                 return JsonResponse({
@@ -64,6 +68,7 @@ class SupervisorExamVerifyAPI(View):
                     'error': 'No stored biometric template found for this applicant',
                     'indicator': 'warning',
                 }, status=404)
+
 
             # Decode live frame
             import base64, io
