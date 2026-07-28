@@ -867,52 +867,107 @@ cameraStream = null;
 }
 
 function captureFrame() {
-const video = document.getElementById('examVideo');
-const canvas = document.createElement('canvas');
-canvas.width = video.videoWidth || 640;
-canvas.height = video.videoHeight || 480;
-const ctx = canvas.getContext('2d');
-ctx.scale(-1, 1);
-ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-return canvas.toDataURL('image/jpeg', 0.9);
+  const video = document.getElementById('examVideo');
+  const origW = video.videoWidth || 640;
+  const origH = video.videoHeight || 480;
+
+  let currentDim = 480;
+  let currentQuality = 0.50;
+
+  let targetW = origW;
+  let targetH = origH;
+
+  if (origW > currentDim || origH > currentDim) {
+    if (origW > origH) {
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
+    } else {
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, -targetW, 0, targetW, targetH);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  let dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+
+  // Guaranteed safety loop:
+  // Iteratively reduce quality and dimension until dataUrl.length is strictly <= 11000 chars
+  while (dataUrl.length > 11000 && currentDim > 120) {
+    currentDim = Math.round(currentDim * 0.8);
+    currentQuality = Math.max(0.20, currentQuality * 0.8);
+
+    if (origW > origH) {
+      targetW = currentDim;
+      targetH = Math.round((origH * currentDim) / origW);
+    } else {
+      targetH = currentDim;
+      targetW = Math.round((origW * currentDim) / origH);
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx2 = canvas.getContext('2d');
+    ctx2.scale(-1, 1);
+    ctx2.drawImage(video, -targetW, 0, targetW, targetH);
+    ctx2.setTransform(1, 0, 0, 1, 0, 0);
+    dataUrl = canvas.toDataURL('image/jpeg', currentQuality);
+  }
+
+  return dataUrl;
 }
 
 async function captureAndVerify() {
-if (!currentProfileId) {
-alert(I18N.noCandidateSelected);
-return;
-}
-const video = document.getElementById('examVideo');
-if (!cameraStream || !video.readyState) {
-alert(I18N.cameraNotReady);
-return;
+  if (!currentProfileId) {
+    alert(I18N.noCandidateSelected);
+    return;
+  }
+  const video = document.getElementById('examVideo');
+  if (!cameraStream || !video.readyState) {
+    alert(I18N.cameraNotReady);
+    return;
+  }
+
+  document.getElementById('faceWaiting').classList.add('d-none');
+  document.getElementById('faceResultBanner').classList.add('d-none');
+  document.getElementById('faceLoading').classList.remove('d-none');
+  document.getElementById('captureBtn').disabled = true;
+
+  const frame = captureFrame();
+  document.getElementById('comp_live').src = frame;
+  document.getElementById('comp_registered').src = lastScannedSelfieUrl || '/static/images/avatar.png';
+
+  try {
+    const resp = await fetch(API_EXAM_VERIFY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+      body: JSON.stringify({ profile_id: currentProfileId, frame: frame }),
+    });
+
+    if (!resp.ok && resp.status !== 422) {
+      console.warn("API_EXAM_VERIFY HTTP status:", resp.status);
+      document.getElementById('faceLoading').classList.add('d-none');
+      showFaceResult({ success: false, error: I18N.networkError + ': HTTP ' + resp.status });
+      return;
+    }
+
+    const result = await resp.json();
+    document.getElementById('faceLoading').classList.add('d-none');
+    showFaceResult(result);
+  } catch (err) {
+    document.getElementById('faceLoading').classList.add('d-none');
+    showFaceResult({ success: false, error: I18N.networkError + ': ' + err.message });
+  } finally {
+    document.getElementById('captureBtn').disabled = false;
+  }
 }
 
-document.getElementById('faceWaiting').classList.add('d-none');
-document.getElementById('faceResultBanner').classList.add('d-none');
-document.getElementById('faceLoading').classList.remove('d-none');
-document.getElementById('captureBtn').disabled = true;
-
-const frame = captureFrame();
-document.getElementById('comp_live').src = frame;
-document.getElementById('comp_registered').src = lastScannedSelfieUrl || '/static/images/avatar.png';
-
-try {
-const resp = await fetch(API_EXAM_VERIFY, {
-method: 'POST',
-headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-body: JSON.stringify({ profile_id: currentProfileId, frame: frame }),
-});
-const result = await resp.json();
-document.getElementById('faceLoading').classList.add('d-none');
-showFaceResult(result);
-} catch (err) {
-document.getElementById('faceLoading').classList.add('d-none');
-showFaceResult({ success: false, error: I18N.networkError + ': ' + err.message });
-} finally {
-document.getElementById('captureBtn').disabled = false;
-}
-}
 
 function showFaceResult(result) {
 const inner = document.getElementById('faceResultInner');

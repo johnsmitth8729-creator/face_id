@@ -150,15 +150,15 @@ class SupervisorExamVerifyAPI(View):
 
             return JsonResponse({
                 'success': True,
-                'match_percentage': round(match_pct, 1),
-                'status': status,
-                'indicator': indicator,
-                'message': message,
-                'already_verified': already_verified,
+                'match_percentage': float(round(match_pct, 1)),
+                'status': str(status),
+                'indicator': str(indicator),
+                'message': str(message),
+                'already_verified': bool(already_verified),
                 'applicant': {
-                    'full_name': profile.full_name,
-                    'admission_id': profile.admission_id,
-                    'passport_number': profile.passport_number,
+                    'full_name': str(profile.full_name or ''),
+                    'admission_id': str(profile.admission_id or ''),
+                    'passport_number': str(profile.passport_number or ''),
                 },
             })
 
@@ -166,7 +166,10 @@ class SupervisorExamVerifyAPI(View):
             return JsonResponse({'success': False, 'error': 'Applicant not found'}, status=404)
         except Exception as e:
             logger.error(f'ExamVerifyAPI error: {e}')
-            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+            import traceback
+            logger.error(traceback.format_exc())
+            return JsonResponse({'success': False, 'error': str(e)}, status=200)
+
 
 
 class SupervisorQRScanAPI(View):
